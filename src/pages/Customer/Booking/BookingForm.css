@@ -1,0 +1,192 @@
+.booking-form-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+.form-section {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+/* Header (Tiêu đề) - Đã xóa đường kẻ */
+.form-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; 
+    margin-bottom: 0.25rem; /* Giảm khoảng cách dưới */
+}
+.form-header-icon {
+    color: rgb(40, 169, 224); 
+    flex-shrink: 0;
+}
+.form-header h2 {
+    margin: 0;
+    font-size: 1.5rem; 
+    font-weight: 600; 
+    color: #111827;
+}
+.form-description {
+    font-size: 0.9rem;
+    color: #555;
+    margin: 0 0 1.5rem 0; /* Khoảng cách chuẩn */
+}
+/* Căn lề cho mô tả của "Thông tin liên hệ" */
+.form-section:first-child .form-description {
+    padding-left: calc(20px + 0.75rem); 
+}
+
+
+/* Phần Form (Nền xanh mờ) */
+.form-group {
+    margin-bottom: 1rem;
+}
+.form-group label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+.form-group label span {
+    color: #dc3545; 
+}
+.form-input, .form-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    font-size: 1rem;
+    border-radius: 8px;
+    border: 1px solid #dbeafe; 
+    background-color: #eff6ff; 
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.form-input:focus, 
+.form-textarea:focus {
+    border-color: #2563eb; 
+    box-shadow: 0 0 0 1px #2563eb;
+    outline: none;
+    background-color: #fff; 
+}
+.form-textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+.form-group small {
+    font-size: 0.85rem;
+    color: #777;
+    margin-top: 0.25rem;
+    display: block;
+}
+.form-row {
+    display: flex;
+    flex-wrap: wrap; 
+    gap: 1.5rem;
+}
+.form-row .form-group {
+    flex: 1;
+    min-width: 250px; 
+}
+
+/* Ô nhập SĐT */
+.phone-input-wrapper {
+    display: flex;
+}
+.phone-input-wrapper .country-code {
+    padding: 0 0.75rem;
+    font-size: 1rem;
+    border-radius: 8px 0 0 8px;
+    border: 1px solid #dbeafe;
+    background-color: #eff6ff;
+    border-right: none; 
+}
+.phone-input-wrapper .form-input {
+    border-radius: 0 8px 8px 0;
+}
+
+/* Checkbox "Tôi đặt cho chính mình" */
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+.checkbox-group input[type="checkbox"] {
+    margin-right: 0.5rem;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+.checkbox-group label {
+    font-weight: normal;
+    font-size: 1rem;
+    margin: 0;
+    cursor: pointer;
+}
+
+/* === CSS CHO YÊU CẦU ĐẶC BIỆT === */
+.special-requests-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+.checkbox-group-vertical {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+    border: 1px solid #dbeafe; /* Viền xanh nhạt */
+    background-color: #eff6ff; /* Nền xanh mờ */
+    border-radius: 8px;
+}
+.checkbox-group-vertical input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+.checkbox-group-vertical label {
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+.read-more-link {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #007bff;
+    text-decoration: none;
+}
+.read-more-link:hover {
+    text-decoration: underline;
+}
+
+/* === CSS CHO CHÍNH SÁCH CHỖ Ở === */
+/* Tiện ích để đẩy "Đọc tất cả" sang phải */
+.ml-auto {
+    margin-left: auto;
+}
+.policy-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+.policy-icon {
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+}
+.policy-icon.no-smoking {
+    color: #dc3545; /* Màu đỏ */
+}
+.policy-content strong {
+    display: block;
+    font-weight: 600;
+    color: #333;
+}
+.policy-content p {
+    font-size: 0.9rem;
+    color: #555;
+    margin: 0.25rem 0 0 0;
+}

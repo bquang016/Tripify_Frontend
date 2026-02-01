@@ -1,0 +1,289 @@
+/* === CSS TÓM TẮT === */
+.payment-summary {
+    overflow: hidden; 
+}
+
+.payment-summary-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background-color: #e0f2fe; 
+    padding: 1rem 1.25rem; 
+}
+
+.header-icon-wrapper {
+    flex-shrink: 0;
+    width: 36px; 
+    height: 36px; 
+    border-radius: 50%;
+    background-color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.header-icon-wrapper svg {
+    width: 20px;
+    height: 20px;
+}
+
+.payment-summary-header strong {
+    font-size: 1rem; 
+    font-weight: 600;
+    color: #111827;
+    display: block; 
+}
+
+.payment-summary-header .booking-id {
+    font-size: 0.8rem; 
+    color: #374151; 
+}
+
+.payment-summary-section {
+    padding: 0.75rem 1.25rem; 
+}
+
+.hotel-info h4 {
+    font-size: 1.1rem; 
+    font-weight: 700; 
+    margin: 0; 
+}
+
+/* === THỜI GIAN === */
+.time-details-payment {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.time-block-payment {
+    display: flex;
+    flex-direction: column;
+    flex-basis: 40%; 
+    padding: 0.75rem 1rem;
+    border: 1px solid #e5e7eb; 
+    border-radius: 0.5rem; 
+    background-color: #f9fafb; 
+}
+
+.time-block-payment:last-child {
+    text-align: right;
+}
+
+.time-block-payment span {
+    font-size: 0.875rem; 
+    color: #6b7280; 
+}
+
+.time-block-payment strong {
+    font-size: 0.9rem; 
+    font-weight: 700; 
+    color: #111827; 
+    margin: 0.1rem 0;
+}
+
+.duration-payment {
+    font-size: 0.875rem;
+    color: #6b7280;
+    flex: 1;
+    text-align: center;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.duration-payment::before,
+.duration-payment::after {
+    content: "";
+    display: block;
+    width: 35%;
+    height: 1px;
+    border-top: 2px dotted #cbd5e1; 
+    position: absolute;
+    top: 50%; 
+}
+
+.duration-payment::before { left: 0; }
+.duration-payment::after { right: 0; }
+
+/* === DÒNG === */
+.room-details-list h4,
+.guest-details h4,
+.contact-details h4 {
+    font-size: 1rem; 
+    font-weight: 700; 
+    margin-bottom: 0.5rem; 
+}
+
+.room-details-list .detail-item,
+.guest-details .detail-item,
+.contact-details .detail-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem; 
+    color: #374151;
+    margin-bottom: 0.35rem; 
+}
+
+.room-details-list .detail-item svg,
+.guest-details .detail-item svg,
+.contact-details .detail-item svg {
+    flex-shrink: 0;
+    color: #6b7280; 
+}
+
+.room-details-list .detail-item svg {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+/* === SPECIAL REQUEST === */
+.request-title {
+    font-weight: 600;
+    font-size: 0.875rem; 
+    margin-top: 0.75rem; 
+}
+
+.request-value {
+    font-size: 0.875rem; 
+    color: #374151;
+}
+
+.policy-list {
+    margin-top: 0.5rem;
+}
+
+.policy-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem; 
+    color: #374151;
+    margin-bottom: 0.35rem; 
+}
+
+.policy-item svg {
+    color: #dc3545; 
+    flex-shrink: 0;
+}
+
+
+/* === LIÊN KẾT === */
+.ml-auto {
+    margin-left: auto;
+}
+
+.read-more-link {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #007bff;
+    text-decoration: none;
+    white-space: nowrap; 
+}
+
+.read-more-link:hover {
+    text-decoration: underline;
+}
+
+
+/* === CỘT TRÁI FORM === */
+.form-section {
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.discount-section .form-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem; 
+    margin-bottom: 0.25rem; 
+}
+
+.discount-section .form-header-icon {
+    color: rgb(40, 169, 224); 
+}
+
+.discount-section .form-header h2 {
+    margin: 0;
+    font-size: 1.5rem; 
+    font-weight: 600; 
+    color: #111827;
+}
+
+.discount-section .form-description {
+    font-size: 0.9rem;
+    color: #555;
+    margin: 0 0 1.5rem 0; 
+    padding-left: calc(20px + 0.75rem); 
+}
+
+.discount-input-group {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center; 
+}
+
+.discount-input-group input.form-input {
+    flex: 1; 
+    width: auto; 
+}
+
+
+/* === TỔNG TIỀN === */
+.total-price-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; 
+    gap: 1rem;
+    flex-wrap: wrap; 
+}
+
+.total-price-label {
+    font-size: 1rem;
+    color: #4b5563; 
+}
+
+.total-price-amount {
+    font-size: 1.75rem; 
+    font-weight: 700;
+    color: #111827; 
+    margin: 0;
+}
+
+/* === NÚT THANH TOÁN + DÒNG ĐIỀU KHOẢN === */
+.payment-submit-button {
+    background-color: #ff5e1f !important; 
+    border-color: #ff5e1f !important;
+    font-weight: 700 !important;
+    min-width: 280px; 
+}
+
+.payment-submit-button:hover {
+    background-color: #f75414 !important;
+    border-color: #f75414 !important;
+}
+
+/* === FIX GIỮA 1 DÒNG — YÊU CẦU CỦA M === */
+.payment-terms-text {
+    font-size: 0.75rem;
+    color: #6b7280; 
+    text-align: right;
+    margin: 0.5rem 0 0 0;
+    white-space: nowrap;  /* GIỮ TRÊN 1 DÒNG */
+    line-height: 1.5;
+}
+
+.payment-terms-text a {
+    color: #007bff; 
+    text-decoration: none;
+}
+
+.payment-terms-text a:hover {
+    text-decoration: underline;
+}

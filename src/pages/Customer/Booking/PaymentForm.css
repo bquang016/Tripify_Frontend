@@ -1,0 +1,72 @@
+/* --- BẮT ĐẦU THAY THẾ TỪ ĐÂY --- */
+
+/* Lựa chọn thanh toán */
+.payment-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem; /* Giảm khoảng cách giữa các ô một chút */
+}
+
+/* Từng dòng phương thức thanh toán */
+.payment-option {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.75rem 1rem; /* Giảm padding cho gọn (cũ là 1rem) */
+    border: 1px solid #e5e7eb; /* Màu viền nhẹ hơn */
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background-color: #fff;
+}
+
+/* Hiệu ứng khi di chuột vào */
+.payment-option:hover {
+    border-color: #b0b0b0;
+    background-color: #f9fafb;
+}
+
+/* Hiệu ứng khi ĐƯỢC CHỌN */
+.payment-option.selected {
+    border-color: #007bff;
+    background-color: #f0f9ff; /* Thêm nền xanh rất nhạt */
+    box-shadow: 0 0 0 1px #007bff; /* Viền nét hơn */
+}
+
+/* === LOGO ĐÃ SỬA (Nhỏ lại & Khớp khung) === */
+.payment-logo {
+    width: 60px;  /* Nhỏ lại (Cũ là 80px) */
+    height: 40px; /* Chiều cao cố định */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    /* Thêm viền trang trí cho logo */
+    background-color: #fff;
+    border: 1px solid #f3f4f6; 
+    border-radius: 6px; 
+    padding: 4px; /* Để logo không dính sát viền */
+}
+
+.payment-logo img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain; /* Giữ tỷ lệ ảnh, không bị méo */
+    display: block;
+}
+
+/* Tên phương thức */
+.payment-name {
+    flex: 1;
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: #111827;
+}
+
+/* Nút Radio */
+.payment-option input[type="radio"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #007bff;
+}
