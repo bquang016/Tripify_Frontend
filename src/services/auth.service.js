@@ -100,6 +100,36 @@ const verifyEmail = async (token) => {
   }
 };
 
+// 9. Gửi mã OTP
+const sendOtp = async (email, type) => {
+  try {
+    const response = await api.post(`/auth/send-otp`, { 
+      email: email.toLowerCase(), 
+      type 
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// 10. Xác thực mã OTP
+const verifyOtp = async (email, otpCode, type = "REGISTER") => {
+  try {
+    const payload = { 
+      email: email.toLowerCase().trim(), 
+      otpCode,
+      type 
+    };
+    console.log(">>> Verify OTP Payload:", payload);
+    const response = await api.post(`/auth/verify-otp`, payload);
+    return response.data;
+  } catch (error) {
+    console.error(">>> Verify OTP Error Response:", error.response?.data);
+    throw error;
+  }
+};
+
 const fetchUserProfile = async () => {
   try {
     const response = await api.get('/auth/me'); 
@@ -148,6 +178,8 @@ export const authService = {
   forgotPassword,
   resetPassword,
   verifyEmail,
+  sendOtp,
+  verifyOtp,
   fetchUserProfile,
   unlinkSocialAccount,
   createPassword,
