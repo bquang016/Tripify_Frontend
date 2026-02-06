@@ -70,9 +70,9 @@ const OTPModal = ({ isOpen, onClose, email, onSuccess, type = "REGISTER" }) => {
     setLoading(true);
     const loadingToast = toast.loading('Đang xử lý mã OTP...');
     try {
-      if (type === "REGISTER") {
-        // Luồng Đăng ký: Truyền otpCode ra cho cha xử lý verify-register
-        console.log(">>> OTP for Register entered, passing to parent...");
+      if (type === "REGISTER" || type === "LOGIN_2FA" || type === "TWO_FACTOR_AUTH") {
+        // Các luồng cần xử lý thêm ở component cha: REGISTER, LOGIN_2FA, TWO_FACTOR_AUTH
+        console.log(`>>> OTP for ${type} entered, passing to parent...`);
         setTimeout(() => {
           toast.dismiss(loadingToast);
           if (onSuccess) onSuccess(otpCode);

@@ -2,15 +2,16 @@ import React, { useState, useEffect } from "react";
 // ✅ 1. Import Hooks & Service
 import { useAuth } from "@/context/AuthContext";
 import { userService } from "@/services/user.service";
+import { authService } from "@/services/auth.service"; // Thêm authService
 
 // ✅ 2. Import Components
 import AccountMenu from "@/pages/Customer/Profile/AccountMenu";
 import ToggleSwitch from "@/components/common/Input/ToggleSwitch";
 import Button from "@/components/common/Button/Button";
 import Card from "@/components/common/Card/Card";
-import Toast from "@/components/common/Notification/Toast";
-import ToastPortal from "@/components/common/Notification/ToastPortal";
-import CustomSelect from "@/components/common/Select/CustomSelect"; // Component chọn email
+import CustomSelect from "@/components/common/Select/CustomSelect"; // Thêm lại dòng này
+import OTPModal from "@/components/auth/OTPModal"; 
+import toast from "react-hot-toast";
 
 // ✅ 3. Import Icons
 import { 
@@ -26,12 +27,14 @@ const SettingsPage = () => {
         emailNoti: true,
         smsNoti: false,
         deviceNoti: true,
-        twoFactor: false,
+        twoFactor: currentUser?.twoFactorEnabled || false,
         notificationEmail: "" // Mặc định rỗng, sẽ set sau khi fetch
     });
 
     const [loading, setLoading] = useState(false);
-    const [toast, setToast] = useState({ show: false, msg: "", type: "success" });
+    
+    // 2FA states
+    const [show2faOtp, setShow2faOtp] = useState(false);
     
     // Danh sách email khả dụng để chọn (Email chính + Email MXH)
     const [availableEmails, setAvailableEmails] = useState([]);
@@ -40,12 +43,7 @@ const SettingsPage = () => {
     const [userInfo, setUserInfo] = useState(currentUser);
     const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
-    const showToastAndDismiss = (msg, type = "info") => {
-        setToast({ show: true, msg, type });
-        setTimeout(() => setToast(prev => ({ ...prev, show: false })), 3000);
-    };
-
-    // ✅ 4. Fetch dữ liệu user mới nhất (bao gồm socialAccounts và notificationEmail)
+    // ✅ 4. Fetch dữ liệu user mới nhất
     useEffect(() => {
         const fetchUserData = async () => {
             try {
@@ -73,6 +71,7 @@ const SettingsPage = () => {
                     // 4b. Set giá trị settings hiện tại
                     setSettings(prev => ({
                         ...prev,
+                        twoFactor: data.twoFactorEnabled || false,
                         notificationEmail: data.notificationEmail || data.email
                     }));
                 }
@@ -93,18 +92,50 @@ const SettingsPage = () => {
                 const newUrl = res.data.profilePhotoUrl;
                 setUserInfo(prev => ({ ...prev, profilePhotoUrl: newUrl }));
                 updateUser({ profilePhotoUrl: newUrl });
-                showToastAndDismiss("Cập nhật ảnh đại diện thành công!", "success");
+                toast.success("Cập nhật ảnh đại diện thành công!");
             }
         } catch (err) {
             console.error("Upload failed:", err);
-            showToastAndDismiss("Lỗi khi tải ảnh lên.", "error");
+            toast.error("Lỗi khi tải ảnh lên.");
         } finally {
             setIsUploadingAvatar(false);
         }
     };
 
-    const handleToggle = (key) => {
+    const handleToggle = async (key) => {
+        if (key === "twoFactor") {
+            const loadingToast = toast.loading("Đang khởi tạo yêu cầu bảo mật...");
+            try {
+                // Gọi API yêu cầu OTP để thay đổi cấu hình 2FA
+                await authService.request2faToggle();
+                toast.success("Mã xác thực đã được gửi về email của bạn.", { id: loadingToast });
+                setShow2faOtp(true);
+            } catch (error) {
+                console.error("Request 2FA Toggle Error:", error);
+                toast.error("Không thể yêu cầu thay đổi lúc này. Vui lòng thử lại sau.", { id: loadingToast });
+            }
+            return;
+        }
         setSettings(prev => ({ ...prev, [key]: !prev[key] }));
+    };
+
+    const handle2faOtpSuccess = async (otpCode) => {
+        setLoading(true);
+        const toggleToast = toast.loading("Đang cập nhật cấu hình bảo mật...");
+        try {
+            const res = await authService.toggle2fa(otpCode);
+            if (res.success) {
+                const newState = !settings.twoFactor;
+                setSettings(prev => ({ ...prev, twoFactor: newState }));
+                updateUser({ twoFactorEnabled: newState });
+                toast.success(newState ? "Đã bật xác thực 2 lớp thành công!" : "Đã tắt xác thực 2 lớp thành công!", { id: toggleToast });
+            }
+        } catch (error) {
+            console.error("Toggle 2FA Error:", error);
+            toast.error(error.response?.data?.message || "Mã xác thực không chính xác.", { id: toggleToast });
+        } finally {
+            setLoading(false);
+        }
     };
 
     // ✅ 5. Lưu cài đặt (Gửi notificationEmail lên server)
@@ -113,18 +144,17 @@ const SettingsPage = () => {
         try {
             const payload = {
                 notificationEmail: settings.notificationEmail,
-                // Các settings khác nếu backend hỗ trợ lưu
             };
 
             const res = await userService.updateUserDetail(payload);
             
             if (res.success) {
                 updateUser({ notificationEmail: settings.notificationEmail });
-                showToastAndDismiss("Đã lưu cài đặt thành công!", "success");
+                toast.success("Đã lưu cài đặt thành công!");
             }
         } catch (err) {
             console.error(err);
-            showToastAndDismiss("Lưu thất bại.", "error");
+            toast.error("Lưu thất bại.");
         } finally {
             setLoading(false);
         }
@@ -274,13 +304,14 @@ const SettingsPage = () => {
                 </div>
             </div>
 
-            <ToastPortal>
-                {toast.show && (
-                    <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[9999]">
-                        <Toast message={toast.msg} type={toast.type} />
-                    </div>
-                )}
-            </ToastPortal>
+            {/* ✅ OTP MODAL CHO BẬT/TẮT 2FA */}
+            <OTPModal
+                isOpen={show2faOtp}
+                onClose={() => setShow2faOtp(false)}
+                email={userInfo?.email}
+                type="TWO_FACTOR_AUTH"
+                onSuccess={handle2faOtpSuccess}
+            />
         </main>
     );
 };
