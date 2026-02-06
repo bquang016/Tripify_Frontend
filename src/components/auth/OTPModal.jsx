@@ -80,14 +80,31 @@ const OTPModal = ({ isOpen, onClose, email, onSuccess, type = "REGISTER" }) => {
         }, 500);
       } else {
         // Luồng khác (Quên mật khẩu...): Gọi verifyOtp trực tiếp
-        console.log(`>>> Verifying OTP for current flow...`);
-        await authService.verifyOtp(email, otpCode);
-        toast.success('Xác thực mã OTP thành công!', { id: loadingToast });
+        console.log(`>>> [STEP 2] Verifying OTP for current flow [${type}]...`);
+        const response = await authService.verifyOtp(email, otpCode, type);
         
-        setTimeout(() => {
-          if (onSuccess) onSuccess(otpCode);
-          onClose();
-        }, 800);
+        // Log để kiểm tra cấu trúc data từ backend
+        console.log(">>> [STEP 2] Verify OTP Response:", response);
+
+        if (response && response.success) {
+          toast.success('Xác thực mã OTP thành công!', { id: loadingToast });
+          
+          // Theo backend: response.data thường chứa Secure Token (UUID)
+          // Chúng ta ưu tiên lấy từ response.data, nếu nó là object thì tìm field token hoặc data bên trong
+          let secureToken = response.data;
+          if (typeof response.data === 'object' && response.data !== null) {
+            secureToken = response.data.token || response.data.data || response.data;
+          }
+          
+          console.log(">>> [DEBUG] Secure Token extracted:", secureToken);
+
+          setTimeout(() => {
+            if (onSuccess) onSuccess(secureToken);
+            onClose();
+          }, 800);
+        } else {
+          toast.error(response?.message || 'Xác thực không thành công', { id: loadingToast });
+        }
       }
     } catch (error) {
       console.error('Verify OTP Error:', error);

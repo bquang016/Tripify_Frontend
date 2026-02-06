@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import { 
   CheckCircle2, XCircle, Loader2, ArrowLeft, 
   Lock, Eye, EyeOff, KeyRound, ShieldCheck, Check
@@ -14,8 +14,25 @@ const BG_URL = "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w
 
 const ResetPassword = () => {
   const [searchParams] = useSearchParams();
-  const token = searchParams.get("token");
+  const location = useLocation();
   const navigate = useNavigate();
+
+  // Ưu tiên lấy token từ state (luồng OTP), sau đó mới đến URL (luồng Email link)
+  const token = location.state?.token || searchParams.get("token");
+
+  // Kiểm tra nếu không có token thì không cho ở lại trang này
+  useEffect(() => {
+    if (!token) {
+        console.warn(">>> [ResetPassword] No token found in state or URL. Redirecting...");
+        showToastOnce("Phiên làm việc đã hết hạn hoặc không hợp lệ.", "error");
+        setTimeout(() => navigate("/forgot-password"), 2000);
+    } else {
+        console.log(">>> [ResetPassword] Token detected:", token);
+        if (token.length <= 6) {
+          console.warn(">>> [ResetPassword] Warning: Token looks like an OTP code (6 digits), not a UUID.");
+        }
+    }
+  }, [token, navigate]);
 
   // Form State
   const [password, setPassword] = useState("");
@@ -58,6 +75,10 @@ const ResetPassword = () => {
     e.preventDefault();
 
     // Validate
+    if (!token) {
+      showToastOnce("Phiên làm việc không hợp lệ. Vui lòng thực hiện lại bước Quên mật khẩu.");
+      return;
+    }
     if (!password || !confirm) {
       showToastOnce("Vui lòng nhập đầy đủ thông tin.");
       return;
@@ -73,11 +94,18 @@ const ResetPassword = () => {
 
     setLoading(true);
     try {
-      // Gọi Service (Lưu ý: Service nhận token và newPassword)
-      await authService.resetPassword(token, password);
-      setIsSuccess(true); // Chuyển sang giao diện thành công
+      // Gọi Service (Lưu ý: Backend mới yêu cầu token, newPassword và confirmPassword)
+      const response = await authService.resetPassword(token, password, confirm);
+      
+      if (response.success) {
+        setIsSuccess(true); // Chuyển sang giao diện thành công
+      } else {
+        showToastOnce(response.message || "Không thể đặt lại mật khẩu.", "error");
+      }
     } catch (err) {
-      const msg = err.response?.data?.message || "Liên kết không hợp lệ hoặc đã hết hạn.";
+      console.error("Reset Password Submit Error:", err);
+      const serverMsg = err.response?.data?.message;
+      const msg = serverMsg || "Liên kết không hợp lệ hoặc đã hết hạn.";
       showToastOnce(msg, "error");
     } finally {
       setLoading(false);
