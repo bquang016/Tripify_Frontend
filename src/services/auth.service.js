@@ -161,12 +161,55 @@ const verifyRegister = async (email, otpCode) => {
   }
 };
 
+// 12. Yêu cầu bật/tắt 2FA (Trong Settings)
+const request2faToggle = async () => {
+  try {
+    const response = await api.post(`/auth/2fa/request-toggle`);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// 13. Xác nhận bật/tắt 2FA
+const toggle2fa = async (otp) => {
+  try {
+    const response = await api.post(`/auth/2fa/toggle`, { 
+      otp: otp.toString().trim() 
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// 14. Xác thực OTP để hoàn tất Đăng nhập (2FA)
+const verify2faLogin = async (email, otp) => {
+  try {
+    const response = await api.post(`/auth/2fa/verify-login`, {
+      email: email.toLowerCase().trim(),
+      otp: otp.toString().trim(),
+    });
+
+    if (response.data && response.data.success && response.data.data?.accessToken) {
+      const { accessToken, user } = response.data.data;
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("user", JSON.stringify(user));
+    }
+
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 const fetchUserProfile = async () => {
   try {
     const response = await api.get('/auth/me'); 
-    const userData = response.data.data;
+    console.log(">>> [DEBUG] Raw /auth/me Response:", response.data);
+    const userData = response.data.data || response.data;
 
-    if (!userData.roles && userData.authorities) {
+    if (userData && !userData.roles && userData.authorities) {
       userData.roles = userData.authorities.map(auth => ({
         roleName: auth.authority.replace("ROLE_", "") // Bỏ tiền tố ROLE_
       }));
@@ -212,6 +255,9 @@ export const authService = {
   sendOtp,
   verifyOtp,
   verifyRegister,
+  request2faToggle,
+  toggle2fa,
+  verify2faLogin,
   fetchUserProfile,
   unlinkSocialAccount,
   createPassword,
