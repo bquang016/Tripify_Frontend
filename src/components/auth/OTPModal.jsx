@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { authService } from '../../services/auth.service';
 import toast from 'react-hot-toast';
 
-const OTPModal = ({ isOpen, onClose, email, onSuccess }) => {
+const OTPModal = ({ isOpen, onClose, email, onSuccess, type = "REGISTER" }) => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(60);
   const [loading, setLoading] = useState(false);
@@ -14,9 +14,9 @@ const OTPModal = ({ isOpen, onClose, email, onSuccess }) => {
   // Log để kiểm tra email khi modal mở
   useEffect(() => {
     if (isOpen) {
-      console.log(">>> OTP Modal Email target:", email);
+      console.log(`>>> OTP Modal target [${type}]:`, email);
     }
-  }, [isOpen, email]);
+  }, [isOpen, email, type]);
 
   // Timer logic for resend OTP
   useEffect(() => {
@@ -65,17 +65,27 @@ const OTPModal = ({ isOpen, onClose, email, onSuccess }) => {
     }
 
     setLoading(true);
-    const loadingToast = toast.loading('Đang xác thực mã OTP...');
+    const loadingToast = toast.loading('Đang xử lý mã OTP...');
     try {
-      // API call to verify OTP - Thêm type 'REGISTER'
-      await authService.verifyOtp(email, otpCode, 'REGISTER');
-      toast.success('Xác thực mã OTP thành công!', { id: loadingToast });
-      
-      // Đợi một chút để người dùng thấy thông báo thành công trước khi đóng modal hoặc chuyển trang
-      setTimeout(() => {
-        if (onSuccess) onSuccess();
-        onClose();
-      }, 1000);
+      if (type === "REGISTER") {
+        // Luồng Đăng ký: Truyền otpCode ra cho cha xử lý verify-register
+        console.log(">>> OTP for Register entered, passing to parent...");
+        setTimeout(() => {
+          toast.dismiss(loadingToast);
+          if (onSuccess) onSuccess(otpCode);
+          onClose();
+        }, 500);
+      } else {
+        // Luồng khác (Quên mật khẩu...): Gọi verifyOtp trực tiếp
+        console.log(`>>> Verifying OTP for current flow...`);
+        await authService.verifyOtp(email, otpCode);
+        toast.success('Xác thực mã OTP thành công!', { id: loadingToast });
+        
+        setTimeout(() => {
+          if (onSuccess) onSuccess(otpCode);
+          onClose();
+        }, 800);
+      }
     } catch (error) {
       console.error('Verify OTP Error:', error);
       const errorMessage = error.response?.data?.message || 'Mã OTP không chính xác hoặc đã hết hạn';
@@ -91,8 +101,7 @@ const OTPModal = ({ isOpen, onClose, email, onSuccess }) => {
     setIsResending(true);
     const loadingToast = toast.loading('Đang gửi lại mã...');
     try {
-      // Sử dụng type 'REGISTER' theo đúng Enum của Backend
-      await authService.sendOtp(email, 'REGISTER');
+      await authService.sendOtp(email, type);
       toast.success('Đã gửi lại mã OTP mới qua email của bạn', { id: loadingToast });
       setTimer(60);
       setOtp(['', '', '', '', '', '']);

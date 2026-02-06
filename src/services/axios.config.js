@@ -6,6 +6,7 @@ const API_URL =
 
 const api = axios.create({
     baseURL: API_URL,
+    withCredentials: true, // Thêm dòng này để gửi kèm Cookie/Session
     headers: {
         "Content-Type": "application/json",
     },

@@ -161,77 +161,35 @@ const Register = () => {
     const [touched, setTouched] = useState({ password: false });
 
     // --- OTP SUCCESS HANDLER ---
-    const handleOTPSuccess = async () => {
+    const handleOTPSuccess = async (otpCode) => {
         setLoading(true);
-        const registerToast = toast.loading("Đang hoàn tất quá trình đăng ký...");
+        const registerToast = toast.loading("Đang xác thực và hoàn tất đăng ký...");
         try {
-            // Bước 2: Chỉ khi OTP đúng mới thực hiện đăng ký thực sự
-            const { fullName, email, password, confirmPassword } = formData;
-            const res = await authService.register(
-                fullName,
-                email,
-                password,
-                confirmPassword
-            );
+            // Bước 3: Gọi verify-register để xác thực OTP và kích hoạt tài khoản
+            const res = await authService.verifyRegister(formData.email, otpCode);
 
-            if (res) {
-                toast.success("Đăng ký thành công! Đang chuyển hướng đến trang đăng nhập...", { 
+            if (res.success) {
+                toast.success("Đăng ký thành công! Chào mừng bạn đến với TravelMate.", { 
                     id: registerToast,
-                    duration: 3000 
+                    duration: 4000 
                 });
                 
+                // Vì verify-register đã lưu token vào localStorage, chuyển thẳng về trang chủ
                 setTimeout(() => {
-                    navigate("/login");
+                    navigate("/");
                 }, 2000);
             }
         } catch (err) {
-            console.error("Registration Error:", err);
-            const statusCode = err.response?.status;
-            const serverMsg = err.response?.data?.message;
+            console.error("Verification Error:", err);
+            // Lấy message chi tiết từ object lỗi của Backend
+            const serverMsg = err.response?.data?.message || err.response?.data || "Mã OTP không chính xác hoặc đã hết hạn.";
             
-            let errorMsg = serverMsg || "Đăng ký thất bại. Vui lòng thử lại.";
-            
-            if (statusCode === 409) {
-                errorMsg = "Email này đã được đăng ký trước đó. Vui lòng đăng nhập!";
-                toast.error(errorMsg, { id: registerToast, duration: 4000 });
-                
-                // Nếu đã tồn tại, chuyển hướng sang login luôn sau 2 giây
-                setTimeout(() => {
-                    navigate("/login");
-                }, 2500);
-            } else {
-                toast.error(errorMsg, { id: registerToast });
-            }
-            
-            setError(errorMsg);
-            setShowOTPModal(false);
+            toast.error(typeof serverMsg === 'string' ? serverMsg : JSON.stringify(serverMsg), { id: registerToast });
+            setError(typeof serverMsg === 'string' ? serverMsg : "Lỗi xác thực dữ liệu.");
         } finally {
             setLoading(false);
         }
     };
-
-    // --- PASSWORD STRENGTH ---
-    useEffect(() => {
-        const pwd = formData.password;
-        const criteria = {
-            length: pwd.length >= 6,
-            hasNumber: /\d/.test(pwd),
-            hasUpper: /[A-Z]/.test(pwd),
-            hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(pwd),
-        };
-
-        setPasswordCriteria(criteria);
-        setPasswordScore(Object.values(criteria).filter(Boolean).length);
-
-        if (pwd.length === 1 && scrollContainerRef.current) {
-            setTimeout(() => {
-                scrollContainerRef.current.scrollTo({
-                    top: scrollContainerRef.current.scrollHeight,
-                    behavior: "smooth",
-                });
-            }, 200);
-        }
-    }, [formData.password]);
 
     const getPasswordCriteria = (pwd = "") => ({
         length: pwd.length >= 6,
@@ -248,6 +206,42 @@ const Register = () => {
     const handleSocialLogin = (provider) => {
         window.location.href = `${API_BASE_URL}/oauth2/authorization/${provider}`;
     };
+
+    // --- PASSWORD STRENGTH EFFECT ---
+    useEffect(() => {
+        const pwd = formData.password;
+        const criteria = getPasswordCriteria(pwd);
+
+        setPasswordCriteria(criteria);
+        setPasswordScore(Object.values(criteria).filter(Boolean).length);
+
+        if (pwd.length === 1 && scrollContainerRef.current) {
+            setTimeout(() => {
+                scrollContainerRef.current.scrollTo({
+                    top: scrollContainerRef.current.scrollHeight,
+                    behavior: "smooth",
+                });
+            }, 200);
+        }
+    }, [formData.password]);
+
+    const getStrengthColor = () => {
+        if (passwordScore <= 1) return "bg-red-500";
+        if (passwordScore === 2) return "bg-yellow-500";
+        if (passwordScore === 3) return "bg-blue-500";
+        return "bg-green-500";
+    };
+
+    const getStrengthText = () => {
+        if (passwordScore === 0) return "";
+        if (passwordScore <= 1) return "Quá yếu";
+        if (passwordScore === 2) return "Trung bình";
+        if (passwordScore === 3) return "Tốt";
+        return "Tuyệt vời";
+    };
+
+    const isFormValid =
+        passwordScore >= 4 && formData.fullName && formData.email && agreed;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -269,7 +263,6 @@ const Register = () => {
             return;
         }
 
-        // ✅ Đồng bộ rule với backend (thường backend yêu cầu đủ 4 tiêu chí)
         const c = getPasswordCriteria(password);
         const strongEnough = c.length && c.hasNumber && c.hasUpper && c.hasSpecial;
 
@@ -283,35 +276,30 @@ const Register = () => {
 
         setLoading(true);
         try {
-            // Bước 1: Gửi OTP để xác thực email TRƯỚC KHI tạo tài khoản
-            await authService.sendOtp(email, "REGISTER");
+            // Bước 1: Gọi API Register để lưu tạm thông tin
+            // Backend sẽ tự động gửi mã OTP ngay tại bước này
+            await authService.register(fullName, email, password, confirmPassword);
+            
             toast.success("Mã xác thực đã được gửi đến email của bạn.");
             setShowOTPModal(true);
+            setError(""); // Xóa lỗi cũ nếu có
         } catch (err) {
-            const serverMsg = err?.response?.data?.message || "Không thể gửi mã xác thực. Vui lòng thử lại.";
-            setError(serverMsg);
+            console.error("Registration Step 1 Error:", err);
+            const statusCode = err.response?.status;
+            const serverMsg = err.response?.data?.message || "Không thể thực hiện đăng ký. Vui lòng thử lại.";
+            
+            if (statusCode === 409) {
+                // Hiển thị thông báo email đã tồn tại như yêu cầu
+                setError("Email này đã được đăng ký. Vui lòng sử dụng email khác hoặc đăng nhập.");
+                toast.error("Email đã tồn tại trên hệ thống!");
+            } else {
+                setError(serverMsg);
+                toast.error(serverMsg);
+            }
         } finally {
             setLoading(false);
         }
     };
-
-    const getStrengthColor = () => {
-        if (passwordScore <= 1) return "bg-red-500";
-        if (passwordScore === 2) return "bg-yellow-500";
-        if (passwordScore === 3) return "bg-blue-500";
-        return "bg-green-500";
-    };
-
-    const getStrengthText = () => {
-        if (passwordScore === 0) return "";
-        if (passwordScore <= 1) return "Quá yếu";
-        if (passwordScore === 2) return "Trung bình";
-        if (passwordScore === 3) return "Tốt";
-        return "Tuyệt vời";
-    };
-
-    const isFormValid =
-        passwordScore >= 2 && formData.fullName && formData.email && agreed;
 
     return (
         <div className="relative h-screen w-screen overflow-hidden flex items-center justify-center font-sans bg-slate-900">
