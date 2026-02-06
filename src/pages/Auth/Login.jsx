@@ -85,25 +85,37 @@ const Login = () => {
 
         setLoading(true);
         try {
-            const res = await authService.login(formData.email, formData.password);
+            const response = await authService.login(formData.email, formData.password);
+            
+            // Log thực tế để debug
+            console.log(">>> Full Login Response Object:", response);
 
-            // Kiểm tra yêu cầu 2FA
-            if (res.is2faRequired || (res.data && res.data.is2faRequired)) {
+            // Backend của bạn thường bọc dữ liệu trong field 'data'
+            const result = response.data || response;
+
+            // 1. Kiểm tra yêu cầu 2FA (Bắt đúng trường 2faRequired từ log thực tế)
+            const is2fa = result?.is2faRequired || result?.['2faRequired'];
+
+            if (result && is2fa === true) {
                 setPendingEmail(formData.email);
                 setShow2faModal(true);
-                toast.success("Mã xác thực 2 lớp đã được gửi về email của bạn.");
+                toast.success("Tài khoản đã bật bảo mật 2 lớp. Vui lòng nhập mã OTP!");
                 return;
             }
 
-            if (res) {
-                const user = res.user || res.data?.user;
-                if (updateUser && user) {
-                    await updateUser(user);
+            // 2. Kiểm tra Token để cho phép đăng nhập
+            if (result && result.accessToken) {
+                if (updateUser) {
+                    await updateUser(result.user);
                 }
                 toast.success("Đăng nhập thành công!");
                 setTimeout(() => {
                     navigate(from, { replace: true });
                 }, 800);
+            } else {
+                // Nếu không có 2FA và cũng không có Token
+                console.error(">>> No Token or 2FA found in result:", result);
+                setError("Hệ thống không nhận diện được thông tin đăng nhập.");
             }
         } catch (err) {
             console.error("Login Error:", err);
