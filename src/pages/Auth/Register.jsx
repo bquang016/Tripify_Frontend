@@ -169,14 +169,14 @@ const Register = () => {
             const res = await authService.verifyRegister(formData.email, otpCode);
 
             if (res.success) {
-                toast.success("Đăng ký thành công! Chào mừng bạn đến với TravelMate.", { 
+                toast.success("Đăng ký thành công! Đang chuyển hướng đến trang đăng nhập...", { 
                     id: registerToast,
                     duration: 4000 
                 });
                 
-                // Vì verify-register đã lưu token vào localStorage, chuyển thẳng về trang chủ
+                // Chuyển hướng về trang đăng nhập như yêu cầu của bạn
                 setTimeout(() => {
-                    navigate("/");
+                    navigate("/login");
                 }, 2000);
             }
         } catch (err) {

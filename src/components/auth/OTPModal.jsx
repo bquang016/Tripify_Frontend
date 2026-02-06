@@ -11,13 +11,15 @@ const OTPModal = ({ isOpen, onClose, email, onSuccess, type = "REGISTER" }) => {
   const [isResending, setIsResending] = useState(false);
   const inputRefs = useRef([]);
 
-  // Log để kiểm tra email khi modal mở
+  // Reset OTP khi đóng hoặc mở modal
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) {
+      setOtp(['', '', '', '', '', '']);
+      setTimer(60);
+    } else {
       console.log(`>>> OTP Modal OPENED for [${type}]:`, email);
-      // Đảm bảo không có lệnh sendOtp() nào ở đây
     }
-  }, [isOpen, email, type]);
+  }, [isOpen]);
 
   // Timer logic for resend OTP
   useEffect(() => {
