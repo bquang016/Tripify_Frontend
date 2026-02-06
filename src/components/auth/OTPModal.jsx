@@ -14,7 +14,8 @@ const OTPModal = ({ isOpen, onClose, email, onSuccess, type = "REGISTER" }) => {
   // Log để kiểm tra email khi modal mở
   useEffect(() => {
     if (isOpen) {
-      console.log(`>>> OTP Modal target [${type}]:`, email);
+      console.log(`>>> OTP Modal OPENED for [${type}]:`, email);
+      // Đảm bảo không có lệnh sendOtp() nào ở đây
     }
   }, [isOpen, email, type]);
 
