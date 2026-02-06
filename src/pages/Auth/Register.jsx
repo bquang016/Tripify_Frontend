@@ -274,15 +274,19 @@ const Register = () => {
             return;
         }
 
+        if (loading) return; // Chặn nhấn nhiều lần khi đang xử lý
+
         setLoading(true);
         try {
             // Bước 1: Gọi API Register để lưu tạm thông tin
-            // Backend sẽ tự động gửi mã OTP ngay tại bước này
-            await authService.register(fullName, email, password, confirmPassword);
+            // Backend ĐÃ tự động gửi mã OTP tại đây. KHÔNG GỌI thêm sendOtp ở đây.
+            const response = await authService.register(fullName, email, password, confirmPassword);
+            
+            console.log(">>> Register successful, OTP should be sent by BE:", response);
             
             toast.success("Mã xác thực đã được gửi đến email của bạn.");
             setShowOTPModal(true);
-            setError(""); // Xóa lỗi cũ nếu có
+            setError(""); 
         } catch (err) {
             console.error("Registration Step 1 Error:", err);
             const statusCode = err.response?.status;
