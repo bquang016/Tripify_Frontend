@@ -10,6 +10,30 @@ export const AuthContextProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // ✅ Tự động fetch profile mới nhất khi vào trang
+  useEffect(() => {
+    const syncUser = async () => {
+      const token = authService.getAccessToken();
+      if (token) {
+        try {
+          const latestUser = await authService.fetchUserProfile();
+          if (latestUser) {
+            console.log(">>> Synced latest user profile:", latestUser);
+            setCurrentUser(latestUser);
+            localStorage.setItem('user', JSON.stringify(latestUser));
+          }
+        } catch (err) {
+          console.error("Failed to sync user profile:", err);
+          // Nếu token hỏng hoặc hết hạn, logout luôn
+          if (err.response?.status === 401) {
+            logout();
+          }
+        }
+      }
+    };
+    syncUser();
+  }, []);
+
   // 1. Đăng nhập thường (Email/Pass)
   const login = async (email, password) => {
     setLoading(true);

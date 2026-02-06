@@ -8,6 +8,8 @@ import {
 import Toast from "@/components/common/Notification/Toast";
 import ToastPortal from "@/components/common/Notification/ToastPortal";
 import LoginSlider from "@/components/auth/LoginSlider";
+import OTPModal from "@/components/auth/OTPModal";
+import toast from "react-hot-toast";
 
 // URL Backend (Cổng OAuth2)
 const API_BASE_URL = "http://localhost:8386";
@@ -22,7 +24,10 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const [toast, setToast] = useState({ show: false, message: "", type: "info" });
+    
+    // 2FA state
+    const [show2faModal, setShow2faModal] = useState(false);
+    const [pendingEmail, setPendingEmail] = useState("");
 
     // ✅ STATE QUẢN LÝ MODAL (Giữ nguyên logic của bạn)
     const [errorModal, setErrorModal] = useState({
@@ -38,6 +43,27 @@ const Login = () => {
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
         if (error) setError("");
+    };
+
+    const handle2faSuccess = async (otpCode) => {
+        setLoading(true);
+        const loginToast = toast.loading("Đang xác thực bảo mật 2 lớp...");
+        try {
+            const res = await authService.verify2faLogin(pendingEmail, otpCode);
+            
+            if (res.success) {
+                if (updateUser) {
+                    await updateUser(res.data.user);
+                }
+                toast.success("Đăng nhập thành công!", { id: loginToast });
+                navigate(from, { replace: true });
+            }
+        } catch (err) {
+            const msg = err.response?.data?.message || "Mã xác thực không chính xác.";
+            toast.error(msg, { id: loginToast });
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleSocialLogin = (provider) => {
@@ -59,16 +85,37 @@ const Login = () => {
 
         setLoading(true);
         try {
-            const res = await authService.login(formData.email, formData.password);
+            const response = await authService.login(formData.email, formData.password);
+            
+            // Log thực tế để debug
+            console.log(">>> Full Login Response Object:", response);
 
-            if (res) {
+            // Backend của bạn thường bọc dữ liệu trong field 'data'
+            const result = response.data || response;
+
+            // 1. Kiểm tra yêu cầu 2FA (Bắt đúng trường 2faRequired từ log thực tế)
+            const is2fa = result?.is2faRequired || result?.['2faRequired'];
+
+            if (result && is2fa === true) {
+                setPendingEmail(formData.email);
+                setShow2faModal(true);
+                toast.success("Tài khoản đã bật bảo mật 2 lớp. Vui lòng nhập mã OTP!");
+                return;
+            }
+
+            // 2. Kiểm tra Token để cho phép đăng nhập
+            if (result && result.accessToken) {
                 if (updateUser) {
-                    await updateUser(res.user);
+                    await updateUser(result.user);
                 }
-                setToast({ show: true, message: "Đăng nhập thành công!", type: "success" });
+                toast.success("Đăng nhập thành công!");
                 setTimeout(() => {
                     navigate(from, { replace: true });
                 }, 800);
+            } else {
+                // Nếu không có 2FA và cũng không có Token
+                console.error(">>> No Token or 2FA found in result:", result);
+                setError("Hệ thống không nhận diện được thông tin đăng nhập.");
             }
         } catch (err) {
             console.error("Login Error:", err);
@@ -334,6 +381,15 @@ const Login = () => {
                     </div>
                 </div>
             )}
+
+            {/* ✅ OTP MODAL CHO 2FA */}
+            <OTPModal
+                isOpen={show2faModal}
+                onClose={() => setShow2faModal(false)}
+                email={pendingEmail}
+                type="LOGIN_2FA"
+                onSuccess={handle2faSuccess}
+            />
 
             <style>{`
          @keyframes ken-burns-slow { 0% { transform: scale(1); } 100% { transform: scale(1.15); } }
