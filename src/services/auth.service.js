@@ -206,9 +206,10 @@ const verify2faLogin = async (email, otp) => {
 const fetchUserProfile = async () => {
   try {
     const response = await api.get('/auth/me'); 
-    const userData = response.data.data;
+    console.log(">>> [DEBUG] Raw /auth/me Response:", response.data);
+    const userData = response.data.data || response.data;
 
-    if (!userData.roles && userData.authorities) {
+    if (userData && !userData.roles && userData.authorities) {
       userData.roles = userData.authorities.map(auth => ({
         roleName: auth.authority.replace("ROLE_", "") // Bỏ tiền tố ROLE_
       }));

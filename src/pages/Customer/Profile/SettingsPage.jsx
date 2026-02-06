@@ -27,8 +27,8 @@ const SettingsPage = () => {
         emailNoti: true,
         smsNoti: false,
         deviceNoti: true,
-        twoFactor: currentUser?.twoFactorEnabled || false,
-        notificationEmail: "" // Mặc định rỗng, sẽ set sau khi fetch
+        twoFactor: false, // Sẽ được cập nhật từ useEffect
+        notificationEmail: "" 
     });
 
     const [loading, setLoading] = useState(false);
@@ -68,10 +68,9 @@ const SettingsPage = () => {
                     }
                     setAvailableEmails(emails);
 
-                    // 4b. Set giá trị settings hiện tại
+                    // 4b. Cập nhật email nhận thông báo
                     setSettings(prev => ({
                         ...prev,
-                        twoFactor: data.twoFactorEnabled || false,
                         notificationEmail: data.notificationEmail || data.email
                     }));
                 }
@@ -82,6 +81,19 @@ const SettingsPage = () => {
 
         fetchUserData();
     }, []);
+
+    // ✅ ĐỒNG BỘ TRẠNG THÁI 2FA TỪ AUTH CONTEXT (Do AuthContext đã sync với /auth/me)
+    useEffect(() => {
+        if (currentUser) {
+            console.log(">>> [DEBUG] currentUser in SettingsPage:", currentUser);
+            // Kiểm tra mọi khả năng tên trường có thể có
+            const isEnabled = currentUser.twoFactorEnabled || currentUser['2faEnabled'] || currentUser.is2faEnabled || false;
+            setSettings(prev => ({
+                ...prev,
+                twoFactor: isEnabled
+            }));
+        }
+    }, [currentUser]);
 
     // Xử lý upload avatar
     const handleAvatarUpload = async (file) => {
@@ -125,9 +137,15 @@ const SettingsPage = () => {
         try {
             const res = await authService.toggle2fa(otpCode);
             if (res.success) {
+                // Đảo ngược trạng thái hiện tại
                 const newState = !settings.twoFactor;
+                
+                // 1. Cập nhật giao diện nút Toggle ngay lập tức
                 setSettings(prev => ({ ...prev, twoFactor: newState }));
+                
+                // 2. Đồng bộ với AuthContext và localStorage (Quan trọng để không bị reset khi F5)
                 updateUser({ twoFactorEnabled: newState });
+                
                 toast.success(newState ? "Đã bật xác thực 2 lớp thành công!" : "Đã tắt xác thực 2 lớp thành công!", { id: toggleToast });
             }
         } catch (error) {
