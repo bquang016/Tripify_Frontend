@@ -34,7 +34,7 @@ const register = async (fullName, email, password, confirmPassword) => {
   try {
     const response = await api.post(`/auth/register`, {
       fullName,
-      email,
+      email: email.toLowerCase().trim(),
       password,
       confirmPassword,
     });
@@ -71,7 +71,9 @@ const getAccessToken = () => {
 // 6. Quên mật khẩu
 const forgotPassword = async (email) => {
   try {
-    const response = await api.post(`/auth/forgot-password`, { email });
+    const response = await api.post(`/auth/forgot-password`, { 
+      email: email.toLowerCase().trim() 
+    });
     return response.data;
   } catch (error) {
     throw error;
@@ -104,7 +106,7 @@ const verifyEmail = async (token) => {
 const sendOtp = async (email, type) => {
   try {
     const response = await api.post(`/auth/send-otp`, { 
-      email: email.toLowerCase(), 
+      email: email.toLowerCase().trim(), 
       type 
     });
     return response.data;
@@ -113,19 +115,48 @@ const sendOtp = async (email, type) => {
   }
 };
 
-// 10. Xác thực mã OTP
-const verifyOtp = async (email, otpCode, type = "REGISTER") => {
+// 10. Xác thực mã OTP chung (Dùng cho luồng Quên mật khẩu)
+const verifyOtp = async (email, otpCode) => {
   try {
     const payload = { 
       email: email.toLowerCase().trim(), 
-      otpCode,
-      type 
+      otp: otpCode.toString().trim(),
     };
-    console.log(">>> Verify OTP Payload:", payload);
     const response = await api.post(`/auth/verify-otp`, payload);
     return response.data;
   } catch (error) {
-    console.error(">>> Verify OTP Error Response:", error.response?.data);
+    throw error;
+  }
+};
+
+// 11. Hoàn tất đăng ký kèm xác thực OTP (Mới)
+const verifyRegister = async (email, otpCode) => {
+  try {
+    const payload = {
+      email: email.toLowerCase().trim(),
+      otp: otpCode.toString().trim(),
+      type: "REGISTER" // Thêm lại type theo nghi ngờ của người dùng về backend logic
+    };
+    console.log(">>> [STEP 3] Finalizing Registration (With Session & Type):", payload);
+    const response = await api.post(`/auth/verify-register`, payload);
+    
+    // Nếu thành công và có token, lưu vào localStorage
+    if (response.data && response.data.success && response.data.data?.accessToken) {
+      const { accessToken, user } = response.data.data;
+      localStorage.setItem("accessToken", accessToken);
+      localStorage.setItem("user", JSON.stringify(user));
+    }
+    
+    return response.data;
+  } catch (error) {
+    // LOG CHI TIẾT ĐỂ PHÂN TÍCH TRIỆT ĐỂ
+    const serverData = error.response?.data;
+    console.group("❌ VERIFY REGISTER FAILED");
+    console.error("Status:", error.response?.status);
+    console.error("Message:", serverData?.message);
+    console.error("Validation Details:", serverData?.data);
+    console.groupEnd();
+    
     throw error;
   }
 };
@@ -180,6 +211,7 @@ export const authService = {
   verifyEmail,
   sendOtp,
   verifyOtp,
+  verifyRegister,
   fetchUserProfile,
   unlinkSocialAccount,
   createPassword,
