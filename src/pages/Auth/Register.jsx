@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import LoginSlider from "@/components/auth/LoginSlider";
 import LegalModal from "@/components/auth/LegalModal";
+import OTPModal from "@/components/auth/OTPModal";
+import toast from "react-hot-toast";
 
 // URL Backend & Background
 const API_BASE_URL = "http://localhost:8386";
@@ -139,8 +141,7 @@ const Register = () => {
     const [agreed, setAgreed] = useState(false);
     const [modalType, setModalType] = useState(null);
 
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const [countdown, setCountdown] = useState(5);
+    const [showOTPModal, setShowOTPModal] = useState(false);
 
     const [passwordCriteria, setPasswordCriteria] = useState({
         length: false,
@@ -159,16 +160,55 @@ const Register = () => {
     // để hiện inline message “mật khẩu yếu” sau khi user chạm vào field
     const [touched, setTouched] = useState({ password: false });
 
-    // --- COUNTDOWN ---
-    useEffect(() => {
-        let timer;
-        if (showSuccessModal && countdown > 0) {
-            timer = setTimeout(() => setCountdown((prev) => prev - 1), 1000);
-        } else if (showSuccessModal && countdown === 0) {
-            navigate("/login");
+    // --- OTP SUCCESS HANDLER ---
+    const handleOTPSuccess = async () => {
+        setLoading(true);
+        const registerToast = toast.loading("Đang hoàn tất quá trình đăng ký...");
+        try {
+            // Bước 2: Chỉ khi OTP đúng mới thực hiện đăng ký thực sự
+            const { fullName, email, password, confirmPassword } = formData;
+            const res = await authService.register(
+                fullName,
+                email,
+                password,
+                confirmPassword
+            );
+
+            if (res) {
+                toast.success("Đăng ký thành công! Đang chuyển hướng đến trang đăng nhập...", { 
+                    id: registerToast,
+                    duration: 3000 
+                });
+                
+                setTimeout(() => {
+                    navigate("/login");
+                }, 2000);
+            }
+        } catch (err) {
+            console.error("Registration Error:", err);
+            const statusCode = err.response?.status;
+            const serverMsg = err.response?.data?.message;
+            
+            let errorMsg = serverMsg || "Đăng ký thất bại. Vui lòng thử lại.";
+            
+            if (statusCode === 409) {
+                errorMsg = "Email này đã được đăng ký trước đó. Vui lòng đăng nhập!";
+                toast.error(errorMsg, { id: registerToast, duration: 4000 });
+                
+                // Nếu đã tồn tại, chuyển hướng sang login luôn sau 2 giây
+                setTimeout(() => {
+                    navigate("/login");
+                }, 2500);
+            } else {
+                toast.error(errorMsg, { id: registerToast });
+            }
+            
+            setError(errorMsg);
+            setShowOTPModal(false);
+        } finally {
+            setLoading(false);
         }
-        return () => clearTimeout(timer);
-    }, [showSuccessModal, countdown, navigate]);
+    };
 
     // --- PASSWORD STRENGTH ---
     useEffect(() => {
@@ -243,60 +283,13 @@ const Register = () => {
 
         setLoading(true);
         try {
-            const res = await authService.register(
-                fullName,
-                email,
-                password,
-                confirmPassword
-            );
-
-            if (res) {
-                setShowSuccessModal(true);
-                setCountdown(5);
-            }
+            // Bước 1: Gửi OTP để xác thực email TRƯỚC KHI tạo tài khoản
+            await authService.sendOtp(email, "REGISTER");
+            toast.success("Mã xác thực đã được gửi đến email của bạn.");
+            setShowOTPModal(true);
         } catch (err) {
-            const status = err?.response?.status;
-            const data = err?.response?.data;
-
-            // lấy message tổng
-            const serverMsg =
-                data?.message || data?.error || data?.msg || data?.title || "";
-
-            // cố lấy lỗi chi tiết theo field (tuỳ backend)
-            const fieldErrors =
-                data?.errors ||
-                data?.data?.errors ||
-                data?.violations ||
-                data?.details ||
-                [];
-
-            const firstFieldMsg =
-                Array.isArray(fieldErrors) && fieldErrors.length
-                    ? fieldErrors[0]?.message || fieldErrors[0]?.msg || ""
-                    : "";
-
-            const msg = firstFieldMsg || serverMsg || "";
-            const s = String(msg).toLowerCase();
-
-            if (status === 400) {
-                // đừng show "Validation failed" trần trụi nữa
-                if (s.includes("password") || s.includes("mật khẩu")) {
-                    setError(
-                        firstFieldMsg ||
-                        "Mật khẩu không đạt yêu cầu. Vui lòng thêm chữ in hoa, số và ký tự đặc biệt."
-                    );
-                } else if (s.includes("email")) {
-                    setError(firstFieldMsg || "Email không hợp lệ. Vui lòng kiểm tra lại.");
-                } else if (s.includes("validation failed")) {
-                    setError("Thông tin đăng ký chưa hợp lệ. Vui lòng kiểm tra lại.");
-                } else {
-                    setError(msg || "Thông tin đăng ký chưa hợp lệ. Vui lòng kiểm tra lại.");
-                }
-            } else if (status === 409) {
-                setError("Email đã được đăng ký. Vui lòng dùng email khác.");
-            } else {
-                setError("Đăng ký thất bại. Vui lòng thử lại.");
-            }
+            const serverMsg = err?.response?.data?.message || "Không thể gửi mã xác thực. Vui lòng thử lại.";
+            setError(serverMsg);
         } finally {
             setLoading(false);
         }
@@ -674,12 +667,12 @@ const Register = () => {
                 </div>
             </div>
 
-            {/* ✅ SUCCESS MODAL */}
-            <RegistrationSuccessModal
-                isOpen={showSuccessModal}
+            {/* ✅ OTP MODAL */}
+            <OTPModal
+                isOpen={showOTPModal}
+                onClose={() => setShowOTPModal(false)}
                 email={formData.email}
-                countdown={countdown}
-                onLoginNow={() => navigate("/login")}
+                onSuccess={handleOTPSuccess}
             />
 
             {/* Other Modals */}

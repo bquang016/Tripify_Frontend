@@ -65,15 +65,21 @@ const OTPModal = ({ isOpen, onClose, email, onSuccess }) => {
     }
 
     setLoading(true);
+    const loadingToast = toast.loading('Đang xác thực mã OTP...');
     try {
       // API call to verify OTP - Thêm type 'REGISTER'
       await authService.verifyOtp(email, otpCode, 'REGISTER');
-      toast.success('Xác thực thành công!');
-      if (onSuccess) onSuccess();
-      onClose();
+      toast.success('Xác thực mã OTP thành công!', { id: loadingToast });
+      
+      // Đợi một chút để người dùng thấy thông báo thành công trước khi đóng modal hoặc chuyển trang
+      setTimeout(() => {
+        if (onSuccess) onSuccess();
+        onClose();
+      }, 1000);
     } catch (error) {
       console.error('Verify OTP Error:', error);
-      toast.error(error.response?.data?.message || 'Mã OTP không chính xác hoặc đã hết hạn');
+      const errorMessage = error.response?.data?.message || 'Mã OTP không chính xác hoặc đã hết hạn';
+      toast.error(errorMessage, { id: loadingToast });
     } finally {
       setLoading(false);
     }
