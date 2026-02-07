@@ -22,6 +22,8 @@ import ComponentsPreview from "@/pages/ComponentsPreview";
 import TermsOfService from "@/pages/Owner/TermsOfService/TermsOfService";
 import PartnerPolicy from "@/pages/Owner/TermsOfService/PartnerPolicy";
 
+import OwnerRegisterPage from "../pages/Partner/OwnerRegisterPage";
+
 // ✅ 1. Import Component xử lý khóa tài khoản
 import SessionExpiredHandler from "@/pages/Admin/Users/components/SessionExpiredHandler";
 
@@ -55,6 +57,7 @@ const AppRoutes = () => {
                 {/* =========================================================
                     CUSTOMER ROUTES
                 ========================================================= */}
+                <Route path="/partner/register" element={<OwnerRegisterPage />} />
                 {customerRoutes.map((route, index) => (
                     <Route
                         key={`customer-${index}`}
