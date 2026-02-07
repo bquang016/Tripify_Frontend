@@ -139,6 +139,14 @@ const createPassword = async (password) => {
   }
 };
 
+const sendOwnerOtp = (email) => {
+  return api.post("/auth/owner/send-otp", { email });
+};
+
+const registerOwner = (data) => {
+  return api.post("/auth/owner/register", data);
+};
+
 export const authService = {
   login,
   register,
@@ -151,4 +159,8 @@ export const authService = {
   fetchUserProfile,
   unlinkSocialAccount,
   createPassword,
+  sendOwnerOtp,
+  registerOwner,
 };
+
+export default authService;
