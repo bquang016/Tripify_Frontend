@@ -9,6 +9,7 @@ import {
 import PartnerInput from "./components/PartnerInput";
 import PasswordStrengthCheck from "./components/PasswordStrengthCheck";
 import OTPModal from "./components/OTPModal";
+import EmailConflictModal from "./components/EmailConflictModal";
 import { authService } from "../../services/auth.service"; 
 import logo from "../../assets/logo/logo_travelmate_xoafont.png"; 
 
@@ -25,6 +26,7 @@ const OwnerRegisterPage = () => {
   const [emailForReg, setEmailForReg] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [showOtpModal, setShowOtpModal] = useState(false);
+  const [showConflictModal, setShowConflictModal] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const {
@@ -45,7 +47,13 @@ const OwnerRegisterPage = () => {
       setShowOtpModal(true);
       toast.success("Mã xác thực đã được gửi!");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Lỗi gửi OTP.");
+      const msg = error.response?.data?.message || "";
+      if (msg.includes("đã được đăng ký") || error.response?.status === 409) {
+        setEmailForReg(data.email);
+        setShowConflictModal(true);
+      } else {
+        toast.error(msg || "Lỗi gửi OTP.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -105,6 +113,12 @@ const OwnerRegisterPage = () => {
         onClose={() => setShowOtpModal(false)}
         email={emailForReg}
         onSuccess={onOtpVerified}
+      />
+
+      <EmailConflictModal
+        isOpen={showConflictModal}
+        onClose={() => setShowConflictModal(false)}
+        email={emailForReg}
       />
 
       {/* MAIN CARD: TRẮNG SỨ & KÍNH MỜ */}

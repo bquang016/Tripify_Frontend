@@ -5,7 +5,8 @@ const OnboardingStepper = ({ currentStep }) => {
   const steps = [
     { id: 1, name: 'Xác minh danh tính' },
     { id: 2, name: 'Thông tin doanh nghiệp' },
-    { id: 3, name: 'Hoàn tất' }
+    { id: 3, name: 'Thông tin thanh toán' },
+    { id: 4, name: 'Hoàn tất' }
   ];
 
   return (
