@@ -11,6 +11,9 @@ export const useOnboarding = () => {
 };
 
 const initialFormData = {
+    temporaryToken: null,
+    email: '',
+
     // From Step 1
     fullName: '',
     phoneNumber: '',

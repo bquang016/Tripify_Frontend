@@ -7,47 +7,40 @@ import { useOnboarding } from '@/context/OnboardingContext';
 import OnboardingStepper from './components/OnboardingStepper';
 import logo from "../../assets/logo/logo_travelmate_xoafont.png";
 import Button from '@/components/common/Button/Button';
-import propertyService from '@/services/property.service';
+import { ownerService } from '@/services/owner.service';
 import Step6_Review from './OnboardingSteps/Step6_Review';
 
 const OwnerOnboardingStep4 = () => {
     const navigate = useNavigate();
-    const onboarding = useOnboarding(); 
+    const { formData } = useOnboarding(); 
     
-    // Safety check
-    if (!onboarding) {
+    // Safety check for context data
+    if (!formData || !formData.temporaryToken) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="text-center p-8 bg-white rounded-2xl shadow-xl border border-gray-100">
-                    <h2 className="text-xl font-bold text-red-500 mb-2">Phiên làm việc hết hạn</h2>
-                    <p className="text-gray-600 mb-6">Vui lòng bắt đầu lại quy trình đăng ký để đảm bảo dữ liệu chính xác.</p>
-                    <Button onClick={() => navigate('/partner/onboarding/step-1')}>Bắt đầu lại</Button>
+                    <h2 className="text-xl font-bold text-red-500 mb-2">Phiên làm việc không hợp lệ</h2>
+                    <p className="text-gray-600 mb-6">Không tìm thấy mã xác thực tạm thời. Vui lòng bắt đầu lại quy trình đăng ký.</p>
+                    <Button onClick={() => navigate('/partner/register')}>Bắt đầu lại</Button>
                 </div>
             </div>
         );
     }
-
-    const { formData } = onboarding;
 
     const [isLoading, setIsLoading] = useState(false);
     const [submissionStatus, setSubmissionStatus] = useState(null);
     const [errorMessage, setErrorMessage] = useState('');
 
     const onFinalSubmit = async () => {
-        // --- 1. Validation thủ công trước khi submit ---
-        // Lý do: Nếu người dùng refresh trang ở Step 4, Context bị reset về null/initial. 
-        // Dù giao diện có thể hiển thị data cũ (nếu cache), nhưng File Object trong JS Memory sẽ mất.
-        // Bắt buộc kiểm tra kỹ để tránh gửi request thiếu file lên server (gây lỗi 500).
-        
         if (!formData.cccdFront || !formData.cccdBack) {
-            toast.error("Thiếu ảnh CCCD/CMND. Vui lòng tải lại.");
+            toast.error("Thiếu ảnh CCCD/CMND. Vui lòng quay lại Bước 1 để tải lên.");
             navigate('/partner/onboarding/step-1');
             return;
         }
 
         if (!formData.propertyInfo?.businessLicenseImage) {
-            toast.error("Thiếu ảnh Giấy phép kinh doanh. Vui lòng tải lại.");
-            navigate('/partner/onboarding/step-2'); // Quay về step 2, đoạn upload GPKD
+            toast.error("Thiếu ảnh Giấy phép kinh doanh. Vui lòng quay lại Bước 2 để tải lên.");
+            navigate('/partner/onboarding/step-2');
             return;
         }
 
@@ -55,27 +48,15 @@ const OwnerOnboardingStep4 = () => {
         setSubmissionStatus(null);
         
         try {
-            const { propertyInfo, paymentInfo } = formData;
+            const { propertyInfo, paymentInfo, temporaryToken, ...personalInfo } = formData;
             const isWholeUnit = ["VILLA", "HOMESTAY"].includes(propertyInfo.propertyType);
             
-            // 2. Chuẩn bị dữ liệu JSON (data part)
-            // Tách các trường file ra khỏi object JSON để tránh gửi thừa
             const { propertyImages, businessLicenseImage, unitData, ...restPropertyInfo } = propertyInfo;
             
             const submitPayload = {
-                // Thông tin cá nhân (Step 1)
-                fullName: formData.fullName,
-                phoneNumber: formData.phoneNumber,
-                identityCardNumber: formData.identityCardNumber,
-                dateOfBirth: formData.dateOfBirth,
-                gender: formData.gender,
-                address: formData.address,
-                city: formData.city,
-                
-                // Thông tin cơ sở kinh doanh (Step 2)
+                ...personalInfo,
                 propertyInfo: {
                     ...restPropertyInfo,
-                    // Nếu là nguyên căn, đẩy các thông tin giá/diện tích lên root propertyInfo
                     ...(isWholeUnit && unitData ? {
                         price: unitData.price,
                         weekendPrice: unitData.weekendPrice,
@@ -88,46 +69,42 @@ const OwnerOnboardingStep4 = () => {
                         }
                     } : {})
                 },
-                
-                // Thông tin thanh toán (Step 3)
                 paymentInfo: paymentInfo
             };
 
-            // 3. Tạo FormData
             const finalFormData = new FormData();
-            
-            // Thêm phần data JSON (Spring Boot yêu cầu part 'data' là application/json)
             finalFormData.append("data", new Blob([JSON.stringify(submitPayload)], { type: 'application/json' }));
 
-            // 4. Thêm các file ảnh (Parts)
-            // Step 1 files
+            // Correctly append single files
             if (formData.avatar) finalFormData.append("avatar", formData.avatar);
-            finalFormData.append("cccdFront", formData.cccdFront);
-            finalFormData.append("cccdBack", formData.cccdBack);
+            if (formData.cccdFront) finalFormData.append("cccdFront", formData.cccdFront);
+            if (formData.cccdBack) finalFormData.append("cccdBack", formData.cccdBack);
             
-            // Step 2 files
+            // Handle multiple files for property
             if (propertyImages && propertyImages.length > 0) {
                 Array.from(propertyImages).forEach(file => finalFormData.append("propertyImages", file));
             }
             
+            // Handle single file for business license
             if (businessLicenseImage) {
                 const file = businessLicenseImage instanceof FileList ? businessLicenseImage[0] : businessLicenseImage;
                 finalFormData.append("businessLicenseImage", file);
             }
             
+            // Handle multiple files for unit
             if (isWholeUnit && unitData?.images && unitData.images.length > 0) {
                 Array.from(unitData.images).forEach(file => finalFormData.append("unitImages", file));
             }
 
-            // Gọi API
-            await propertyService.registerFullOnboarding(finalFormData);
+            // Use the new service function with the temporary token
+            await ownerService.submitRegistration(finalFormData, temporaryToken);
             
             toast.success('Đơn đăng ký của bạn đã được gửi thành công!');
             setSubmissionStatus('success');
             
         } catch (error) {
             console.error("Submission Error:", error);
-            const message = error.response?.data?.message || error.message || 'Gửi đơn thất bại. Vui lòng thử lại.';
+            const message = error.response?.data?.message || 'Gửi đơn thất bại. Vui lòng thử lại.';
             toast.error(message);
             setSubmissionStatus('error');
             setErrorMessage(message);
@@ -145,9 +122,8 @@ const OwnerOnboardingStep4 = () => {
                 </div>
                 <h2 className="text-2xl font-bold text-slate-800">Đăng ký hoàn tất!</h2>
                 <p className="mt-3 text-slate-500 max-w-md mx-auto">Chúng tôi đã tiếp nhận hồ sơ của bạn. TravelMate sẽ xem xét và phản hồi qua email trong vòng 24-48 giờ làm việc.</p>
-                <div className="mt-8 flex justify-center gap-4">
-                     <Button variant="outline" onClick={() => navigate('/partner/dashboard')}>Về trang chủ</Button>
-                     <Button onClick={() => navigate('/owner/properties')}>Quản lý chỗ nghỉ</Button>
+                <div className="mt-8">
+                     <Button onClick={() => navigate('/')}>Về trang chủ</Button>
                 </div>
             </div>
         );
@@ -176,7 +152,7 @@ const OwnerOnboardingStep4 = () => {
                     <div className="hidden md:block w-[500px]">
                         <OnboardingStepper currentStep={4} />
                     </div>
-                     <Button variant="ghost" onClick={() => navigate('/partner/dashboard')}>Thoát</Button>
+                     <Button variant="ghost" onClick={() => navigate('/')}>Thoát</Button>
                 </div>
             </header>
 
