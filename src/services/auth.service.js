@@ -147,10 +147,6 @@ const registerOwner = (data) => {
   return api.post("/auth/owner/register", data);
 };
 
-const updateOwnerProfile = (data) => {
-  // Gọi đến endpoint mới tạo: /api/v1/owner/onboarding/profile
-  return api.post("/owner/onboarding/profile", data);
-};
 
 export const authService = {
   login,
@@ -166,7 +162,6 @@ export const authService = {
   createPassword,
   sendOwnerOtp,
   registerOwner,
-  updateOwnerProfile,
 };
 
 export default authService;

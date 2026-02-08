@@ -1,20 +1,18 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
-import { toast } from "react-hot-toast";
 import { format } from "date-fns";
 import { 
   User, Phone, MapPin, CreditCard, Flag, ArrowRight, Building2, Phone as PhoneIcon, Check 
 } from "lucide-react";
 
-// --- IMPORTS ---
+import { useOnboarding } from "@/context/OnboardingContext";
 import PartnerInput from "./components/PartnerInput";
 import OnboardingStepper from "./components/OnboardingStepper";
 import ImageUploadField from "./components/ImageUploadField";
-import DatePickerInput from "../../components/common/Input/DatePickerInput"; // Đường dẫn đến file bạn cung cấp
-import { authService } from "../../services/auth.service"; 
+import DatePickerInput from "../../components/common/Input/DatePickerInput";
 import logo from "../../assets/logo/logo_travelmate_xoafont.png"; 
-import AvatarUpload from "./components/AvatarUpload"; // Import mới
+import AvatarUpload from "./components/AvatarUpload";
 
 const Spinner = () => (
   <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -25,56 +23,32 @@ const Spinner = () => (
 
 const OwnerOnboardingStep1 = () => {
   const navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+  const { formData, updateFormData } = useOnboarding();
 
   const {
     register,
     handleSubmit,
     control,
+    reset,
     formState: { errors }
-  } = useForm({ mode: "onChange" });
+  } = useForm({ 
+      mode: "onChange",
+      defaultValues: formData,
+  });
 
-  const onSubmit = async (data) => {
-    setIsLoading(true);
-    try {
-      // 1. Chuẩn bị FormData (Vì có upload file)
-      const formData = new FormData();
-      
-      // 2. Gom dữ liệu Profile thành Object JSON
-      const profileData = {
-        fullName: data.fullName,
-        phoneNumber: data.phoneNumber,
-        identityCardNumber: data.identityCardNumber,
-        // Convert Date Object -> YYYY-MM-DD string cho Backend
+  useEffect(() => {
+    reset(formData);
+  }, [formData, reset]);
+
+  const onSubmit = (data) => {
+    const profileData = {
+        ...data,
         dateOfBirth: data.dateOfBirth ? format(data.dateOfBirth, 'yyyy-MM-dd') : null,
-        gender: data.gender,
-        address: data.address,
-        city: data.city,
-        country: data.country
-      };
-
-      // 3. Append JSON String (Backend yêu cầu @RequestPart("data"))
-      formData.append("data", JSON.stringify(profileData));
-
-      // 4. Append Files (Nếu có)
-      if (data.avatar) formData.append("avatar", data.avatar);
-      if (data.cccdFront) formData.append("cccdFront", data.cccdFront);
-      if (data.cccdBack) formData.append("cccdBack", data.cccdBack);
-
-      // 5. Gọi API
-      await authService.updateOwnerProfile(formData);
-      
-      toast.success("Hồ sơ đã được lưu thành công!");
-      // Chuyển sang bước 2 (Ví dụ: Đăng ký doanh nghiệp hoặc Tạo khách sạn)
-      navigate("/partner/onboarding/step-2"); 
-
-    } catch (error) {
-      console.error(error);
-      toast.error(error.response?.data?.message || "Lỗi cập nhật hồ sơ. Vui lòng thử lại.");
-    } finally {
-      setIsLoading(false);
-    }
+    };
+    updateFormData(profileData);
+    navigate("/partner/onboarding/step-2"); 
   };
+
 
   return (
     <div className="min-h-screen w-full bg-[#F8FAFC] font-sans pb-20">
@@ -116,7 +90,7 @@ const OwnerOnboardingStep1 = () => {
                     <p className="text-slate-500 mt-2 text-lg">Cung cấp thông tin CCCD/CMND để kích hoạt tài khoản và nhận thanh toán.</p>
                 </div>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+                <form className="space-y-8">
                     
                     {/* --- GROUP 1: ẢNH ĐẠI DIỆN (ĐÃ CUSTOM UI) --- */}
                     <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
@@ -321,11 +295,10 @@ const OwnerOnboardingStep1 = () => {
                     {/* --- BUTTON SUBMIT --- */}
                     <div className="flex justify-end pt-4 pb-10">
                         <button
-                            type="submit"
-                            disabled={isLoading}
-                            className="group flex items-center gap-3 rounded-2xl bg-[#28A9E0] px-10 py-4 text-base font-bold text-white shadow-lg shadow-[#28A9E0]/30 transition-all hover:bg-[#2090C0] hover:shadow-[#28A9E0]/50 hover:-translate-y-1 disabled:bg-slate-300 disabled:shadow-none disabled:translate-y-0"
+                            type="button"
+                            onClick={handleSubmit(onSubmit)}
+                            className="group flex items-center gap-3 rounded-2xl bg-[#28A9E0] px-10 py-4 text-base font-bold text-white shadow-lg shadow-[#28A9E0]/30 transition-all hover:bg-[#2090C0] hover:shadow-[#28A9E0]/50 hover:-translate-y-1"
                         >
-                            {isLoading ? <Spinner /> : null}
                             <span>Lưu hồ sơ & Tiếp tục</span>
                             <ArrowRight size={20} strokeWidth={2.5} className="group-hover:translate-x-1 transition-transform"/>
                         </button>

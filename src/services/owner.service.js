@@ -4,11 +4,10 @@ import api from "./axios.config.js";
 const ownerService = {
   /**
    * 1. Gửi đơn đăng ký làm Owner
-   * (Dùng cho trang BecomeOwnerPage)
+   * (Dùng cho luồng cũ hoặc trang BecomeOwnerPage nếu còn dùng)
    */
   submitApplication: async (payload) => {
     try {
-      // ✅ FIX: Ghi đè header Content-Type thành multipart/form-data
       const res = await api.post("/applications/submit-owner", payload, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -25,13 +24,43 @@ const ownerService = {
   },
 
   /**
-   * ✅ 2. Lấy thống kê Dashboard (API mới)
+   * 2. Cập nhật hồ sơ Owner (Onboarding Step 1)
+   * ✅ MỚI THÊM: Hàm này xử lý việc upload ảnh CCCD + Avatar
+   * @param {FormData} formData - Chứa file và json data
+   */
+  updateOwnerProfile: async (formData) => {
+    try {
+      const response = await api.post("/owner/onboarding/profile", formData);
+      return response.data;
+    } catch (error) {
+      console.error("Error updating owner profile:", error);
+      throw error; 
+    }
+  },
+
+  /**
+   * 3. Đăng ký đầy đủ thông tin đối tác (Full Onboarding)
+   * Endpoint: /api/v1/owner/onboarding/register-full
+   * @param {FormData} formData - Chứa data (JSON string) và các file ảnh
+   */
+  registerFullOnboarding: async (formData) => {
+    try {
+      const response = await api.post("/owner/onboarding/register-full", formData);
+      return response.data;
+    } catch (error) {
+      console.error("Error registering full onboarding:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * 4. Lấy thống kê Dashboard
    * (Dùng cho trang OwnerDashboard)
    */
   getDashboardStats: async () => {
     try {
       const response = await api.get("/owner/dashboard/stats");
-      return response.data; // Trả về ApiResponse
+      return response.data;
     } catch (error) {
       console.error("Error fetching owner dashboard stats:", error);
       throw error;
@@ -39,6 +68,6 @@ const ownerService = {
   },
 };
 
-// ✅ Quan trọng: Export cả 2 kiểu để tương thích với code cũ và mới
-export { ownerService }; // Cho import { ownerService }
-export default ownerService; // Cho import ownerService
+// ✅ Quan trọng: Export cả 2 kiểu để tương thích
+export { ownerService }; 
+export default ownerService;

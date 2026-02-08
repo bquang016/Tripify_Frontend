@@ -1,0 +1,123 @@
+import React, { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import * as yup from "yup";
+import { yupResolver } from '@hookform/resolvers/yup';
+import { Banknote, CreditCard, ArrowRight } from 'lucide-react';
+
+import { useOnboarding } from '@/context/OnboardingContext';
+import OnboardingStepper from './components/OnboardingStepper';
+import logo from "../../assets/logo/logo_travelmate_xoafont.png";
+import Button from '@/components/common/Button/Button';
+import PartnerInput from './components/PartnerInput';
+
+const schema = yup.object().shape({
+    paymentMethod: yup.string().required(),
+    bankName: yup.string().when('paymentMethod', {
+        is: 'bank',
+        then: schema => schema.required('Vui lòng nhập tên ngân hàng'),
+    }),
+    accountHolderName: yup.string().when('paymentMethod', {
+        is: 'bank',
+        then: schema => schema.required('Vui lòng nhập tên chủ tài khoản'),
+    }),
+    accountNumber: yup.string().when('paymentMethod', {
+        is: 'bank',
+        then: schema => schema.required('Vui lòng nhập số tài khoản'),
+    }),
+});
+
+const OwnerOnboardingStep3 = () => {
+    const navigate = useNavigate();
+    const { formData, updateFormData } = useOnboarding();
+
+    const { register, handleSubmit, watch, reset, formState: { errors } } = useForm({
+        resolver: yupResolver(schema),
+        defaultValues: formData.paymentInfo,
+    });
+    
+    useEffect(() => {
+        reset(formData.paymentInfo);
+    }, [formData, reset]);
+
+    const paymentMethod = watch('paymentMethod');
+
+    const onNext = (data) => {
+        updateFormData({ paymentInfo: data });
+        navigate('/partner/onboarding/step-4');
+    };
+
+    return (
+        <div className="min-h-screen w-full bg-[#F8FAFC] font-sans pb-20">
+            <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <img src={logo} alt="Tripify" className="h-9 w-auto" />
+                        <div className="h-6 w-px bg-slate-300 mx-1"></div>
+                        <span className="font-bold text-slate-700 tracking-tight">Partner Center</span>
+                    </div>
+                    <div className="hidden md:block w-[500px]">
+                        <OnboardingStepper currentStep={3} />
+                    </div>
+                    <div className="md:hidden text-sm font-semibold text-[#28A9E0]">
+                        Bước 3/4
+                    </div>
+                </div>
+            </header>
+
+            <main className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+                 <div className="mb-8 text-center">
+                    <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Thông tin Thanh toán</h1>
+                    <p className="text-slate-500 mt-2 text-lg">Cung cấp thông tin để chúng tôi có thể thanh toán cho bạn.</p>
+                </div>
+                <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
+                    <form onSubmit={handleSubmit(onNext)}>
+                        <div className="mb-6">
+                             <div className="flex border-b border-gray-200">
+                                <label className={`flex items-center gap-2 px-6 py-3 cursor-pointer border-b-2 transition-all -mb-px
+                                    ${paymentMethod === 'bank' ? 'border-[rgb(40,169,224)] text-[rgb(40,169,224)]' : 'border-transparent text-gray-500 hover:text-gray-800'}`}
+                                >
+                                    <input type="radio" value="bank" {...register('paymentMethod')} className="hidden" />
+                                    <Banknote size={18} />
+                                    <span className="font-bold">Tài khoản ngân hàng</span>
+                                </label>
+                                 <label className={`flex items-center gap-2 px-6 py-3 cursor-pointer border-b-2 transition-all -mb-px
+                                    ${paymentMethod === 'card' ? 'border-[rgb(40,169,224)] text-[rgb(40,169,224)]' : 'border-transparent text-gray-500 hover:text-gray-800'}`}
+                                >
+                                    <input type="radio" value="card" {...register('paymentMethod')} className="hidden" />
+                                    <CreditCard size={18} />
+                                    <span className="font-bold">Thẻ (Sắp ra mắt)</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        {paymentMethod === 'bank' && (
+                             <div className="space-y-4 animate-fadeIn">
+                                <PartnerInput name="bankName" label="Tên ngân hàng (VD: Vietcombank)" register={register} errors={errors} />
+                                <PartnerInput name="accountHolderName" label="Tên chủ tài khoản" register={register} errors={errors} />
+                                <PartnerInput name="accountNumber" label="Số tài khoản" register={register} errors={errors} />
+                             </div>
+                        )}
+
+                        {paymentMethod === 'card' && (
+                             <div className="text-center p-8 bg-gray-50 rounded-lg">
+                                <p className="font-medium text-gray-600">Tính năng thanh toán qua thẻ sẽ được ra mắt trong thời gian tới.</p>
+                             </div>
+                        )}
+
+                        <div className="flex justify-between items-center pt-8 mt-8 border-t border-gray-100">
+                            <Button type="button" variant="ghost" onClick={() => navigate('/partner/onboarding/step-2')}>
+                                Quay lại
+                            </Button>
+                            <Button type="submit" rightIcon={<ArrowRight size={18} />}>
+                                Lưu & Tiếp tục
+                            </Button>
+                        </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+    );
+};
+
+export default OwnerOnboardingStep3;
