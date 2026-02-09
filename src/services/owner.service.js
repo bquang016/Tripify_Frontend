@@ -31,7 +31,7 @@ const ownerService = {
    */
   submitRegistration: async (formData, token) => {
     try {
-      const response = await api.post("/owner-registration/submit", formData, {
+      const response = await api.post("/owner/register/submit", formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
           'Authorization': `Bearer ${token}`

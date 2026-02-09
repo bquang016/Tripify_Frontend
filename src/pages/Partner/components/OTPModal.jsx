@@ -4,12 +4,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { authService } from '../../../services/auth.service';
 import toast from 'react-hot-toast';
 
-const OTPModal = ({ isOpen, onClose, email, onSuccess }) => {
+const OTPModal = ({ isOpen, onClose, email, onSuccess, verifyOtpApi }) => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(60);
   const [loading, setLoading] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const inputRefs = useRef([]);
+
+  // Ưu tiên dùng api được truyền vào, nếu không thì dùng mặc định
+  const verifyApi = verifyOtpApi || authService.verifyOwnerOtp;
 
   // Focus input đầu tiên khi mở modal
   useEffect(() => {
@@ -69,13 +72,6 @@ const OTPModal = ({ isOpen, onClose, email, onSuccess }) => {
     }
   };
 
-  // VERIFY OTP (Client side verify -> Trả về code cho Parent)
-  // Lưu ý: Ở luồng cũ, API /register nhận cả OTP + Pass để tạo user luôn.
-  // Nên ở đây chúng ta chỉ verify "giả" (client check đủ 6 số) hoặc gọi API verify tạm nếu backend hỗ trợ.
-  // Tuy nhiên, theo luồng bạn muốn: Nhập OTP -> OK -> Nhập Pass.
-  // Cách tốt nhất: Truyền OTP code ra ngoài cho Parent component giữ, 
-  // Parent component sẽ gửi (Email + OTP + Pass) cùng lúc ở bước cuối.
-  
   const handleVerify = async () => {
     const otpCode = otp.join('');
     if (otpCode.length < 6) {
@@ -84,15 +80,37 @@ const OTPModal = ({ isOpen, onClose, email, onSuccess }) => {
     }
 
     setLoading(true);
-    // Giả lập verify hoặc gọi API verify riêng (nếu có)
-    // Ở đây ta tạm thời cho pass luôn để chuyển sang nhập password
-    // (Việc check đúng sai sẽ thực hiện ở bước cuối cùng khi gọi Register)
-    
-    setTimeout(() => {
-        setLoading(false);
-        onSuccess(otpCode); // Trả OTP code ra ngoài
+    try {
+      console.log("Verifying OTP for email:", email, "code:", otpCode);
+      const response = await verifyApi(email, otpCode);
+      
+      console.log("Full Backend Response:", response);
+      console.log("Response Data Content:", response.data);
+
+      // Thử nhiều trường hợp để lấy token (Ưu tiên temporaryToken theo log thực tế, sau đó đến registrationToken)
+      const token = 
+        response.data?.data?.temporaryToken || 
+        response.data?.data?.registrationToken || 
+        response.data?.temporaryToken || 
+        response.data?.registrationToken ||
+        (typeof response.data?.data === 'string' ? response.data.data : null);
+
+      console.log("Extracted Token:", token);
+
+      if (token) {
+        onSuccess(token);
         onClose();
-    }, 1000); 
+      } else {
+        console.error("Token not found in response structure");
+        toast.error('Xác thực thành công nhưng không tìm thấy mã đăng ký trong phản hồi.');
+      }
+    } catch (error) {
+      console.error("OTP Verification Error Details:", error);
+      const msg = error.response?.data?.message || 'Mã xác thực không chính xác hoặc đã hết hạn.';
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleResend = async () => {
