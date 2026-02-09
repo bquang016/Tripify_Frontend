@@ -53,27 +53,41 @@ const OwnerOnboardingStep4 = () => {
             
             const { propertyImages, businessLicenseImage, unitData, ...restPropertyInfo } = propertyInfo;
             
+            // Mapping data to match Backend Specification
             const submitPayload = {
                 ...personalInfo,
+                // Chuyển đổi gender sang uppercase (MALE/FEMALE)
+                gender: personalInfo.gender?.toUpperCase() === 'MALE' ? 'MALE' : 
+                        (personalInfo.gender?.toUpperCase() === 'FEMALE' ? 'FEMALE' : 'OTHER'),
                 propertyInfo: {
                     ...restPropertyInfo,
+                    // Đảm bảo các trường giá và diện tích là số
+                    price: Number(restPropertyInfo.price) || 0,
+                    weekendPrice: Number(restPropertyInfo.weekendPrice) || 0,
+                    capacity: Number(restPropertyInfo.capacity) || 0,
+                    area: Number(restPropertyInfo.area) || 0,
                     ...(isWholeUnit && unitData ? {
-                        price: unitData.price,
-                        weekendPrice: unitData.weekendPrice,
-                        capacity: unitData.capacity,
-                        area: unitData.area,
+                        price: Number(unitData.price),
+                        weekendPrice: Number(unitData.weekendPrice),
+                        capacity: Number(unitData.capacity),
+                        area: Number(unitData.area),
                         unitData: {
                             name: unitData.name,
                             description: unitData.description,
-                            amenities: unitData.amenities
+                            amenityIds: unitData.amenityIds || [] // Dùng amenityIds theo spec
                         }
                     } : {})
                 },
-                paymentInfo: paymentInfo
+                paymentInfo: {
+                    ...paymentInfo,
+                    // Map 'bank' thành 'BANK_TRANSFER' theo spec
+                    paymentMethod: paymentInfo.paymentMethod === 'bank' ? 'BANK_TRANSFER' : 'CARD'
+                }
             };
 
             const finalFormData = new FormData();
-            finalFormData.append("data", new Blob([JSON.stringify(submitPayload)], { type: 'application/json' }));
+            // Đổi key từ 'data' sang 'request' theo spec mới (thường dùng trong Spring Boot @RequestPart)
+            finalFormData.append("request", new Blob([JSON.stringify(submitPayload)], { type: 'application/json' }));
 
             // Correctly append single files
             if (formData.avatar) finalFormData.append("avatar", formData.avatar);
@@ -95,6 +109,10 @@ const OwnerOnboardingStep4 = () => {
             if (isWholeUnit && unitData?.images && unitData.images.length > 0) {
                 Array.from(unitData.images).forEach(file => finalFormData.append("unitImages", file));
             }
+
+            // Debug token và payload trước khi gửi
+            console.log("Submitting registration with token:", temporaryToken);
+            console.log("Submit Payload:", submitPayload);
 
             // Use the new service function with the temporary token
             await ownerService.submitRegistration(finalFormData, temporaryToken);
