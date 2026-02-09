@@ -17,7 +17,8 @@ import {
   RotateCcw,
   Ticket,
   FileSearch,
-  Bell // [THÊM ICON BELL]
+  Bell, // [THÊM ICON BELL]
+  ShieldCheck
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -25,11 +26,14 @@ const AdminSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [openSubMenu, setOpenSubMenu] = useState(""); 
   const location = useLocation();
-  const { logout } = useAuth(); 
+  const { logout, currentUser } = useAuth(); 
 
   const menuItems = [
     { name: "Dashboard", icon: <LayoutDashboard size={20} />, path: "/admin" },
     { name: "Quản lý Users", icon: <Users size={20} />, path: "/admin/users" },
+    ...(currentUser?.isSuper ? [
+      { name: "Quản lý Phân quyền", icon: <ShieldCheck size={20} />, path: "/admin/roles" }
+    ] : []),
     
     // 🏢 MENU CON: QUẢN LÝ NƠI CƯ TRÚ
     { 
