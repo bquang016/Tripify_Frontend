@@ -22,13 +22,12 @@ const ForgotPassword = () => {
   const [focusedField, setFocusedField] = useState(null);
   const [error, setError] = useState("");
 
-  const handleOTPSuccess = (otpCode) => {
-    // Sau khi xác thực OTP thành công (đã gọi verify-otp trong Modal), 
-    // chuyển hướng sang trang đặt lại mật khẩu kèm email và otpCode
+  const handleOTPSuccess = (secureToken) => {
+    // Sau khi xác thực OTP thành công (đã nhận UUID từ Modal), 
+    // chuyển hướng sang trang đặt lại mật khẩu kèm token (UUID)
     navigate("/reset-password", { 
         state: { 
-            email: email.toLowerCase().trim(),
-            otpCode: otpCode 
+            token: secureToken
         } 
     });
   };

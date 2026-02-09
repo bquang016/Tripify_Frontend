@@ -81,11 +81,18 @@ const forgotPassword = async (email) => {
 };
 
 // 7. Reset mật khẩu
-const resetPassword = async (token, newPassword) => {
+const resetPassword = async (token, newPassword, confirmPassword) => {
   try {
-    const response = await api.post(`/auth/reset-password`, { token, newPassword });
+    const payload = { 
+      token: token?.toString().trim(), 
+      newPassword: newPassword,
+      confirmPassword: confirmPassword
+    };
+    console.log(">>> [STEP 3] Reset Password Payload:", payload);
+    const response = await api.post(`/auth/reset-password`, payload);
     return response.data;
   } catch (error) {
+    console.error(">>> [STEP 3] Reset Password Error:", error.response?.data || error.message);
     throw error;
   }
 };
@@ -115,16 +122,19 @@ const sendOtp = async (email, type) => {
   }
 };
 
-// 10. Xác thực mã OTP chung (Dùng cho luồng Quên mật khẩu)
-const verifyOtp = async (email, otpCode) => {
+// 10. Xác thực mã OTP chung (Dùng cho luồng Quên mật khẩu...)
+const verifyOtp = async (email, otpCode, type) => {
   try {
     const payload = { 
       email: email.toLowerCase().trim(), 
       otp: otpCode.toString().trim(),
+      type: type // Đảm bảo type (ví dụ: "FORGOT_PASSWORD") luôn được gửi đi
     };
+    console.log(">>> [STEP 2] Verify OTP Payload:", payload);
     const response = await api.post(`/auth/verify-otp`, payload);
     return response.data;
   } catch (error) {
+    console.error(">>> [STEP 2] Verify OTP Error:", error.response?.data || error.message);
     throw error;
   }
 };
