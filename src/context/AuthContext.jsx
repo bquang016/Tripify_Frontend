@@ -16,8 +16,17 @@ export const AuthContextProvider = ({ children }) => {
       const token = authService.getAccessToken();
       if (token) {
         try {
-          const latestUser = await authService.fetchUserProfile();
+          let latestUser = await authService.fetchUserProfile();
           if (latestUser) {
+            // ✅ Đảm bảo flag isSuper được nhận diện chính xác
+            const roles = latestUser.roles || [];
+            const roleNames = roles.map(r => (typeof r === 'object' ? r.roleName : r));
+            
+            latestUser = {
+              ...latestUser,
+              isSuper: latestUser.isSuper || latestUser.isRoot || roleNames.includes('SUPER_ADMIN')
+            };
+
             console.log(">>> Synced latest user profile:", latestUser);
             setCurrentUser(latestUser);
             localStorage.setItem('user', JSON.stringify(latestUser));
@@ -42,8 +51,17 @@ export const AuthContextProvider = ({ children }) => {
       const data = await authService.login(email, password);
 
       if (data && data.user && data.accessToken) { 
-        setCurrentUser(data.user);
+        const roles = data.user.roles || [];
+        const roleNames = roles.map(r => (typeof r === 'object' ? r.roleName : r));
+        
+        const userWithSuper = {
+          ...data.user,
+          isSuper: data.user.isSuper || data.user.isRoot || roleNames.includes('SUPER_ADMIN')
+        };
+
+        setCurrentUser(userWithSuper);
         localStorage.setItem('accessToken', data.accessToken); 
+        localStorage.setItem('user', JSON.stringify(userWithSuper));
         return true;
       } else {
         setError('Login failed: Invalid data received');
