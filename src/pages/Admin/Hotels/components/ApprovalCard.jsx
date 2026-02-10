@@ -68,7 +68,7 @@ const ApprovalCard = forwardRef(({ application, onViewDetails }, ref) => {
         <div className="text-sm text-gray-600 space-y-2">
             <div className="flex items-center gap-2">
                 <MapPin size={14} className="text-gray-400 shrink-0"/>
-                <span className="truncate">{application.permanentAddress || "Chưa cập nhật địa chỉ"}</span>
+                <span className="truncate">{application.address || application.permanentAddress || "Chưa cập nhật địa chỉ"}</span>
             </div>
             <div className="flex items-center gap-2">
                 <User size={14} className="text-gray-400 shrink-0"/>

@@ -65,11 +65,12 @@ const PendingApprovalsPage = () => {
       const mappedData = data.map((app) => ({
         ...app,
         id: app.id, 
-        fullName: app.applicantFullName || "Chưa rõ",
-        email: app.applicantEmail,
-        phoneNumber: app.applicantPhoneNumber || "Chưa cập nhật",
-        avatar: app.applicantAvatar, 
-        businessName: app.businessLicenseNumber ? `GPKD: ${app.businessLicenseNumber}` : "Cá nhân",
+        // Ưu tiên các trường mới từ backend, nếu không có thì fallback về các trường cũ
+        fullName: app.fullName || app.applicantFullName || "Chưa rõ",
+        email: app.email || app.applicantEmail,
+        phoneNumber: app.phoneNumber || app.applicantPhoneNumber || "Chưa cập nhật",
+        avatar: app.avatar || app.applicantAvatar, 
+        businessName: app.propertyInfo?.businessLicenseNumber || app.businessLicenseNumber ? `GPKD: ${app.propertyInfo?.businessLicenseNumber || app.businessLicenseNumber}` : "Cá nhân",
         status: app.status,
         submittedDate: app.createdAt ? new Date(app.createdAt).toLocaleDateString("vi-VN") : "N/A",
       }));
