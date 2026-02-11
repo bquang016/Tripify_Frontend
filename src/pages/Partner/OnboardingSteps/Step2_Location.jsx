@@ -9,7 +9,7 @@ import "mapbox-gl/dist/mapbox-gl.css";
 
 const PRIMARY_COLOR = "rgb(40, 169, 224)";
 
-const Step2_Location = ({ register, setValue, watch, errors }) => {
+const Step2_Location = ({ register, setValue, watch, errors, control }) => {
   mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN;
 
   const latWatch = watch("propertyInfo.latitude");
@@ -227,6 +227,7 @@ const Step2_Location = ({ register, setValue, watch, errors }) => {
                 
                 <AdminSelectorsWithApi 
                     watch={watch} setValue={setValue} errors={errors?.propertyInfo} 
+                    control={control}
                     mapRef={mapRef} markerRef={markerRef} mapboxData={mapboxData} 
                     prefix="propertyInfo"
                 />

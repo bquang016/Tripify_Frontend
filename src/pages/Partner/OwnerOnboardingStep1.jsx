@@ -14,6 +14,8 @@ import DatePickerInput from "../../components/common/Input/DatePickerInput";
 import logo from "../../assets/logo/logo_travelmate_xoafont.png"; 
 import AvatarUpload from "./components/AvatarUpload";
 
+import AdminSelectorsWithApi from "./OnboardingSteps/components/AdminSelectorsWithApi";
+
 const Spinner = () => (
   <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -30,6 +32,8 @@ const OwnerOnboardingStep1 = () => {
     handleSubmit,
     control,
     reset,
+    setValue,
+    watch,
     formState: { errors }
   } = useForm({ 
       mode: "onChange",
@@ -240,55 +244,46 @@ const OwnerOnboardingStep1 = () => {
                         </div>
                     </div>
 
-                    {/* --- GROUP 3: LIÊN HỆ --- */}
+                    {/* --- GROUP 3: LIÊN HỆ & ĐỊA CHỈ --- */}
                     <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
                         <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
                              <div className="p-2 bg-blue-50 rounded-lg text-[#28A9E0]">
                                 <MapPin size={24} />
                              </div>
-                            Địa chỉ thường trú
+                            Thông tin liên hệ
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <PartnerInput
-                                label="Số điện thoại chính"
-                                name="phoneNumber"
-                                placeholder="0912 345 678"
-                                icon={Phone}
-                                register={register}
-                                error={errors.phoneNumber}
-                                rules={{ 
-                                    required: "Vui lòng nhập SĐT",
-                                    pattern: { value: /^[0-9]{10,11}$/, message: "SĐT không hợp lệ" }
-                                }}
-                            />
-                             <PartnerInput
-                                label="Địa chỉ chi tiết"
-                                name="address"
-                                placeholder="Số nhà, tên đường..."
-                                icon={MapPin}
-                                register={register}
-                                error={errors.address}
-                                rules={{ required: "Nhập địa chỉ" }}
-                            />
-                            <PartnerInput
-                                label="Tỉnh / Thành phố"
-                                name="city"
-                                placeholder="VD: Hà Nội"
-                                icon={Building2}
-                                register={register}
-                                error={errors.city}
-                                rules={{ required: "Nhập thành phố" }}
-                            />
-                             <PartnerInput
-                                label="Quốc gia"
-                                name="country"
-                                placeholder="VD: Việt Nam"
-                                icon={Flag}
-                                register={register}
-                                error={errors.country}
-                                rules={{ required: "Nhập quốc gia" }}
-                                // defaultValue="Vietnam"
-                            />
+                             <div className="md:col-span-2">
+                                <PartnerInput
+                                    label="Số điện thoại chính"
+                                    name="phoneNumber"
+                                    placeholder="0912 345 678"
+                                    icon={Phone}
+                                    register={register}
+                                    error={errors.phoneNumber}
+                                    rules={{ 
+                                        required: "Vui lòng nhập SĐT",
+                                        pattern: { value: /^[0-9]{10,11}$/, message: "SĐT không hợp lệ" }
+                                    }}
+                                />
+                            </div>
+                            
+                            {/* --- NEW: Structured Address --- */}
+                            <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <AdminSelectorsWithApi control={control} setValue={setValue} errors={errors} watch={watch} />
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <PartnerInput
+                                    label="Địa chỉ chi tiết (Số nhà, tên đường)"
+                                    name="streetAddress"
+                                    placeholder="Ví dụ: 123 Đường Nguyễn Huệ"
+                                    icon={MapPin}
+                                    register={register}
+                                    error={errors.streetAddress}
+                                    rules={{ required: "Vui lòng nhập địa chỉ chi tiết" }}
+                                />
+                            </div>
                         </div>
                     </div>
 
