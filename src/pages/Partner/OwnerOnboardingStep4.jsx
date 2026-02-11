@@ -48,17 +48,28 @@ const OwnerOnboardingStep4 = () => {
         setSubmissionStatus(null);
         
         try {
-            const { propertyInfo, paymentInfo, temporaryToken, ...personalInfo } = formData;
+            const { propertyInfo, paymentInfo, temporaryToken, address, city, country, ...personalInfo } = formData;
             const isWholeUnit = ["VILLA", "HOMESTAY"].includes(propertyInfo.propertyType);
             
             const { propertyImages, businessLicenseImage, unitData, ...restPropertyInfo } = propertyInfo;
             
             // Mapping data to match Backend Specification
             const submitPayload = {
-                ...personalInfo,
-                // Chuyển đổi gender sang uppercase (MALE/FEMALE)
-                gender: personalInfo.gender?.toUpperCase() === 'MALE' ? 'MALE' : 
-                        (personalInfo.gender?.toUpperCase() === 'FEMALE' ? 'FEMALE' : 'OTHER'),
+                personalInfo: {
+                    ...personalInfo,
+                    gender: personalInfo.gender?.toUpperCase() === 'MALE' ? 'MALE' : 
+                            (personalInfo.gender?.toUpperCase() === 'FEMALE' ? 'FEMALE' : 'OTHER'),
+                    // Add new structured address fields
+                    permanentAddress: {
+                        streetAddress: personalInfo.streetAddress,
+                        wardCode: personalInfo.wardCode,
+                        wardName: personalInfo.wardName,
+                        districtCode: personalInfo.districtCode,
+                        districtName: personalInfo.districtName,
+                        provinceCode: personalInfo.provinceCode,
+                        provinceName: personalInfo.provinceName,
+                    }
+                },
                 propertyInfo: {
                     ...restPropertyInfo,
                     // Đảm bảo các trường giá và diện tích là số
@@ -84,6 +95,15 @@ const OwnerOnboardingStep4 = () => {
                     paymentMethod: paymentInfo.paymentMethod === 'bank' ? 'BANK_TRANSFER' : 'CARD'
                 }
             };
+
+            // Remove temporary fields from personalInfo in payload
+            delete submitPayload.personalInfo.streetAddress;
+            delete submitPayload.personalInfo.wardCode;
+            delete submitPayload.personalInfo.wardName;
+            delete submitPayload.personalInfo.districtCode;
+            delete submitPayload.personalInfo.districtName;
+            delete submitPayload.personalInfo.provinceCode;
+            delete submitPayload.personalInfo.provinceName;
 
             const finalFormData = new FormData();
             // Đổi key từ 'data' sang 'request' theo spec mới (thường dùng trong Spring Boot @RequestPart)
