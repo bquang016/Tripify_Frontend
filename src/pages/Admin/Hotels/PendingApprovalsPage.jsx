@@ -8,7 +8,7 @@ import CardHeader from "@/components/common/Card/CardHeader";
 import Button from "@/components/common/Button/Button";
 import Toast from "@/components/common/Notification/Toast";
 import EmptyState from "@/components/common/EmptyState/EmptyState";
-import LoadingOverlay from "@/components/common/Loading/LoadingOverlay"; // ✅ Loading
+import LoadingOverlay from "@/components/common/Loading/LoadingOverlay";
 
 import SubmissionSearchBar from "./components/SubmissionSearchBar";
 import SubmissionStatusFilter from "./components/SubmissionStatusFilter";
@@ -24,7 +24,7 @@ import adminService from "@/services/admin.service";
 const PendingApprovalsPage = () => {
   const [applications, setApplications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isActionLoading, setIsActionLoading] = useState(false); // ✅ Action Loading
+  const [isActionLoading, setIsActionLoading] = useState(false); // Loading khi thực hiện hành động duyệt/từ chối
   const [selectedApp, setSelectedApp] = useState(null);
   const [toastData, setToastData] = useState(null);
 
@@ -61,11 +61,10 @@ const PendingApprovalsPage = () => {
         data = res.data || [];
       }
 
-      // Mapping
+      // Mapping data
       const mappedData = data.map((app) => ({
         ...app,
         id: app.id, 
-        // Ưu tiên các trường mới từ backend, nếu không có thì fallback về các trường cũ
         fullName: app.fullName || app.applicantFullName || "Chưa rõ",
         email: app.email || app.applicantEmail,
         phoneNumber: app.phoneNumber || app.applicantPhoneNumber || "Chưa cập nhật",
@@ -75,6 +74,7 @@ const PendingApprovalsPage = () => {
         submittedDate: app.createdAt ? new Date(app.createdAt).toLocaleDateString("vi-VN") : "N/A",
       }));
 
+      // Sort by date desc
       mappedData.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       setApplications(mappedData);
 
@@ -90,7 +90,7 @@ const PendingApprovalsPage = () => {
     fetchApplications();
   }, [filterStatus]);
 
-  // Filter
+  // Filter logic
   const filteredList = useMemo(() => {
     if (!searchTerm) return applications;
     const q = searchTerm.toLowerCase();
@@ -102,7 +102,7 @@ const PendingApprovalsPage = () => {
     );
   }, [applications, searchTerm]);
 
-  // Handlers
+  // Handlers mở modal
   const handleViewDetails = (app) => { setSelectedApp(app); setIsViewOpen(true); };
   const handleApprove = (app) => { setSelectedApp(app); setIsApproveOpen(true); };
   const handleReject = (app) => { setSelectedApp(app); setIsRejectOpen(true); };
@@ -114,32 +114,37 @@ const PendingApprovalsPage = () => {
     setTimeout(() => setSelectedApp(null), 200);
   };
 
-  // Actions (Với Loading Overlay)
+  // --- HÀM XỬ LÝ DUYỆT (Gọi service mới) ---
   const onConfirmApprove = async () => {
     if (!selectedApp) return;
     setIsActionLoading(true);
     try {
-      await adminService.reviewOwnerApplication(selectedApp.id, { status: "APPROVED" });
+      // Gọi endpoint /approve
+      await adminService.approveOwnerApplication(selectedApp.id);
+      
       showToast(`Đã duyệt chủ sở hữu ${selectedApp.fullName}`, "success");
-      await fetchApplications();
+      await fetchApplications(); // Refresh lại danh sách
       closeModals();
     } catch (error) {
-      showToast(error.message || "Lỗi khi duyệt", "error");
+      showToast(error.message || "Lỗi khi duyệt hồ sơ", "error");
     } finally {
       setIsActionLoading(false);
     }
   };
 
+  // --- HÀM XỬ LÝ TỪ CHỐI (Gọi service mới) ---
   const onConfirmReject = async (reason) => {
     if (!selectedApp) return;
     setIsActionLoading(true);
     try {
-      await adminService.reviewOwnerApplication(selectedApp.id, { status: "REJECTED", reason });
+      // Gọi endpoint /reject
+      await adminService.rejectOwnerApplication(selectedApp.id, reason);
+      
       showToast(`Đã từ chối đơn của ${selectedApp.fullName}`, "success");
-      await fetchApplications();
+      await fetchApplications(); // Refresh lại danh sách
       closeModals();
     } catch (error) {
-      showToast(error.message || "Lỗi khi từ chối", "error");
+      showToast(error.message || "Lỗi khi từ chối hồ sơ", "error");
     } finally {
       setIsActionLoading(false);
     }
@@ -149,6 +154,7 @@ const PendingApprovalsPage = () => {
     <>
       {toastData && <div className="fixed top-24 right-6 z-[9999]"><Toast message={toastData.message} type={toastData.type} /></div>}
       
+      {/* Hiển thị Loading Overlay khi đang gọi API Approve/Reject */}
       {isActionLoading && <LoadingOverlay message="Đang xử lý hồ sơ..." />}
 
       <Card className="overflow-hidden min-h-screen bg-gray-50/50 border-none shadow-none">

@@ -32,15 +32,14 @@ const OwnerOnboardingStep4 = () => {
     const [errorMessage, setErrorMessage] = useState('');
 
     const onFinalSubmit = async () => {
+        // 1. Validation cơ bản
         if (!formData.cccdFront || !formData.cccdBack) {
             toast.error("Thiếu ảnh CCCD/CMND. Vui lòng quay lại Bước 1 để tải lên.");
-            navigate('/partner/onboarding/step-1');
             return;
         }
 
         if (!formData.propertyInfo?.businessLicenseImage) {
             toast.error("Thiếu ảnh Giấy phép kinh doanh. Vui lòng quay lại Bước 2 để tải lên.");
-            navigate('/partner/onboarding/step-2');
             return;
         }
 
@@ -48,93 +47,117 @@ const OwnerOnboardingStep4 = () => {
         setSubmissionStatus(null);
         
         try {
-            const { propertyInfo, paymentInfo, temporaryToken, address, city, country, ...personalInfo } = formData;
-            const isWholeUnit = ["VILLA", "HOMESTAY"].includes(propertyInfo.propertyType);
+            const { propertyInfo, paymentInfo, temporaryToken, ...personalInfo } = formData;
+            const isWholeUnit = ["VILLA", "HOMESTAY", "APARTMENT"].includes(propertyInfo.propertyType);
             
-            const { propertyImages, businessLicenseImage, unitData, ...restPropertyInfo } = propertyInfo;
+            // Tách các file ảnh ra khỏi object propertyInfo để không gửi nhầm vào JSON
+            const { 
+                propertyImages, 
+                businessLicenseImage, 
+                unitData, 
+                ...restPropertyInfo 
+            } = propertyInfo;
             
-            // Mapping data to match Backend Specification
+            // --- XỬ LÝ ĐỊA CHỈ AN TOÀN (FIX LỖI UNDEFINED) ---
+            // Kiểm tra và lấy giá trị từ nhiều nguồn biến khác nhau để tránh null/undefined
+            const street = personalInfo.streetAddress || "";
+            const ward = personalInfo.wardName || personalInfo.ward || "";
+            const district = personalInfo.districtName || personalInfo.district || "";
+            const province = personalInfo.provinceName || personalInfo.city || personalInfo.province || "";
+
+            // Tạo chuỗi địa chỉ sạch: Lọc bỏ các giá trị rỗng/undefined
+            const fullAddress = [street, ward, district, province]
+                .filter(part => part && part.trim() !== "") // Chỉ giữ lại phần có dữ liệu
+                .join(", ");
+            // --------------------------------------------------
+
+            // 2. Chuẩn bị JSON Payload (Clean Data)
             const submitPayload = {
-                personalInfo: {
-                    ...personalInfo,
-                    gender: personalInfo.gender?.toUpperCase() === 'MALE' ? 'MALE' : 
-                            (personalInfo.gender?.toUpperCase() === 'FEMALE' ? 'FEMALE' : 'OTHER'),
-                    // Add new structured address fields
-                    permanentAddress: {
-                        streetAddress: personalInfo.streetAddress,
-                        wardCode: personalInfo.wardCode,
-                        wardName: personalInfo.wardName,
-                        districtCode: personalInfo.districtCode,
-                        districtName: personalInfo.districtName,
-                        provinceCode: personalInfo.provinceCode,
-                        provinceName: personalInfo.provinceName,
-                    }
+                // --- Đưa các trường personalInfo ra ngoài root ---
+                fullName: personalInfo.fullName,
+                email: personalInfo.email,
+                phoneNumber: personalInfo.phoneNumber,
+                dateOfBirth: personalInfo.dateOfBirth,
+                identityCardNumber: personalInfo.identityCardNumber,
+                gender: personalInfo.gender ? personalInfo.gender.toUpperCase() : 'OTHER',
+                
+                // --- Mapping Address & City đã xử lý ---
+                address: fullAddress, // Chuỗi địa chỉ sạch đã gộp
+                city: province,       // Tên tỉnh/thành phố
+
+                // Vẫn gửi object structured nếu backend cần chi tiết (dùng biến đã fallback an toàn)
+                permanentAddress: {
+                    streetAddress: street,
+                    wardCode: personalInfo.wardCode || "",
+                    wardName: ward,
+                    districtCode: personalInfo.districtCode || "",
+                    districtName: district,
+                    provinceCode: personalInfo.provinceCode || "",
+                    provinceName: province,
                 },
+                
+                // Giữ nguyên các phần khác
                 propertyInfo: {
                     ...restPropertyInfo,
-                    // Đảm bảo các trường giá và diện tích là số
                     price: Number(restPropertyInfo.price) || 0,
                     weekendPrice: Number(restPropertyInfo.weekendPrice) || 0,
                     capacity: Number(restPropertyInfo.capacity) || 0,
                     area: Number(restPropertyInfo.area) || 0,
+                    amenityIds: restPropertyInfo.amenityIds || [],
+                    
                     ...(isWholeUnit && unitData ? {
-                        price: Number(unitData.price),
-                        weekendPrice: Number(unitData.weekendPrice),
-                        capacity: Number(unitData.capacity),
-                        area: Number(unitData.area),
                         unitData: {
                             name: unitData.name,
                             description: unitData.description,
-                            amenityIds: unitData.amenityIds || [] // Dùng amenityIds theo spec
+                            amenityIds: unitData.amenityIds || [],
+                            price: Number(unitData.price) || Number(restPropertyInfo.price),
+                            capacity: Number(unitData.capacity) || Number(restPropertyInfo.capacity),
+                            area: Number(unitData.area) || Number(restPropertyInfo.area),
                         }
                     } : {})
                 },
                 paymentInfo: {
-                    ...paymentInfo,
-                    // Map 'bank' thành 'BANK_TRANSFER' theo spec
-                    paymentMethod: paymentInfo.paymentMethod === 'bank' ? 'BANK_TRANSFER' : 'CARD'
+                    bankName: paymentInfo?.bankName,
+                    accountNumber: paymentInfo?.accountNumber,
+                    accountHolderName: paymentInfo?.accountHolderName,
+                    paymentMethod: paymentInfo?.paymentMethod === 'bank' ? 'BANK_TRANSFER' : 'CARD'
                 }
             };
 
-            // Remove temporary fields from personalInfo in payload
-            delete submitPayload.personalInfo.streetAddress;
-            delete submitPayload.personalInfo.wardCode;
-            delete submitPayload.personalInfo.wardName;
-            delete submitPayload.personalInfo.districtCode;
-            delete submitPayload.personalInfo.districtName;
-            delete submitPayload.personalInfo.provinceCode;
-            delete submitPayload.personalInfo.provinceName;
-
+            // 3. Đóng gói FormData
             const finalFormData = new FormData();
-            // Đổi key từ 'data' sang 'request' theo spec mới (thường dùng trong Spring Boot @RequestPart)
+            
+            // Append JSON với Content-Type application/json (Quan trọng cho Spring Boot @RequestPart)
             finalFormData.append("request", new Blob([JSON.stringify(submitPayload)], { type: 'application/json' }));
 
-            // Correctly append single files
+            // Append Single Files
             if (formData.avatar) finalFormData.append("avatar", formData.avatar);
             if (formData.cccdFront) finalFormData.append("cccdFront", formData.cccdFront);
             if (formData.cccdBack) finalFormData.append("cccdBack", formData.cccdBack);
             
-            // Handle multiple files for property
+            // Append Property Images (List)
             if (propertyImages && propertyImages.length > 0) {
-                Array.from(propertyImages).forEach(file => finalFormData.append("propertyImages", file));
+                Array.from(propertyImages).forEach(file => {
+                    if (file instanceof File) finalFormData.append("propertyImages", file);
+                });
             }
             
-            // Handle single file for business license
+            // Append Business License (Single)
             if (businessLicenseImage) {
                 const file = businessLicenseImage instanceof FileList ? businessLicenseImage[0] : businessLicenseImage;
-                finalFormData.append("businessLicenseImage", file);
+                if (file instanceof File) finalFormData.append("businessLicenseImage", file);
             }
             
-            // Handle multiple files for unit
+            // Append Unit Images (List - Optional)
             if (isWholeUnit && unitData?.images && unitData.images.length > 0) {
-                Array.from(unitData.images).forEach(file => finalFormData.append("unitImages", file));
+                Array.from(unitData.images).forEach(file => {
+                     if (file instanceof File) finalFormData.append("unitImages", file);
+                });
             }
 
-            // Debug token và payload trước khi gửi
-            console.log("Submitting registration with token:", temporaryToken);
-            console.log("Submit Payload:", submitPayload);
+            console.log("Submitting payload:", submitPayload); // Debug
 
-            // Use the new service function with the temporary token
+            // 4. Gọi Service
             await ownerService.submitRegistration(finalFormData, temporaryToken);
             
             toast.success('Đơn đăng ký của bạn đã được gửi thành công!');
@@ -142,7 +165,7 @@ const OwnerOnboardingStep4 = () => {
             
         } catch (error) {
             console.error("Submission Error:", error);
-            const message = error.response?.data?.message || 'Gửi đơn thất bại. Vui lòng thử lại.';
+            const message = error.response?.data?.message || 'Gửi đơn thất bại. Vui lòng kiểm tra lại thông tin.';
             toast.error(message);
             setSubmissionStatus('error');
             setErrorMessage(message);
