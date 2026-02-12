@@ -29,34 +29,30 @@ const ownerService = {
    * @param {FormData} formData - Contains all registration data and files
    * @param {string} token - The temporary token from OTP verification
    */
-  submitRegistration: async (formData, token) => {
-    try {
-      const response = await api.post("/owner/register/submit", formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      return response.data;
-    } catch (error) {
-      console.error("Error submitting final registration:", error);
-      throw error;
-    }
+submitRegistration: async (formData, token) => {
+    // Lưu ý: formData truyền vào phải là đối tượng FormData đã chứa đầy đủ file và json
+    return await axios.post("/owner/register/submit", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        "Authorization": `Bearer ${token}` // Token tạm thời (nếu backend yêu cầu)
+      },
+    });
   },
 
-  /**
-   * 2. Cập nhật hồ sơ Owner (Onboarding Step 1)
-   * ✅ MỚI THÊM: Hàm này xử lý việc upload ảnh CCCD + Avatar
-   * @param {FormData} formData - Chứa file và json data
+ /**
+   * NEW: Submit final registration application
+   * Endpoint: /api/v1/owner-registration/submit
+   * @param {FormData} formData - Contains all registration data and files
+   * @param {string} token - The temporary token from OTP verification
    */
-  updateOwnerProfile: async (formData) => {
-    try {
-      const response = await api.post("/owner/onboarding/profile", formData);
-      return response.data;
-    } catch (error) {
-      console.error("Error updating owner profile:", error);
-      throw error; 
-    }
+  submitRegistration: async (formData, token) => {
+    // SỬA LỖI Ở ĐÂY: Thay axios.post bằng api.post
+    return await api.post("/owner/register/submit", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        "Authorization": `Bearer ${token}` 
+      },
+    });
   },
 
   /**
