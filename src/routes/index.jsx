@@ -22,9 +22,14 @@ import ComponentsPreview from "@/pages/ComponentsPreview";
 import TermsOfService from "@/pages/Owner/TermsOfService/TermsOfService";
 import PartnerPolicy from "@/pages/Owner/TermsOfService/PartnerPolicy";
 
+import OwnerRegisterPage from "@/pages/Partner/OwnerRegisterPage";
+import OwnerOnboardingStep1 from "@/pages/Partner/OwnerOnboardingStep1";
+import OwnerOnboardingStep2 from '@/pages/Partner/OwnerOnboardingStep2';
+import OwnerOnboardingStep3 from '@/pages/Partner/OwnerOnboardingStep3';
+import OwnerOnboardingStep4 from '@/pages/Partner/OwnerOnboardingStep4';
+
 // ✅ 1. Import Component xử lý khóa tài khoản
 import SessionExpiredHandler from "@/pages/Admin/Users/components/SessionExpiredHandler";
-
 const AppRoutes = () => {
     return (
         // ✅ 2. Dùng thẻ Fragment để bọc SessionExpiredHandler và Routes
@@ -55,6 +60,11 @@ const AppRoutes = () => {
                 {/* =========================================================
                     CUSTOMER ROUTES
                 ========================================================= */}
+                <Route path="/partner/register" element={<OwnerRegisterPage />} />
+                <Route path="/partner/onboarding/step-1" element={<OwnerOnboardingStep1 />} />
+                <Route path="/partner/onboarding/step-2" element={<OwnerOnboardingStep2 />} />
+                <Route path="/partner/onboarding/step-3" element={<OwnerOnboardingStep3 />} />
+                <Route path="/partner/onboarding/step-4" element={<OwnerOnboardingStep4 />} />
                 {customerRoutes.map((route, index) => (
                     <Route
                         key={`customer-${index}`}

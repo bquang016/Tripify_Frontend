@@ -253,6 +253,23 @@ const createPassword = async (password) => {
   }
 };
 
+const sendOwnerOtp = (email) => {
+  return api.post("/auth/owner/send-otp", { email });
+};
+
+const checkOwnerEmail = (email) => {
+  return api.post("/auth/owner/check-email", { email });
+};
+
+const verifyOwnerOtp = (email, otpCode) => {
+  return api.post("/auth/owner/verify-otp", { email, otpCode });
+};
+
+const registerOwner = (data) => {
+  return api.post("/auth/owner/register", data);
+};
+
+
 export const authService = {
   login,
   register,
@@ -271,4 +288,10 @@ export const authService = {
   fetchUserProfile,
   unlinkSocialAccount,
   createPassword,
+  sendOwnerOtp,
+  checkOwnerEmail,
+  verifyOwnerOtp,
+  registerOwner,
 };
+
+export default authService;

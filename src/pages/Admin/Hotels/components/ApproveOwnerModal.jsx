@@ -46,6 +46,14 @@ const ApproveOwnerModal = ({ open, onClose, onConfirm, application }) => {
         </p>
       </div>
 
+      {/* Confirmation Message */}
+      <div className="my-6 text-center">
+        <p className="text-md text-slate-700">
+          Hệ thống sẽ tự động tạo tài khoản và gửi mật khẩu cho đối tác.
+        </p>
+        <p className="font-semibold text-slate-800">Bạn có chắc chắn không?</p>
+      </div>
+
       {/* Actions */}
       <div className="flex justify-end gap-3 border-t pt-4">
         {/* Cancel */}

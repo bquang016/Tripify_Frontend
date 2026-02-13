@@ -230,6 +230,22 @@ const getFeaturedProperties = async () => {
   }
 };
 
+//Đăng ký thông tin cơ bản của property (step 2)
+const registerPropertyInfo = async (data) => {
+  // data: { propertyName, description, propertyType, starRating, ... }
+  const response = await api.post("/api/v1/properties/register-info", data);
+  return response.data;
+};
+
+const registerFullOnboarding = async (formData) => {
+  try {
+    const response = await api.post("/owner/onboarding/register-full", formData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
 // ==========================================================
 // 📦 EXPORT
 // ==========================================================
@@ -250,7 +266,9 @@ const propertyService = {
   updatePropertyPolicies,
   checkNameAvailability,
   togglePropertyStatus,
-  getFeaturedProperties
+  getFeaturedProperties,
+  registerPropertyInfo,
+  registerFullOnboarding,
 };
 
 export default propertyService;
