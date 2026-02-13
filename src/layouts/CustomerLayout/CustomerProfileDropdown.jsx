@@ -4,7 +4,7 @@ import { useAuth } from "../../context/AuthContext";
 import { userService } from "../../services/user.service";
 import {
     User, LogOut, Calendar, Heart,
-    Shield, Star, Award, Gem, ChevronRight, Crown
+    Shield, Star, Award, Gem, ChevronRight, Crown, LayoutDashboard
 } from "lucide-react";
 import Avatar from "../../components/common/Avatar/Avatar";
 
@@ -37,7 +37,7 @@ const RANK_STYLES = {
 };
 
 const CustomerProfileDropdown = ({ onClose }) => {
-    const { currentUser, logout } = useAuth();
+    const { currentUser, logout, hasRole } = useAuth();
     const navigate = useNavigate();
 
     const [userInfo, setUserInfo] = useState(currentUser);
@@ -105,6 +105,22 @@ const CustomerProfileDropdown = ({ onClose }) => {
 
             {/* --- MENU ITEMS --- */}
             <div className="p-2">
+                {(userInfo?.isSuper || hasRole("ADMIN")) && (
+                    <Link
+                        to="/admin"
+                        className="flex items-center gap-3 p-3 rounded-lg text-blue-600 bg-blue-50 hover:bg-blue-100 transition-colors group mb-1"
+                        onClick={() => onClose && onClose()}
+                    >
+                        <div className="p-2 bg-blue-100 text-blue-600 rounded-full group-hover:bg-blue-200 transition-colors">
+                            <LayoutDashboard size={18} />
+                        </div>
+                        <div className="flex-1">
+                            <span className="font-bold text-sm">Trang quản trị admin</span>
+                        </div>
+                        <ChevronRight size={16} className="text-blue-300 group-hover:text-blue-500 transition-colors" />
+                    </Link>
+                )}
+
                 <Link
                     to="/customer/profile"
                     className="flex items-center gap-3 p-3 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors group"
