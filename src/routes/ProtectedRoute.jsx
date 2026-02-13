@@ -1,10 +1,15 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
-export default function ProtectedRoute({ roles, children }) {
+export default function ProtectedRoute({ roles, isSuperRequired, children }) {
   const { currentUser } = useAuth();
 
   if (!currentUser) return <Navigate to="/login" replace />;
+
+  // ✅ Kiểm tra quyền Super Admin nếu yêu cầu
+  if (isSuperRequired && !currentUser.isSuper) {
+    return <Navigate to="/admin" replace />;
+  }
 
   // ✅ LOGIC MỚI: Kiểm tra an toàn
   // 1. Lấy danh sách role từ 'roles' hoặc 'authorities'

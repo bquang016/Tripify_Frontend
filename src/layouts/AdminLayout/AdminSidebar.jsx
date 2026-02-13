@@ -17,7 +17,8 @@ import {
   RotateCcw,
   Ticket,
   FileSearch,
-  Bell // [THÊM ICON BELL]
+  Bell, // [THÊM ICON BELL]
+  ShieldCheck
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -25,22 +26,32 @@ const AdminSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
   const [openSubMenu, setOpenSubMenu] = useState(""); 
   const location = useLocation();
-  const { logout } = useAuth(); 
+  const { logout, currentUser, hasRole } = useAuth(); 
 
   const menuItems = [
     { name: "Dashboard", icon: <LayoutDashboard size={20} />, path: "/admin" },
-    { name: "Quản lý Users", icon: <Users size={20} />, path: "/admin/users" },
+    { 
+      name: "Quản lý Users", 
+      icon: <Users size={20} />, 
+      path: "/admin/users",
+      permission: "USER_VIEW" 
+    },
+    ...(currentUser?.isSuper ? [
+      { name: "Quản lý Phân quyền", icon: <ShieldCheck size={20} />, path: "/admin/roles" }
+    ] : []),
     
     // 🏢 MENU CON: QUẢN LÝ NƠI CƯ TRÚ
     { 
       name: "Quản lý nơi cư trú", 
       icon: <Building2 size={20} />, 
       key: "residences",
+      permission: "PROPERTY_VIEW",
       children: [
         { 
           name: "Duyệt nơi cư trú", 
           path: "/admin/hotels/submissions", 
-          icon: <CheckSquare size={16} /> 
+          icon: <CheckSquare size={16} />,
+          permission: "PROPERTY_APPROVE"
         },
         { 
           name: "Danh sách nơi cư trú",
@@ -55,6 +66,7 @@ const AdminSidebar = () => {
       name: "Quản lý dòng tiền", 
       icon: <DollarSign size={20} />, 
       key: "finance", 
+      permission: "TRANSACTION_VIEW",
       children: [
         { 
           name: "Quản lý thanh toán", 
@@ -64,7 +76,8 @@ const AdminSidebar = () => {
         { 
           name: "Quản lý hoàn tiền",
           path: "/admin/refunds",
-          icon: <RotateCcw size={16} /> 
+          icon: <RotateCcw size={16} />,
+          permission: "REFUND_MANAGE"
         },
       ]
     },
@@ -73,32 +86,46 @@ const AdminSidebar = () => {
     { 
       name: "Quản lý Khuyến mãi", 
       icon: <Ticket size={20} />, 
-      path: "/admin/promotions" 
+      path: "/admin/promotions",
+      permission: "PROMOTION_VIEW"
     },
 
     { 
       name: "Duyệt Chủ sở hữu", 
       icon: <CheckSquare size={20} />, 
-      path: "/admin/approvals" 
+      path: "/admin/approvals",
+      permission: "OWNER_APPROVE"
     },
 
     // [BỔ SUNG MỤC THÔNG BÁO]
     {
       name: "Thông báo",
-      icon: <Bell size={20} />, // Icon cái chuông
-      path: "/admin/notifications" // Link đến trang thông báo bạn vừa tạo
+      icon: <Bell size={20} />, 
+      path: "/admin/notifications"
     },
 
     {
       name: "Lịch sử hệ thống",
       icon: <FileSearch size={20} />,
-      path: "/admin/audit-logs"
+      path: "/admin/audit-logs",
+      permission: "AUDIT_VIEW"
     },
   ];
 
   const handleSubMenuToggle = (key) => {
       setOpenSubMenu(openSubMenu === key ? "" : key);
   };
+
+  // Hàm lọc menu dựa trên quyền
+  const filteredMenuItems = menuItems.filter(item => {
+    // Nếu là Super Admin thì hiện tất cả
+    if (currentUser?.isSuper) return true;
+    
+    // Nếu mục yêu cầu permission cụ thể
+    if (item.permission && !hasRole(item.permission)) return false;
+    
+    return true;
+  });
 
   return (
     <aside
@@ -130,13 +157,24 @@ const AdminSidebar = () => {
 
       {/* Menu */}
       <nav className="flex-1 p-3 space-y-2 overflow-y-auto custom-scrollbar">
-        {menuItems.map((item) => {
+        {filteredMenuItems.map((item) => {
           
           // Menu có con
           if (item.children) {
             const isSubMenuOpen = openSubMenu === item.key;
+            
+            // Lọc các menu con dựa trên quyền
+            const filteredChildren = item.children.filter(child => {
+              if (currentUser?.isSuper) return true;
+              if (child.permission && !hasRole(child.permission)) return false;
+              return true;
+            });
+
+            // Nếu không có menu con nào được phép xem, ẩn luôn menu cha
+            if (filteredChildren.length === 0) return null;
+
             // Logic active: Nếu đang ở route con thì menu cha cũng active
-            const isParentActive = item.children.some(child => 
+            const isParentActive = filteredChildren.some(child => 
                 location.pathname === child.path || location.pathname.startsWith(child.path)
             );
             
@@ -159,7 +197,7 @@ const AdminSidebar = () => {
 
                 {isSubMenuOpen && !collapsed && (
                   <div className="pl-7 mt-1 space-y-1 animate-fadeIn">
-                    {item.children.map(child => {
+                    {filteredChildren.map(child => {
                       const isChildActive = location.pathname === child.path;
                       return (
                         <Link

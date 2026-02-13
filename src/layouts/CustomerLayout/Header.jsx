@@ -91,7 +91,7 @@ const Header = () => {
 
   const getPartnerNavigation = () => {
     if (!currentUser) return { label: "Hợp tác với chúng tôi", path: "/partner-with-us" };
-    if (hasRole("ADMIN")) return { label: "Trang quản trị", path: "/admin" };
+    if (currentUser.isSuper || hasRole("ADMIN")) return { label: "Trang quản trị admin", path: "/admin" };
     if (hasRole("OWNER")) return { label: "Trang quản lý", path: "/owner" };
     return { label: "Hợp tác với chúng tôi", path: "/partner-with-us" };
   };
