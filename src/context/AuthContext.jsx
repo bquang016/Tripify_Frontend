@@ -10,63 +10,71 @@ export const AuthContextProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // ✅ Tự động fetch profile mới nhất khi vào trang
+  // Hàm bổ trợ để chuẩn hóa thông tin User (Phân biệt Super Admin và Admin)
+  const enrichUserData = (user) => {
+    if (!user) return null;
+    
+    // 1. Lấy danh sách tên vai trò
+    const roles = user.roles || [];
+    const roleNames = roles.map(r => {
+      if (typeof r === 'object') return (r.roleName || r.name || r.authority || "").replace("ROLE_", "");
+      return r.replace("ROLE_", "");
+    });
+
+    // 2. Lấy danh sách mã quyền hạn (Permission Codes)
+    const permissions = user.permissions || [];
+    const permissionCodes = permissions.map(p => {
+      if (typeof p === 'object') return p.code || p.name;
+      return p;
+    });
+
+    const isSuper = user.isSuper || user.is_super || user.isRoot || roleNames.includes("SUPER_ADMIN");
+    const isAdmin = roleNames.includes("ADMIN") || isSuper;
+
+    return {
+      ...user,
+      isSuper,
+      isAdmin,
+      roleNames,
+      permissionCodes
+    };
+  };
+
+  // ✅ Tự động đồng bộ profile khi vào trang
   useEffect(() => {
     const syncUser = async () => {
       const token = authService.getAccessToken();
       if (token) {
         try {
-          let latestUser = await authService.fetchUserProfile();
+          const latestUser = await authService.fetchUserProfile();
           if (latestUser) {
-            // ✅ Đảm bảo flag isSuper được nhận diện chính xác
-            const roles = latestUser.roles || [];
-            const roleNames = roles.map(r => (typeof r === 'object' ? r.roleName : r));
-            
-            latestUser = {
-              ...latestUser,
-              isSuper: latestUser.isSuper || latestUser.isRoot || roleNames.includes('SUPER_ADMIN')
-            };
-
-            console.log(">>> Synced latest user profile:", latestUser);
-            setCurrentUser(latestUser);
-            localStorage.setItem('user', JSON.stringify(latestUser));
+            const enriched = enrichUserData(latestUser);
+            setCurrentUser(enriched);
+            localStorage.setItem('user', JSON.stringify(enriched));
           }
         } catch (err) {
           console.error("Failed to sync user profile:", err);
-          // Nếu token hỏng hoặc hết hạn, logout luôn
-          if (err.response?.status === 401) {
-            logout();
-          }
+          if (err.response?.status === 401) logout();
         }
       }
     };
     syncUser();
   }, []);
 
-  // 1. Đăng nhập thường (Email/Pass)
+  // 1. Đăng nhập thường
   const login = async (email, password) => {
     setLoading(true);
     setError(null);
     try {
       const data = await authService.login(email, password);
-
       if (data && data.user && data.accessToken) { 
-        const roles = data.user.roles || [];
-        const roleNames = roles.map(r => (typeof r === 'object' ? r.roleName : r));
-        
-        const userWithSuper = {
-          ...data.user,
-          isSuper: data.user.isSuper || data.user.isRoot || roleNames.includes('SUPER_ADMIN')
-        };
-
-        setCurrentUser(userWithSuper);
+        const enriched = enrichUserData(data.user);
+        setCurrentUser(enriched);
         localStorage.setItem('accessToken', data.accessToken); 
-        localStorage.setItem('user', JSON.stringify(userWithSuper));
+        localStorage.setItem('user', JSON.stringify(enriched));
         return true;
-      } else {
-        setError('Login failed: Invalid data received');
-        return false;
       }
+      return false;
     } catch (err) {
       setError(err.message || 'Login failed'); 
       return false;
@@ -75,30 +83,22 @@ export const AuthContextProvider = ({ children }) => {
     }
   };
 
-  // ✅ [MỚI] 2. Đăng nhập bằng OAuth2 (Google/Facebook)
-  // Hàm này được gọi khi RedirectHandler nhận được token từ URL
+  // 2. Đăng nhập bằng OAuth2 (Google/Facebook)
   const loginWithOAuth2 = async (token) => {
     setLoading(true);
     setError(null);
     try {
-      // Lưu token trước để axios interceptor có thể dùng nó gọi API
       localStorage.setItem('accessToken', token);
-
-      // Gọi API lấy thông tin user
       const user = await authService.fetchUserProfile();
-      
       if (user) {
-        setCurrentUser(user);
-        localStorage.setItem('user', JSON.stringify(user));
+        const enriched = enrichUserData(user);
+        setCurrentUser(enriched);
+        localStorage.setItem('user', JSON.stringify(enriched));
         return true;
-      } else {
-        setError("Không thể lấy thông tin người dùng.");
-        authService.logout(); // Xóa token nếu lỗi
-        return false;
       }
+      return false;
     } catch (err) {
       console.error("OAuth2 Login Error:", err);
-      setError("Đăng nhập Google/Facebook thất bại.");
       authService.logout();
       return false;
     } finally {
@@ -111,44 +111,35 @@ export const AuthContextProvider = ({ children }) => {
     const currentToken = authService.getAccessToken();
     authService.logout(currentToken);
     setCurrentUser(null);
+    localStorage.removeItem('user');
+    localStorage.removeItem('accessToken');
   };
 
-  // 4. Cập nhật User State (không cần login lại)
+  // 4. Cập nhật User State
   const updateUser = (userData) => {
     setCurrentUser((prev) => {
-      const updated = { ...prev, ...userData };
+      const updated = enrichUserData({ ...prev, ...userData });
       localStorage.setItem('user', JSON.stringify(updated));
       return updated;
     });
   };
 
-  // 5. Kiểm tra Role
-  const hasRole = (role) => {
-    if (!currentUser || !currentUser.roles) return false;
-    // Kiểm tra nếu roles là mảng object (Backend trả về Set<Role>) hay mảng string
-    // Nếu role là object {roleName: "CUSTOMER"}
-    if (currentUser.roles.length > 0 && typeof currentUser.roles[0] === 'object') {
-       return currentUser.roles.some(r => r.roleName === role);
-    }
-    // Nếu role là string "CUSTOMER"
-    return currentUser.roles.includes(role);
+  // 5. Kiểm tra Role hoặc Permission
+  const hasRole = (target) => {
+    if (!currentUser) return false;
+    if (currentUser.isSuper) return true;
+    if (currentUser.roleNames?.includes(target)) return true;
+    if (target === "ADMIN" && currentUser.isAdmin) return true;
+    if (currentUser.permissionCodes?.includes(target)) return true;
+    return false;
   };
-
-  useEffect(() => {
-    if (currentUser) {
-      localStorage.setItem('user', JSON.stringify(currentUser));
-    } else {
-      localStorage.removeItem('user');
-      localStorage.removeItem('accessToken');
-    }
-  }, [currentUser]);
 
   return (
     <AuthContext.Provider
       value={{
         currentUser,
         login,
-        loginWithOAuth2, // ✅ Export hàm này
+        loginWithOAuth2,
         logout,
         updateUser, 
         loading,
