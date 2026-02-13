@@ -166,9 +166,9 @@ export default function AdminSelectorsWithApi({ watch, setValue, errors, mapRef,
           </span>
         </div>
       )}
-      <CustomSelect label="Tỉnh / Thành phố" options={provinces} value={provinceCode || ""} onChange={handleProvinceChange} error={errors.province?.message} disabled={isSyncing} placeholder="Chọn Tỉnh/Thành phố" />
-      <CustomSelect label="Quận / Huyện" options={districts} value={districtCode || ""} onChange={handleDistrictChange} error={errors.city?.message} disabled={!provinceCode || isSyncing} placeholder="Chọn Quận/Huyện" />
-      <CustomSelect label="Phường / Xã" options={wards} value={wardName || ""} onChange={(val)=>setValue("ward", val, {shouldValidate:true})} error={errors.ward?.message} disabled={!districtCode || isSyncing} placeholder="Chọn Phường/Xã" />
+      <CustomSelect label="Tỉnh / Thành phố" options={provinces} value={provinceCode || ""} onChange={handleProvinceChange} error={errors?.province?.message} disabled={isSyncing} placeholder="Chọn Tỉnh/Thành phố" />
+      <CustomSelect label="Quận / Huyện" options={districts} value={districtCode || ""} onChange={handleDistrictChange} error={errors?.city?.message} disabled={!provinceCode || isSyncing} placeholder="Chọn Quận/Huyện" />
+      <CustomSelect label="Phường / Xã" options={wards} value={wardName || ""} onChange={(val)=>setValue("ward", val, {shouldValidate:true})} error={errors?.ward?.message} disabled={!districtCode || isSyncing} placeholder="Chọn Phường/Xã" />
     </div>
   );
 }

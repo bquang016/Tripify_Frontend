@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import ModalPortal from "@/components/common/Modal/ModalPortal";
 import { 
     X, User, Mail, Phone, Calendar, Briefcase, MapPin, CreditCard, 
-    CheckCircle, XCircle, Image as ImageIcon, ShieldCheck, AlertOctagon, Cake
+    CheckCircle, XCircle, Image as ImageIcon, ShieldCheck, AlertOctagon, 
+    Cake, Home, DollarSign, Users as UsersIcon, Maximize, Clock, Info, Banknote, Map,
+    Sparkles, Compass
 } from "lucide-react";
 import Button from "@/components/common/Button/Button";
 import ImageViewerModal from "./ImageViewerModal";
@@ -25,7 +27,11 @@ const formatDateVN = (dateString) => {
     } catch (e) { return "N/A"; }
 };
 
-// ✅ Helper Việt hóa trạng thái
+const formatCurrency = (amount) => {
+    if (typeof amount !== 'number') return "0 đ";
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+};
+
 const getStatusLabel = (status) => {
     switch (status) {
         case "PENDING": return "Chờ duyệt";
@@ -35,12 +41,46 @@ const getStatusLabel = (status) => {
     }
 };
 
-const InfoRow = ({ icon, label, value, isHighlight = false }) => (
-  <div className={`flex items-start gap-3 py-3 border-b border-gray-50 last:border-0 ${isHighlight ? 'bg-yellow-50/50 -mx-2 px-2 rounded' : ''}`}>
-    <div className={`mt-1 shrink-0 ${isHighlight ? 'text-yellow-600' : 'text-gray-400'}`}>{icon}</div>
+const getPropertyTypeLabel = (type) => {
+    switch (type) {
+        case "HOTEL": return "Khách sạn";
+        case "RESORT": return "Resort";
+        case "VILLA": return "Villa";
+        case "HOMESTAY": return "Homestay";
+        case "APARTMENT": return "Căn hộ";
+        default: return type;
+    }
+};
+
+const getGenderLabel = (gender) => {
+    if (!gender) return "Chưa cập nhật";
+    switch (gender.toUpperCase()) {
+        case "MALE": return "Nam";
+        case "FEMALE": return "Nữ";
+        case "OTHER": return "Khác";
+        default: return gender;
+    }
+};
+
+const AmenityBadge = ({ amenity }) => (
+    <div className="bg-gray-100 text-gray-700 text-xs font-medium px-2.5 py-1 rounded-full flex items-center gap-1.5">
+        <Sparkles size={12} className="text-yellow-500" />
+        {amenity}
+    </div>
+);
+
+const SectionTitle = ({ icon: Icon, title }) => (
+    <h3 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2 pb-2 border-b border-gray-100">
+        <Icon size={18} className="text-blue-500"/> {title}
+    </h3>
+);
+
+const InfoRow = ({ icon, label, value, isHighlight = false, children }) => (
+  <div className={`flex items-start gap-3 py-2.5 border-b border-gray-50 last:border-0 ${isHighlight ? 'bg-yellow-50/50 -mx-3 px-3 rounded' : ''}`}>
+    <div className={`mt-0.5 shrink-0 ${isHighlight ? 'text-yellow-600' : 'text-gray-400'}`}>{icon}</div>
     <div className="flex-1">
-      <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{label}</p>
-      <p className={`text-sm mt-0.5 font-medium break-words ${isHighlight ? 'text-yellow-900' : 'text-gray-900'}`}>{value || "---"}</p>
+      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider leading-tight">{label}</p>
+      {children ? children : <p className={`text-sm font-medium break-words ${isHighlight ? 'text-yellow-900' : 'text-gray-900'}`}>{value || "---"}</p>}
     </div>
   </div>
 );
@@ -51,92 +91,105 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
 
   if (!isOpen || !application) return null;
 
-  const proofImages = [
-    { url: getImgUrl(application.cardFrontImage), caption: "CCCD Mặt trước" },
-    { url: getImgUrl(application.cardBackImage), caption: "CCCD Mặt sau" },
-    { url: getImgUrl(application.businessLicenseImage), caption: "Giấy phép KD" }
-  ].filter(img => img.url && !img.url.includes("placeholder"));
+  const { propertyInfo = {}, paymentInfo = {} } = application;
+  const policies = propertyInfo.policies || {};
 
+  const personalImages = [
+    { url: getImgUrl(application.cardFrontImage), caption: "CCCD Mặt trước" },
+    { url: getImgUrl(application.cardBackImage), caption: "CCCD Mặt sau" }
+  ].filter(img => application.cardFrontImage && application.cardBackImage);
+
+  const businessImages = [
+    { url: getImgUrl(application.businessLicenseImage), caption: "Giấy phép Kinh doanh" }
+  ].filter(img => application.businessLicenseImage);
+
+  const propertyImages = (propertyInfo.propertyImageUrls || []).map((url, idx) => ({
+    url: getImgUrl(url),
+    caption: `Ảnh chỗ nghỉ ${idx + 1}`
+  }));
+
+  const allImages = [...personalImages, ...businessImages, ...propertyImages];
   const isReviewed = application.status !== "PENDING";
   const isRejected = application.status === "REJECTED";
 
   return (
     <ModalPortal>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-6">
         <div className="absolute inset-0 bg-black/60 backdrop-blur-md transition-opacity" onClick={onClose} />
 
-        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-6xl flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
+        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-7xl flex flex-col h-full max-h-[95vh] animate-in fade-in zoom-in-95 duration-200 overflow-hidden">
           
           {/* HEADER */}
-          <div className="flex items-center justify-between px-8 py-5 border-b border-gray-100 bg-white">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white shrink-0">
             <div>
-              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-3">
-                <span className="text-blue-600 bg-blue-50 p-2 rounded-lg"><Briefcase size={24}/></span>
-                Hồ sơ đối tác #{application.id}
+              <h2 className="text-lg font-bold text-gray-800 flex items-center gap-3">
+                <span className="text-blue-600 bg-blue-50 p-1.5 rounded-lg"><Briefcase size={20}/></span>
+                Chi tiết Hồ sơ Đối tác #{application.id}
               </h2>
-              <div className="flex items-center gap-4 mt-1 ml-12">
-                  <p className="text-sm text-gray-500 flex items-center gap-1">
-                    <Calendar size={14}/> Nộp ngày: {formatDateVN(application.createdAt || application.submittedDate)}
+              <div className="flex items-center gap-4 mt-0.5 ml-10">
+                  <p className="text-xs text-gray-500 flex items-center gap-1">
+                    <Calendar size={12}/> Nộp ngày: {formatDateVN(application.createdAt)}
                   </p>
-                  
-                  {/* ✅ Badge trạng thái (Header) - Tiếng Việt */}
-                  <span className={`text-xs font-bold px-2.5 py-1 rounded border flex items-center gap-1.5 ${
+                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded border flex items-center gap-1 ${
                       application.status === 'PENDING' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
                       application.status === 'APPROVED' ? 'bg-green-50 text-green-700 border-green-200' :
                       'bg-red-50 text-red-700 border-red-200'
                   }`}>
-                      {application.status === 'PENDING' && <span className="relative flex h-2 w-2 mr-1"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-yellow-500"></span></span>}
                       {getStatusLabel(application.status)}
                   </span>
               </div>
             </div>
-            <button onClick={onClose} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"><X size={24} /></button>
+            <button onClick={onClose} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors"><X size={20} /></button>
           </div>
 
           {/* BODY */}
-          <div className="flex-1 overflow-y-auto p-8 bg-gray-50/50 custom-scrollbar">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="flex-1 overflow-y-auto p-6 bg-gray-50/30 custom-scrollbar">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               
-              {/* CỘT TRÁI (5/12) */}
-              <div className="lg:col-span-5 space-y-6">
-                <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5 text-white relative overflow-hidden">
-                        <div className="absolute top-0 right-0 p-4 opacity-10"><User size={100}/></div>
-                        <h4 className="font-bold text-base mb-2 opacity-90 relative z-10">Thông tin người nộp</h4>
-                        <h3 className="text-2xl font-bold relative z-10">{application.applicantFullName}</h3>
+              {/* CỘT 1: THÔNG TIN CÁ NHÂN & THANH TOÁN */}
+              <div className="lg:col-span-3 space-y-6">
+                {/* Personal Info */}
+                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                    <SectionTitle icon={User} title="Thông tin cá nhân" />
+                    <div className="space-y-1">
+                        <InfoRow icon={<User size={14}/>} label="Họ và tên" value={application.applicantFullName} />
+                        <InfoRow icon={<Phone size={14}/>} label="Số điện thoại" value={application.applicantPhoneNumber} />
+                        <InfoRow icon={<Mail size={14}/>} label="Email" value={application.applicantEmail} />
+                        <InfoRow icon={<CreditCard size={14}/>} label="Số định danh (CCCD)" value={application.personalIdCard} />
+                        <InfoRow icon={<Cake size={14}/>} label="Ngày sinh" value={formatDateVN(application.applicantDob)} />
+                        <InfoRow icon={<UsersIcon size={14}/>} label="Giới tính" value={getGenderLabel(application.gender)} />
+                        {/* Hiển thị địa chỉ thường trú, nếu null thì hiện --- */}
+                        <InfoRow icon={<MapPin size={14}/>} label="Địa chỉ" value={application.permanentAddress} />
                     </div>
-                    <div className="p-5">
-                        <InfoRow icon={<Mail size={16}/>} label="Email" value={application.applicantEmail} />
-                        <InfoRow icon={<Phone size={16}/>} label="SĐT" value={application.applicantPhoneNumber} />
-                        <InfoRow icon={<Cake size={16}/>} label="Ngày sinh" value={formatDateVN(application.applicantDob)} />
-                        <InfoRow icon={<CreditCard size={16}/>} label="Số CCCD" value={application.personalIdCard} />
-                        <InfoRow icon={<MapPin size={16}/>} label="Quê quán" value={application.hometownAddress} />
-                        <InfoRow icon={<MapPin size={16}/>} label="Thường trú" value={application.permanentAddress} />
+                </div>
+
+                {/* Payment Info */}
+                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                    <SectionTitle icon={Banknote} title="Thanh toán" />
+                    <div className="space-y-1">
+                        <InfoRow icon={<DollarSign size={14}/>} label="Phương thức" value={paymentInfo?.paymentMethod === 'BANK_TRANSFER' ? 'Chuyển khoản' : paymentInfo?.paymentMethod} />
+                        <InfoRow icon={<Briefcase size={14}/>} label="Ngân hàng" value={paymentInfo?.bankName} />
+                        <InfoRow icon={<User size={14}/>} label="Chủ tài khoản" value={paymentInfo?.accountHolderName} />
+                        <InfoRow icon={<CreditCard size={14}/>} label="Số tài khoản" value={paymentInfo?.accountNumber} />
                     </div>
                 </div>
 
                 {isReviewed && (
-                    <div className={`rounded-2xl border shadow-sm overflow-hidden ${isRejected ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'}`}>
-                        <div className={`px-6 py-4 border-b flex items-center gap-2 ${isRejected ? 'border-red-200 text-red-800' : 'border-green-200 text-green-800'}`}>
-                            {isRejected ? <AlertOctagon size={20}/> : <ShieldCheck size={20}/>}
-                            <h4 className="font-bold text-base">Kết quả xét duyệt</h4>
-                        </div>
-                        <div className="p-5 space-y-3">
-                            <div className="flex justify-between items-center border-b border-black/5 pb-2">
-                                <span className="text-sm font-medium opacity-70">Người duyệt:</span>
-                                <span className="font-bold">{application.reviewedByAdminName || "Admin"}</span>
+                    <div className={`p-5 rounded-2xl border shadow-sm ${isRejected ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'}`}>
+                        <SectionTitle icon={isRejected ? AlertOctagon : ShieldCheck} title="Kết quả xét duyệt" />
+                        <div className="space-y-2 mt-2">
+                            <div className="flex justify-between text-xs">
+                                <span className="text-gray-500">Người duyệt:</span>
+                                <span className="font-bold">{application.reviewedByAdminName || "Quản trị viên"}</span>
                             </div>
-                            <div className="flex justify-between items-center border-b border-black/5 pb-2">
-                                <span className="text-sm font-medium opacity-70">Ngày duyệt:</span>
+                            <div className="flex justify-between text-xs">
+                                <span className="text-gray-500">Ngày duyệt:</span>
                                 <span className="font-bold">{formatDateVN(application.reviewedAt)}</span>
                             </div>
-                            
                             {isRejected && (
-                                <div className="pt-2">
-                                    <span className="text-xs font-bold uppercase opacity-70 block mb-1">Lý do từ chối:</span>
-                                    <p className="bg-white/60 p-3 rounded-lg text-red-700 text-sm italic border border-red-100">
-                                        "{application.adminReason || "Không có lý do cụ thể"}"
-                                    </p>
+                                <div className="mt-3 p-3 bg-white/60 rounded-lg border border-red-100">
+                                    <p className="text-[10px] font-bold text-red-500 uppercase mb-1">Lý do từ chối:</p>
+                                    <p className="text-xs text-red-700 italic">"{application.adminReason || "Không cung cấp lý do"}"</p>
                                 </div>
                             )}
                         </div>
@@ -144,35 +197,135 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
                 )}
               </div>
 
-              {/* CỘT PHẢI (7/12) */}
-              <div className="lg:col-span-7 space-y-6">
-                <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm">
-                    <h3 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
-                        <ImageIcon size={18} className="text-blue-500"/> Ảnh minh chứng ({proofImages.length})
-                    </h3>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                        {proofImages.map((img, idx) => (
-                            <div 
-                                key={idx} 
-                                className={`relative group cursor-pointer overflow-hidden rounded-xl border border-gray-100 shadow-sm ${idx === 2 ? 'col-span-2 h-56' : 'h-48'}`}
-                                onClick={() => { setViewerIndex(idx); setViewerOpen(true); }}
-                            >
-                                <img src={img.url} alt={img.caption} className="w-full h-full object-contain bg-gray-50 transition-transform duration-500 group-hover:scale-105" />
-                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
-                                <span className="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-sm">
-                                    {img.caption}
-                                </span>
-                            </div>
-                        ))}
+              {/* CỘT 2: THÔNG TIN CHỖ NGHỈ & CHÍNH SÁCH */}
+              <div className="lg:col-span-4 space-y-6">
+                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                    <SectionTitle icon={Home} title="Thông tin chỗ nghỉ" />
+                    <div className="space-y-1">
+                        <InfoRow icon={<Home size={14}/>} label="Tên chỗ nghỉ" value={propertyInfo.propertyName} />
+                        <InfoRow icon={<Briefcase size={14}/>} label="Loại hình" value={getPropertyTypeLabel(propertyInfo.propertyType)} />
+                        <InfoRow icon={<MapPin size={14}/>} label="Địa chỉ chỗ nghỉ" value={propertyInfo.propertyAddress} />
+                        <InfoRow icon={<Map size={14}/>} label="Khu vực" value={`${propertyInfo.propertyWard || ''}, ${propertyInfo.propertyDistrict || ''}, ${propertyInfo.propertyCity || ''}`.replace(/, , /g, ', ').trim().replace(/^,|,$/g, '')} />
+                        
+                        {/* FIX LIÊN KẾT GOOGLE MAPS */}
+                        <InfoRow icon={<Compass size={14}/>} label="Vị trí trên bản đồ">
+                            {propertyInfo.latitude && propertyInfo.longitude ? (
+                                <a 
+                                    href={`https://www.google.com/maps?q=${propertyInfo.latitude},${propertyInfo.longitude}`} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer" 
+                                    className="text-blue-600 text-sm font-medium hover:underline flex items-center gap-1"
+                                >
+                                    Xem trên Google Maps <Maximize size={12}/>
+                                </a>
+                            ) : (
+                                <span className="text-gray-400 text-xs italic">Chưa có tọa độ</span>
+                            )}
+                        </InfoRow>
+
+                        <InfoRow icon={<Info size={14}/>} label="Mô tả">
+                           <p className="text-sm font-medium text-gray-800 whitespace-pre-line line-clamp-4 hover:line-clamp-none transition-all cursor-default">
+                               {propertyInfo.description || '---'}
+                           </p>
+                        </InfoRow>
+                        <InfoRow icon={<DollarSign size={14}/>} label="Giá cơ bản" value={formatCurrency(propertyInfo.price)} />
+                        <InfoRow icon={<DollarSign size={14}/>} label="Giá cuối tuần" value={formatCurrency(propertyInfo.weekendPrice)} />
+                        <InfoRow icon={<UsersIcon size={14}/>} label="Sức chứa" value={`${propertyInfo.capacity || 0} người lớn`} />
+                        <InfoRow icon={<Maximize size={14}/>} label="Diện tích" value={`${propertyInfo.area || 0} m²`} />
+                        <InfoRow icon={<ShieldCheck size={14}/>} label="Giấy phép KD" value={propertyInfo.businessLicenseNumber || application.businessLicenseNumber} isHighlight />
                     </div>
-                    
-                    <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-100 flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 text-blue-600 rounded-lg"><Briefcase size={20}/></div>
-                        <div>
-                            <p className="text-xs text-blue-600 font-semibold uppercase">Số Giấy phép kinh doanh</p>
-                            <p className="text-lg font-bold text-blue-900 tracking-wide">{application.businessLicenseNumber}</p>
+                </div>
+
+                 {propertyInfo.amenityNames && propertyInfo.amenityNames.length > 0 && (
+                    <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                        <SectionTitle icon={Sparkles} title="Tiện ích nổi bật" />
+                        <div className="flex flex-wrap gap-2">
+                            {propertyInfo.amenityNames.map((amenity, idx) => (
+                                <AmenityBadge key={idx} amenity={amenity} />
+                            ))}
                         </div>
+                    </div>
+                 )}
+
+                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
+                    <SectionTitle icon={Clock} title="Chính sách vận hành" />
+                    <div className="grid grid-cols-2 gap-x-4">
+                        <InfoRow icon={<Clock size={14}/>} label="Giờ nhận phòng" value={policies.checkInTime} />
+                        <InfoRow icon={<Clock size={14}/>} label="Giờ trả phòng" value={policies.checkOutTime} />
+                        <InfoRow icon={<UsersIcon size={14}/>} label="Tuổi tối thiểu" value={policies.minimumAge ? `${policies.minimumAge} tuổi` : 'N/A'} />
+                        <InfoRow icon={<XCircle size={14}/>} label="Hủy miễn phí" value={policies.allowFreeCancellation ? "Có" : "Không"} />
+                        {policies.allowFreeCancellation && (
+                            <div className="col-span-2">
+                                <InfoRow icon={<Calendar size={14}/>} label="Hạn hủy miễn phí" value={policies.freeCancellationDays ? `Trước ${policies.freeCancellationDays} ngày` : 'N/A'} />
+                            </div>
+                        )}
+                    </div>
+                </div>
+              </div>
+
+              {/* CỘT 3: HÌNH ẢNH MINH CHỨNG */}
+              <div className="lg:col-span-5 space-y-6">
+                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm h-full">
+                    <SectionTitle icon={ImageIcon} title={`Hình ảnh minh chứng (${allImages.length})`} />
+                    
+                    <div className="space-y-6">
+                        {/* CCCD & License Group */}
+                        {([...personalImages, ...businessImages].length > 0) ? (
+                            <div>
+                                <p className="text-xs font-bold text-gray-400 uppercase mb-3 px-1">Định danh & Pháp lý</p>
+                                <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
+                                    {[...personalImages, ...businessImages].map((img, idx) => (
+                                        <div 
+                                            key={idx} 
+                                            className="relative group cursor-pointer aspect-[4/3] rounded-xl overflow-hidden border border-gray-100 hover:border-blue-400 transition"
+                                            onClick={() => { 
+                                                const globalIdx = allImages.findIndex(ai => ai.url === img.url);
+                                                setViewerIndex(globalIdx !== -1 ? globalIdx : 0); 
+                                                setViewerOpen(true); 
+                                            }}
+                                        >
+                                            <img src={img.url} alt={img.caption} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
+                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-2">
+                                                <p className="text-[10px] text-white font-bold text-center leading-tight">{img.caption}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                <p className="text-sm text-gray-400">Không có tài liệu pháp lý</p>
+                            </div>
+                        )}
+
+                        {/* Property Images Group */}
+                        {propertyImages.length > 0 ? (
+                            <div>
+                                <p className="text-xs font-bold text-gray-400 uppercase mb-3 px-1">Ảnh Chỗ nghỉ</p>
+                                <div className="grid grid-cols-3 gap-2">
+                                    {propertyImages.map((img, idx) => (
+                                        <div 
+                                            key={idx} 
+                                            className="relative group cursor-pointer aspect-square rounded-lg overflow-hidden border border-gray-100 hover:border-blue-400 transition"
+                                            onClick={() => { 
+                                                const globalIdx = allImages.findIndex(ai => ai.url === img.url);
+                                                setViewerIndex(globalIdx !== -1 ? globalIdx : 0); 
+                                                setViewerOpen(true); 
+                                            }}
+                                        >
+                                            <img src={img.url} alt={img.caption} className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                                               <p className="text-[10px] text-white font-bold">{`Ảnh ${idx+1}`}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                <p className="text-sm text-gray-400">Chưa tải lên ảnh chỗ nghỉ</p>
+                            </div>
+                        )}
                     </div>
                 </div>
               </div>
@@ -181,25 +334,24 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
           </div>
 
           {/* FOOTER */}
-          <div className="p-5 border-t border-gray-100 bg-white rounded-b-2xl flex justify-end gap-3 shrink-0 z-10">
+          <div className="px-6 py-4 border-t border-gray-100 bg-white/50 backdrop-blur-sm rounded-b-2xl flex justify-end gap-3 shrink-0">
             {application.status === "PENDING" ? (
                 <>
-                    <Button variant="danger" leftIcon={<XCircle size={18} />} onClick={() => onReject(application)} className="bg-white text-red-600 border-red-200 hover:bg-red-50 px-6">
-                        Từ chối hồ sơ
+                    <Button variant="danger" leftIcon={<XCircle size={18} />} onClick={() => onReject(application)} className="bg-white text-red-600 border-red-200 hover:bg-red-50 font-semibold">
+                        Từ chối
                     </Button>
-                    <Button variant="primary" leftIcon={<CheckCircle size={18} />} className="bg-green-600 hover:bg-green-700 border-green-600 text-white px-8 shadow-lg shadow-green-200" onClick={() => onApprove(application)}>
-                        Phê duyệt ngay
+                    <Button variant="primary" leftIcon={<CheckCircle size={18} />} className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/50 font-semibold" onClick={() => onApprove(application)}>
+                        Duyệt hồ sơ
                     </Button>
                 </>
             ) : (
-                // ✅ Badge trạng thái (Footer) - Tiếng Việt
-                <div className={`px-5 py-2.5 rounded-xl font-bold text-sm flex items-center gap-2 shadow-sm ${
+                <div className={`px-4 py-2 rounded-lg font-bold text-xs flex items-center gap-2 ${
                     application.status === 'APPROVED' 
-                    ? 'bg-green-50 text-green-700 border border-green-200' 
-                    : 'bg-red-50 text-red-700 border border-red-200'
+                    ? 'bg-green-100 text-green-800 border border-green-200' 
+                    : 'bg-red-100 text-red-800 border border-red-200'
                 }`}>
-                     {application.status === 'APPROVED' ? <CheckCircle size={18}/> : <XCircle size={18}/>}
-                     {getStatusLabel(application.status)}
+                     {application.status === 'APPROVED' ? <CheckCircle size={14}/> : <XCircle size={14}/>}
+                     Hồ sơ đã được {getStatusLabel(application.status).toLowerCase()}
                  </div>
             )}
           </div>
@@ -211,7 +363,7 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
         <ImageViewerModal 
             open={viewerOpen} 
             onClose={() => setViewerOpen(false)} 
-            images={proofImages} 
+            images={allImages} 
             startIndex={viewerIndex}
         />
       )}
