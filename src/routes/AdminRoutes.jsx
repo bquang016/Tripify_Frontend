@@ -117,7 +117,7 @@ const adminRoutes = [
         path: "/admin/audit-logs",
         element: (
             <AdminLayout>
-                <ProtectedRoute roles={["ADMIN"]}>
+                <ProtectedRoute requiredRole="ADMIN">
                     <AuditLogsPage />
                 </ProtectedRoute>
             </AdminLayout>
@@ -127,7 +127,7 @@ const adminRoutes = [
         path: "/admin/notifications",
         element: (
             <AdminLayout>
-                <ProtectedRoute roles={["ADMIN"]}>
+                <ProtectedRoute requiredRole="ADMIN">
                     <AdminNotificationsPage />
                 </ProtectedRoute>
             </AdminLayout>
