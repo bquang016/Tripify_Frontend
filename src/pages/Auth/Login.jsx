@@ -47,7 +47,6 @@ const Login = () => {
 
     const handle2faSuccess = async (otpCode) => {
         setLoading(true);
-        const loginToast = toast.loading("Đang xác thực bảo mật 2 lớp...");
         try {
             const res = await authService.verify2faLogin(pendingEmail, otpCode);
             
@@ -55,12 +54,12 @@ const Login = () => {
                 if (updateUser) {
                     await updateUser(res.data.user);
                 }
-                toast.success("Đăng nhập thành công!", { id: loginToast });
+                toast.success("Đăng nhập thành công!");
+                setShow2faModal(false); // Đóng modal 2FA khi thành công
                 navigate(from, { replace: true });
             }
         } catch (err) {
-            const msg = err.response?.data?.message || "Mã xác thực không chính xác.";
-            toast.error(msg, { id: loginToast });
+            throw err; // Ném lỗi để modal reset và hiện toast
         } finally {
             setLoading(false);
         }

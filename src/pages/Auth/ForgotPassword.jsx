@@ -48,16 +48,28 @@ const ForgotPassword = () => {
 
     setLoading(true);
     try {
-      // Gọi API gửi OTP cho luồng quên mật khẩu
-      await authService.sendOtp(email.trim(), "FORGOT_PASSWORD");
-      toast.success("Mã xác thực đã được gửi đến email của bạn.");
+      // Hiển thị Modal ngay lập tức như yêu cầu của bạn
       setShowOTPModal(true);
+
+      // Gọi API gửi OTP cho luồng quên mật khẩu (chạy song song/nền)
+      authService.sendOtp(email.trim(), "FORGOT_PASSWORD")
+        .then(() => {
+          toast.success("Mã xác thực đã được gửi đến email của bạn.");
+        })
+        .catch((err) => {
+          console.error("Forgot Password Send OTP Error:", err);
+          const msg = err.response?.data?.message || "Không tìm thấy tài khoản với email này.";
+          setError(msg);
+          toast.error(msg);
+          // Nếu gửi lỗi thì đóng modal lại
+          setShowOTPModal(false);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+
     } catch (err) {
-      console.error("Forgot Password Error:", err);
-      const msg = err.response?.data?.message || "Không tìm thấy tài khoản với email này.";
-      setError(msg);
-      toast.error(msg);
-    } finally {
+      console.error("Forgot Password Submit Error:", err);
       setLoading(false);
     }
   };

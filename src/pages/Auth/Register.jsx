@@ -163,29 +163,28 @@ const Register = () => {
     // --- OTP SUCCESS HANDLER ---
     const handleOTPSuccess = async (otpCode) => {
         setLoading(true);
-        const registerToast = toast.loading("Đang xác thực và hoàn tất đăng ký...");
         try {
             // Bước 3: Gọi verify-register để xác thực OTP và kích hoạt tài khoản
             const res = await authService.verifyRegister(formData.email, otpCode);
 
             if (res.success) {
-                toast.success("Đăng ký thành công! Đang chuyển hướng đến trang đăng nhập...", { 
-                    id: registerToast,
-                    duration: 4000 
-                });
+                toast.success("Đăng ký thành công! Đang chuyển hướng đến trang đăng nhập...");
                 
-                // Chuyển hướng về trang đăng nhập như yêu cầu của bạn
+                // Đóng modal ngay khi thành công
+                setShowOTPModal(false);
+
+                // Chuyển hướng về trang đăng nhập
                 setTimeout(() => {
                     navigate("/login");
                 }, 2000);
             }
         } catch (err) {
             console.error("Verification Error:", err);
-            // Lấy message chi tiết từ object lỗi của Backend
             const serverMsg = err.response?.data?.message || err.response?.data || "Mã OTP không chính xác hoặc đã hết hạn.";
-            
-            toast.error(typeof serverMsg === 'string' ? serverMsg : JSON.stringify(serverMsg), { id: registerToast });
             setError(typeof serverMsg === 'string' ? serverMsg : "Lỗi xác thực dữ liệu.");
+            
+            // Ném lỗi để OTPModal biết và thực hiện reset + hiện toast 1 lần duy nhất
+            throw err;
         } finally {
             setLoading(false);
         }
@@ -276,31 +275,41 @@ const Register = () => {
 
         if (loading) return; // Chặn nhấn nhiều lần khi đang xử lý
 
+        // Hiển thị Modal ngay lập tức như yêu cầu của bạn
+        setShowOTPModal(true);
         setLoading(true);
+
         try {
             // Bước 1: Gọi API Register để lưu tạm thông tin
             // Backend ĐÃ tự động gửi mã OTP tại đây. KHÔNG GỌI thêm sendOtp ở đây.
-            const response = await authService.register(fullName, email, password, confirmPassword);
-            
-            console.log(">>> Register successful, OTP should be sent by BE:", response);
-            
-            toast.success("Mã xác thực đã được gửi đến email của bạn.");
-            setShowOTPModal(true);
-            setError(""); 
+            authService.register(fullName, email, password, confirmPassword)
+                .then((response) => {
+                    console.log(">>> Register successful, OTP should be sent by BE:", response);
+                    toast.success("Mã xác thực đã được gửi đến email của bạn.");
+                    setError(""); 
+                })
+                .catch((err) => {
+                    console.error("Registration Step 1 Error:", err);
+                    setShowOTPModal(false); // Đóng modal nếu có lỗi xảy ra
+
+                    const statusCode = err.response?.status;
+                    const serverMsg = err.response?.data?.message || "Không thể thực hiện đăng ký. Vui lòng thử lại.";
+                    
+                    if (statusCode === 409) {
+                        setError("Email này đã được đăng ký. Vui lòng sử dụng email khác hoặc đăng nhập.");
+                        toast.error("Email đã tồn tại trên hệ thống!");
+                    } else {
+                        setError(serverMsg);
+                        toast.error(serverMsg);
+                    }
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
+
         } catch (err) {
-            console.error("Registration Step 1 Error:", err);
-            const statusCode = err.response?.status;
-            const serverMsg = err.response?.data?.message || "Không thể thực hiện đăng ký. Vui lòng thử lại.";
-            
-            if (statusCode === 409) {
-                // Hiển thị thông báo email đã tồn tại như yêu cầu
-                setError("Email này đã được đăng ký. Vui lòng sử dụng email khác hoặc đăng nhập.");
-                toast.error("Email đã tồn tại trên hệ thống!");
-            } else {
-                setError(serverMsg);
-                toast.error(serverMsg);
-            }
-        } finally {
+            console.error("Register catch error:", err);
+            setShowOTPModal(false);
             setLoading(false);
         }
     };
