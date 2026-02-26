@@ -116,15 +116,24 @@ const SettingsPage = () => {
 
     const handleToggle = async (key) => {
         if (key === "twoFactor") {
+            // Hiện Modal ngay lập tức
+            setShow2faOtp(true);
+            
             const loadingToast = toast.loading("Đang khởi tạo yêu cầu bảo mật...");
             try {
-                // Gọi API yêu cầu OTP để thay đổi cấu hình 2FA
-                await authService.request2faToggle();
-                toast.success("Mã xác thực đã được gửi về email của bạn.", { id: loadingToast });
-                setShow2faOtp(true);
+                // Gọi API yêu cầu OTP để thay đổi cấu hình 2FA (chạy trong nền)
+                authService.request2faToggle()
+                    .then(() => {
+                        toast.success("Mã xác thực đã được gửi về email của bạn.", { id: loadingToast });
+                    })
+                    .catch((error) => {
+                        console.error("Request 2FA Toggle Error:", error);
+                        toast.error("Không thể yêu cầu thay đổi lúc này. Vui lòng thử lại sau.", { id: loadingToast });
+                        setShow2faOtp(false); // Đóng modal nếu lỗi
+                    });
             } catch (error) {
-                console.error("Request 2FA Toggle Error:", error);
-                toast.error("Không thể yêu cầu thay đổi lúc này. Vui lòng thử lại sau.", { id: loadingToast });
+                console.error("Request 2FA Toggle Try-Catch Error:", error);
+                setShow2faOtp(false);
             }
             return;
         }
@@ -133,7 +142,6 @@ const SettingsPage = () => {
 
     const handle2faOtpSuccess = async (otpCode) => {
         setLoading(true);
-        const toggleToast = toast.loading("Đang cập nhật cấu hình bảo mật...");
         try {
             const res = await authService.toggle2fa(otpCode);
             if (res.success) {
@@ -146,11 +154,12 @@ const SettingsPage = () => {
                 // 2. Đồng bộ với AuthContext và localStorage (Quan trọng để không bị reset khi F5)
                 updateUser({ twoFactorEnabled: newState });
                 
-                toast.success(newState ? "Đã bật xác thực 2 lớp thành công!" : "Đã tắt xác thực 2 lớp thành công!", { id: toggleToast });
+                toast.success(newState ? "Đã bật xác thực 2 lớp thành công!" : "Đã tắt xác thực 2 lớp thành công!");
+                setShow2faOtp(false); // Đóng modal khi thành công
             }
         } catch (error) {
             console.error("Toggle 2FA Error:", error);
-            toast.error(error.response?.data?.message || "Mã xác thực không chính xác.", { id: toggleToast });
+            throw error; // Ném lỗi để modal reset và hiện toast
         } finally {
             setLoading(false);
         }
