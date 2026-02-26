@@ -101,13 +101,18 @@ const OTPModal = ({ isOpen, onClose, email, onSuccess, verifyOtpApi }) => {
         onSuccess(token);
         onClose();
       } else {
-        console.error("Token not found in response structure");
-        toast.error('Xác thực thành công nhưng không tìm thấy mã đăng ký trong phản hồi.');
+        throw new Error('Xác thực thành công nhưng không tìm thấy mã đăng ký trong phản hồi.');
       }
     } catch (error) {
       console.error("OTP Verification Error Details:", error);
-      const msg = error.response?.data?.message || 'Mã xác thực không chính xác hoặc đã hết hạn.';
+      const msg = error.response?.data?.message || error.message || 'Mã xác thực không chính xác hoặc đã hết hạn.';
       toast.error(msg);
+
+      // ✅ RESET OTP VÀ FOCUS LẠI KHI SAI (Yêu cầu của bạn)
+      setOtp(['', '', '', '', '', '']);
+      if (inputRefs.current[0]) {
+        inputRefs.current[0].focus();
+      }
     } finally {
       setLoading(false);
     }

@@ -163,29 +163,28 @@ const Register = () => {
     // --- OTP SUCCESS HANDLER ---
     const handleOTPSuccess = async (otpCode) => {
         setLoading(true);
-        const registerToast = toast.loading("Đang xác thực và hoàn tất đăng ký...");
         try {
             // Bước 3: Gọi verify-register để xác thực OTP và kích hoạt tài khoản
             const res = await authService.verifyRegister(formData.email, otpCode);
 
             if (res.success) {
-                toast.success("Đăng ký thành công! Đang chuyển hướng đến trang đăng nhập...", { 
-                    id: registerToast,
-                    duration: 4000 
-                });
+                toast.success("Đăng ký thành công! Đang chuyển hướng đến trang đăng nhập...");
                 
-                // Chuyển hướng về trang đăng nhập như yêu cầu của bạn
+                // Đóng modal ngay khi thành công
+                setShowOTPModal(false);
+
+                // Chuyển hướng về trang đăng nhập
                 setTimeout(() => {
                     navigate("/login");
                 }, 2000);
             }
         } catch (err) {
             console.error("Verification Error:", err);
-            // Lấy message chi tiết từ object lỗi của Backend
             const serverMsg = err.response?.data?.message || err.response?.data || "Mã OTP không chính xác hoặc đã hết hạn.";
-            
-            toast.error(typeof serverMsg === 'string' ? serverMsg : JSON.stringify(serverMsg), { id: registerToast });
             setError(typeof serverMsg === 'string' ? serverMsg : "Lỗi xác thực dữ liệu.");
+            
+            // Ném lỗi để OTPModal biết và thực hiện reset + hiện toast 1 lần duy nhất
+            throw err;
         } finally {
             setLoading(false);
         }

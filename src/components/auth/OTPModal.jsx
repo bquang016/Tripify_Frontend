@@ -73,24 +73,25 @@ const OTPModal = ({ isOpen, onClose, email, onSuccess, type = "REGISTER" }) => {
       if (type === "REGISTER" || type === "LOGIN_2FA" || type === "TWO_FACTOR_AUTH") {
         // Các luồng cần xử lý thêm ở component cha: REGISTER, LOGIN_2FA, TWO_FACTOR_AUTH
         console.log(`>>> OTP for ${type} entered, passing to parent...`);
-        setTimeout(() => {
+        
+        // Đợi component cha xử lý xong
+        if (onSuccess) {
+          await onSuccess(otpCode);
+          // Nếu onSuccess thành công (không ném lỗi), ta có thể đóng modal
+          // Lưu ý: Thông thường component cha sẽ quản lý việc đóng modal này thông qua prop isOpen
+          // nhưng ta gọi onClose ở đây cho chắc chắn nếu cha không chủ động đóng.
           toast.dismiss(loadingToast);
-          if (onSuccess) onSuccess(otpCode);
-          onClose();
-        }, 500);
+        }
       } else {
         // Luồng khác (Quên mật khẩu...): Gọi verifyOtp trực tiếp
         console.log(`>>> [STEP 2] Verifying OTP for current flow [${type}]...`);
         const response = await authService.verifyOtp(email, otpCode, type);
         
-        // Log để kiểm tra cấu trúc data từ backend
         console.log(">>> [STEP 2] Verify OTP Response:", response);
 
         if (response && response.success) {
           toast.success('Xác thực mã OTP thành công!', { id: loadingToast });
           
-          // Theo backend: response.data thường chứa Secure Token (UUID)
-          // Chúng ta ưu tiên lấy từ response.data, nếu nó là object thì tìm field token hoặc data bên trong
           let secureToken = response.data;
           if (typeof response.data === 'object' && response.data !== null) {
             secureToken = response.data.token || response.data.data || response.data;
@@ -98,18 +99,22 @@ const OTPModal = ({ isOpen, onClose, email, onSuccess, type = "REGISTER" }) => {
           
           console.log(">>> [DEBUG] Secure Token extracted:", secureToken);
 
-          setTimeout(() => {
-            if (onSuccess) onSuccess(secureToken);
-            onClose();
-          }, 800);
+          if (onSuccess) onSuccess(secureToken);
+          onClose();
         } else {
-          toast.error(response?.message || 'Xác thực không thành công', { id: loadingToast });
+          throw new Error(response?.message || 'Xác thực không thành công');
         }
       }
     } catch (error) {
       console.error('Verify OTP Error:', error);
-      const errorMessage = error.response?.data?.message || 'Mã OTP không chính xác hoặc đã hết hạn';
+      const errorMessage = error.response?.data?.message || error.message || 'Mã OTP không chính xác hoặc đã hết hạn';
       toast.error(errorMessage, { id: loadingToast });
+      
+      // ✅ RESET OTP VÀ FOCUS LẠI KHI SAI (Yêu cầu của bạn)
+      setOtp(['', '', '', '', '', '']);
+      if (inputRefs.current[0]) {
+        inputRefs.current[0].focus();
+      }
     } finally {
       setLoading(false);
     }
