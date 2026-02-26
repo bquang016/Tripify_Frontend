@@ -12,8 +12,22 @@ function App() {
     <AuthContextProvider>
       <OnboardingProvider>
         <BrowserRouter>
-        <ScrollToTop />
+          <ScrollToTop />
           <AppRoutes />
+          {/* Cấu hình Toaster toàn cục với z-index cực cao để không bị che bởi Modal */}
+          <Toaster 
+            position="top-right"
+            containerStyle={{
+              zIndex: 99999,
+            }}
+            toastOptions={{
+              duration: 4000,
+              style: {
+                background: '#363636',
+                color: '#fff',
+              },
+            }}
+          />
         </BrowserRouter>
       </OnboardingProvider>
     </AuthContextProvider>
