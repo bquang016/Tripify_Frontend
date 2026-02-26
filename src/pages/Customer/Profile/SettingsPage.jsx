@@ -116,15 +116,24 @@ const SettingsPage = () => {
 
     const handleToggle = async (key) => {
         if (key === "twoFactor") {
+            // Hiện Modal ngay lập tức
+            setShow2faOtp(true);
+            
             const loadingToast = toast.loading("Đang khởi tạo yêu cầu bảo mật...");
             try {
-                // Gọi API yêu cầu OTP để thay đổi cấu hình 2FA
-                await authService.request2faToggle();
-                toast.success("Mã xác thực đã được gửi về email của bạn.", { id: loadingToast });
-                setShow2faOtp(true);
+                // Gọi API yêu cầu OTP để thay đổi cấu hình 2FA (chạy trong nền)
+                authService.request2faToggle()
+                    .then(() => {
+                        toast.success("Mã xác thực đã được gửi về email của bạn.", { id: loadingToast });
+                    })
+                    .catch((error) => {
+                        console.error("Request 2FA Toggle Error:", error);
+                        toast.error("Không thể yêu cầu thay đổi lúc này. Vui lòng thử lại sau.", { id: loadingToast });
+                        setShow2faOtp(false); // Đóng modal nếu lỗi
+                    });
             } catch (error) {
-                console.error("Request 2FA Toggle Error:", error);
-                toast.error("Không thể yêu cầu thay đổi lúc này. Vui lòng thử lại sau.", { id: loadingToast });
+                console.error("Request 2FA Toggle Try-Catch Error:", error);
+                setShow2faOtp(false);
             }
             return;
         }

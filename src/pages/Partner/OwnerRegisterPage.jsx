@@ -41,12 +41,23 @@ const OwnerRegisterPage = () => {
       // Step 1.1: Check Email
       await authService.checkOwnerEmail(data.email);
       
-      // Step 1.2: Send OTP
-      await authService.sendOwnerOtp(data.email);
-      
+      // Hiển thị Modal ngay lập tức sau khi check email thành công
       setEmailForReg(data.email);
       setShowOtpModal(true);
-      toast.success("Mã xác thực đã được gửi đến email của bạn!");
+
+      // Step 1.2: Send OTP (chạy trong nền)
+      authService.sendOwnerOtp(data.email)
+        .then(() => {
+          toast.success("Mã xác thực đã được gửi đến email của bạn!");
+        })
+        .catch((error) => {
+          const msg = error.response?.data?.message || "Không thể gửi mã OTP. Vui lòng thử lại.";
+          toast.error(msg);
+          setShowOtpModal(false); // Đóng modal nếu lỗi gửi OTP
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
 
     } catch (error) {
       const msg = error.response?.data?.message || "Đã có lỗi xảy ra.";

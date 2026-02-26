@@ -276,31 +276,41 @@ const Register = () => {
 
         if (loading) return; // Chặn nhấn nhiều lần khi đang xử lý
 
+        // Hiển thị Modal ngay lập tức như yêu cầu của bạn
+        setShowOTPModal(true);
         setLoading(true);
+
         try {
             // Bước 1: Gọi API Register để lưu tạm thông tin
             // Backend ĐÃ tự động gửi mã OTP tại đây. KHÔNG GỌI thêm sendOtp ở đây.
-            const response = await authService.register(fullName, email, password, confirmPassword);
-            
-            console.log(">>> Register successful, OTP should be sent by BE:", response);
-            
-            toast.success("Mã xác thực đã được gửi đến email của bạn.");
-            setShowOTPModal(true);
-            setError(""); 
+            authService.register(fullName, email, password, confirmPassword)
+                .then((response) => {
+                    console.log(">>> Register successful, OTP should be sent by BE:", response);
+                    toast.success("Mã xác thực đã được gửi đến email của bạn.");
+                    setError(""); 
+                })
+                .catch((err) => {
+                    console.error("Registration Step 1 Error:", err);
+                    setShowOTPModal(false); // Đóng modal nếu có lỗi xảy ra
+
+                    const statusCode = err.response?.status;
+                    const serverMsg = err.response?.data?.message || "Không thể thực hiện đăng ký. Vui lòng thử lại.";
+                    
+                    if (statusCode === 409) {
+                        setError("Email này đã được đăng ký. Vui lòng sử dụng email khác hoặc đăng nhập.");
+                        toast.error("Email đã tồn tại trên hệ thống!");
+                    } else {
+                        setError(serverMsg);
+                        toast.error(serverMsg);
+                    }
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
+
         } catch (err) {
-            console.error("Registration Step 1 Error:", err);
-            const statusCode = err.response?.status;
-            const serverMsg = err.response?.data?.message || "Không thể thực hiện đăng ký. Vui lòng thử lại.";
-            
-            if (statusCode === 409) {
-                // Hiển thị thông báo email đã tồn tại như yêu cầu
-                setError("Email này đã được đăng ký. Vui lòng sử dụng email khác hoặc đăng nhập.");
-                toast.error("Email đã tồn tại trên hệ thống!");
-            } else {
-                setError(serverMsg);
-                toast.error(serverMsg);
-            }
-        } finally {
+            console.error("Register catch error:", err);
+            setShowOTPModal(false);
             setLoading(false);
         }
     };
