@@ -1,77 +1,115 @@
 // src/pages/Admin/AuditLogs/AuditTable.jsx
 
 import React from "react";
+import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { formatAuditValue, getActionColor } from "@/utils/auditValueMapper";
 
-export default function AuditTable({ logs = [], onViewDetail }) {
+export default function AuditTable({ logs, sortConfig, onSort, onViewDetail }) {
+    
+    // Helper để render icon sort
+    const renderSortIcon = (key) => {
+        if (sortConfig.key !== key) return <ArrowUpDown size={14} className="text-gray-300 opacity-0 group-hover:opacity-100 transition-all ml-1.5" />;
+        return sortConfig.direction === 'asc' 
+            ? <ArrowUp size={14} className="text-[rgb(40,169,224)] ml-1.5" /> 
+            : <ArrowDown size={14} className="text-[rgb(40,169,224)] ml-1.5" />;
+    };
+
+    const headerClass = (key) => `
+        px-6 py-4 text-sm font-semibold tracking-tight transition-all cursor-pointer group
+        ${sortConfig.key === key ? 'text-[rgb(40,169,224)] bg-blue-50/30' : 'text-gray-700 hover:text-[rgb(40,169,224)]'}
+    `;
+
     return (
-        <table className="w-full border-collapse">
-            {/* HEADER */}
-            <thead className="bg-gray-50">
-            <tr className="text-left text-sm font-semibold text-blue-600">
-                <th className="px-6 py-4">Mã Log</th>
-                <th className="px-6 py-4">Hành Động</th>
-                <th className="px-6 py-4">Đối Tượng</th>
-                <th className="px-6 py-4">Mô Tả</th>
-                <th className="px-6 py-4">Người Thực Hiện</th>
-                <th className="px-6 py-4 text-right"></th>
-            </tr>
-            </thead>
+        <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+                <thead className="bg-gray-50/50 border-b border-gray-100">
+                    <tr>
+                        <th className={headerClass('logId')} onClick={() => onSort('logId')}>
+                            <div className="flex items-center">ID {renderSortIcon('logId')}</div>
+                        </th>
+                        <th className={headerClass('createdAt')} onClick={() => onSort('createdAt')}>
+                            <div className="flex items-center">Thời gian {renderSortIcon('createdAt')}</div>
+                        </th>
+                        <th className={headerClass('action')} onClick={() => onSort('action')}>
+                            <div className="flex items-center">Hành động {renderSortIcon('action')}</div>
+                        </th>
+                        <th className="px-6 py-4 text-sm font-semibold text-gray-700">
+                            Đối tượng
+                        </th>
+                        <th className="px-6 py-4 text-sm font-semibold text-gray-700">
+                            Mô tả
+                        </th>
+                        <th className="px-6 py-4 text-sm font-semibold text-gray-700">
+                            Người thực hiện
+                        </th>
+                        <th className="px-6 py-4 text-sm font-semibold text-gray-700 text-right">
+                            Thao tác
+                        </th>
+                    </tr>
+                </thead>
 
-            {/* BODY */}
-            <tbody className="divide-y">
-            {logs.length === 0 && (
-                <tr>
-                    <td
-                        colSpan={6}
-                        className="text-center py-10 text-gray-400"
-                    >
-                        Không có dữ liệu
-                    </td>
-                </tr>
-            )}
-
-
-            {logs.map((log) => (
-                <tr
-                    key={log.logId}
-                    className="hover:bg-gray-50 transition"
-                >
-                    <td className="px-6 py-4 text-sm text-gray-700">
-                        {log.logId}
-                    </td>
-
-                    <td className="px-6 py-4">
-                            <span className="px-2 py-1 rounded-lg text-xs font-semibold bg-blue-50 text-blue-600">
-                                {log.action}
-                            </span>
-                    </td>
-
-                    <td className="px-6 py-4">
-                            <span className="px-2 py-1 rounded-lg text-xs font-semibold bg-gray-100 text-gray-700">
-                                {log.entityType}
-                            </span>
-                    </td>
-
-                    <td className="px-6 py-4 text-sm text-gray-700 max-w-md">
-                        {log.description}
-                    </td>
-
-                    <td className="px-6 py-4 text-sm text-gray-600">
-                        {log.actorEmail}
-                    </td>
-
-                    {/* ACTION */}
-                    <td className="px-6 py-4 text-right">
-                        <button
-                            onClick={() => onViewDetail(log.logId)}
-                            className="text-sm font-medium text-blue-600 hover:text-blue-800 hover:underline"
-                        >
-                            Xem chi tiết
-                        </button>
-                    </td>
-                </tr>
-            ))}
-            </tbody>
-        </table>
+                <tbody className="bg-white divide-y divide-gray-50">
+                    {logs.length > 0 ? (
+                        logs.map((log) => {
+                            const actionStyle = getActionColor(log.action);
+                            
+                            return (
+                                <tr 
+                                    key={log.logId} 
+                                    className="hover:bg-gray-50/50 transition-all duration-200"
+                                >
+                                    <td className="px-6 py-5 text-sm font-medium text-gray-400">
+                                        #{log.logId}
+                                    </td>
+                                    <td className="px-6 py-5 text-sm text-gray-500 font-medium">
+                                        {new Date(log.createdAt).toLocaleString("vi-VN")}
+                                    </td>
+                                    
+                                    <td className="px-6 py-5">
+                                        <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold border ${actionStyle.bg} ${actionStyle.text} ${actionStyle.border}`}>
+                                            {formatAuditValue(log.action)}
+                                        </span>
+                                    </td>
+                                    
+                                    <td className="px-6 py-5">
+                                        <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
+                                            {formatAuditValue(log.entityType)}
+                                        </span>
+                                    </td>
+                                    
+                                    <td className="px-6 py-5">
+                                        <p className="text-sm text-gray-600 font-medium max-w-[200px] truncate">
+                                            {log.description || "-"}
+                                        </p>
+                                    </td>
+                                    
+                                    <td className="px-6 py-5">
+                                        <div className="flex flex-col">
+                                            <span className="text-sm font-semibold text-gray-800">{log.actorName}</span>
+                                            <span className="text-xs text-gray-400 font-medium">{log.actorEmail}</span>
+                                        </div>
+                                    </td>
+                                    
+                                    <td className="px-6 py-5 text-right">
+                                        <button
+                                            onClick={() => onViewDetail(log.logId)}
+                                            className="text-[rgb(40,169,224)] hover:text-blue-700 font-bold text-sm transition-all underline-offset-2 hover:underline"
+                                        >
+                                            Xem chi tiết
+                                        </button>
+                                    </td>
+                                </tr>
+                            );
+                        })
+                    ) : (
+                        <tr>
+                            <td colSpan="7" className="px-6 py-16 text-center text-gray-400 font-medium text-sm italic">
+                                Không có dữ liệu nhật ký hệ thống
+                            </td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+        </div>
     );
 }

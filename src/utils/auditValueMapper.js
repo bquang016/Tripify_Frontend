@@ -1,53 +1,51 @@
 // src/utils/auditValueMapper.js
 
-// Map enum / value backend → tiếng Việt cho Audit Log
-export function formatAuditValue(value) {
-    if (value === null || value === undefined) return null;
-
-    // Nếu là chuỗi JSON rỗng
-    if (value === "{}") return null;
-
-    // Enum mapping
-    const enumMap = {
-        // PropertyStatus
-        PENDING: "Chờ duyệt",
-        APPROVE: "Đã duyệt",
-        APPROVED: "Đã duyệt",
-        REJECTED: "Từ chối",
-        SUSPENDED: "Tạm dừng",
-        ACTIVE: "Hoạt động",
-        INACTIVE: "Ngưng hoạt động",
-
+export const formatAuditValue = (value) => {
+    if (!value) return "-";
+    
+    const mapping = {
         // LogAction
-        CREATE: "Tạo mới",
-        UPDATE: "Cập nhật",
-        DELETE: "Xóa",
-        APPROVE_ACTION: "Phê duyệt",
-        REJECT_ACTION: "Từ chối",
+        "CREATE": "Tạo mới",
+        "UPDATE": "Cập nhật",
+        "DELETE": "Xóa",
+        "APPROVE": "Phê duyệt",
+        "REJECT": "Từ chối",
+        "SUSPEND": "Tạm đình chỉ",
+        "ACTIVATE": "Kích hoạt lại",
+        "LOGIN": "Đăng nhập",
+        "LOGOUT": "Đăng xuất",
 
-        // EntityType
-        PROPERTY: "Cơ sở lưu trú",
-        ROOM: "Phòng",
-        USER: "Người dùng",
-        BOOKING: "Đơn đặt phòng",
-        PROMOTION: "Khuyến mãi",
-        SYSTEM: "Hệ thống",
+        // LogEntityType
+        "PROPERTY": "Nơi cư trú", // Thay thế cho HOTEL
+        "ROOM": "Phòng",
+        "USER": "Người dùng",
+        "BOOKING": "Đặt phòng",
+        "PAYMENT": "Thanh toán",
+        "PROMOTION": "Khuyến mãi",
+        "TRANSACTION": "Giao dịch",
+        "ROLE": "Vai trò"
     };
 
-    // Nếu value là enum
-    if (enumMap[value]) {
-        return enumMap[value];
-    }
+    return mapping[value] || value;
+};
 
-    // Nếu là JSON string → pretty
-    if (typeof value === "string" && value.startsWith("{")) {
-        try {
-            const obj = JSON.parse(value);
-            return JSON.stringify(obj, null, 2);
-        } catch {
-            return value;
-        }
+export const getActionColor = (action) => {
+    switch (action) {
+        case 'CREATE':
+            return { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-100' };
+        case 'UPDATE':
+            return { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-100' };
+        case 'DELETE':
+            return { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-100' };
+        case 'APPROVE':
+            return { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-100' };
+        case 'REJECT':
+            return { bg: 'bg-red-50', text: 'text-red-700', border: 'border-red-100' };
+        case 'SUSPEND':
+            return { bg: 'bg-gray-100', text: 'text-gray-700', border: 'border-gray-200' };
+        case 'ACTIVATE':
+            return { bg: 'bg-cyan-50', text: 'text-cyan-700', border: 'border-cyan-100' };
+        default:
+            return { bg: 'bg-slate-50', text: 'text-slate-700', border: 'border-slate-100' };
     }
-
-    return value;
-}
+};
