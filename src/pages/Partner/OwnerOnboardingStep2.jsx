@@ -113,6 +113,21 @@ const OwnerOnboardingStep2 = () => {
     const propertyType = watch("propertyInfo.propertyType");
     const isWholeUnit = ["VILLA", "HOMESTAY"].includes(propertyType);
 
+    const highestMinorStep = useMemo(() => {
+        let step = 0;
+        const p = formData?.propertyInfo || {};
+        
+        if (p.propertyType) step = 1; // Mở khóa bước 1
+        if (p.propertyName) step = 2; // Mở khóa bước 2
+        if (p.provinceCode) step = 3; // Mở khóa bước 3
+        if (p.propertyImages?.length > 0) step = 4; // Mở khóa bước 4
+        if (p.amenityIds?.length > 0) step = 5; // Mở khóa bước 5
+        if (p.businessLicenseNumber) step = 6; // Mở khóa bước 6
+        if (p.policies) step = 7; // Mở khóa bước 7 (nếu có)
+        
+        return Math.max(step, currentStep); // Ít nhất là bước hiện tại
+    }, [formData, currentStep]);
+
     const stepsConfig = useMemo(() => {
         const baseSteps = [
             { id: 0, title: "Loại hình", component: Step0_PropertyType, schema: validationSchemas.step0 },
@@ -165,6 +180,26 @@ const OwnerOnboardingStep2 = () => {
             navigate('/partner/onboarding/step-1');
         }
     };
+    
+const handleMajorStepClick = (stepId) => {
+        updateFormData(getValues());
+        
+        // Bắt buộc phải có đủ 4 dòng này thì click từ Step 2 mới nhảy qua bước khác được
+        if (stepId === 1) navigate('/partner/onboarding/step-1');
+        if (stepId === 2) navigate('/partner/onboarding/step-2');
+        if (stepId === 3) navigate('/partner/onboarding/step-3');
+        if (stepId === 4) navigate('/partner/onboarding/step-4');
+    };
+    const handleSubStepClick = (targetIndex) => {
+        const targetStateStep = targetIndex + 1;
+
+        // Cho phép click (kể cả lùi về hay tiến lên) miễn là <= highestMinorStep
+        if (targetStateStep <= highestMinorStep) {
+            updateFormData(getValues());
+            setCurrentStep(targetStateStep);
+            clearErrors();
+        }
+    };
   
     const renderContent = () => {
         const StepComponent = CurrentStepConfig.component;
@@ -188,7 +223,13 @@ const OwnerOnboardingStep2 = () => {
                 </Button>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
                     <div className="md:col-span-1">
-                        <VerticalStepper steps={stepperItems} currentStep={currentStep - 1} />
+                        {/* ĐÃ THÊM onStepClick VÀO ĐÂY */}
+                        <VerticalStepper 
+                            steps={stepperItems} 
+                            currentStep={currentStep - 1} 
+                            highestStep={highestMinorStep - 1}
+                            onStepClick={handleSubStepClick} 
+                        />
                     </div>
                     <div className="md:col-span-3">
                          <StepComponent
@@ -219,7 +260,7 @@ const OwnerOnboardingStep2 = () => {
                         <span className="font-bold text-slate-700 tracking-tight">Partner Center</span>
                     </div>
                     <div className="hidden md:block w-[500px]">
-                        <OnboardingStepper currentStep={2} />
+                        <OnboardingStepper currentStep={2} onStepClick={handleMajorStepClick} />
                     </div>
                     <div className="md:hidden text-sm font-semibold text-[#28A9E0]">
                         Bước 2/4
