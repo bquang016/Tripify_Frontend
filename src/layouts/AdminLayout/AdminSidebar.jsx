@@ -110,6 +110,13 @@ const AdminSidebar = () => {
       path: "/admin/audit-logs",
       permission: "AUDIT_VIEW"
     },
+    ...(currentUser?.isSuper ? [
+      {
+        name: "Cấu hình hệ thống",
+        icon: <Settings size={20} />,
+        path: "/admin/settings"
+      }
+    ] : []),
   ];
 
   const handleSubMenuToggle = (key) => {
@@ -220,13 +227,20 @@ const AdminSidebar = () => {
 
           // Menu đơn
           const isActive = location.pathname === item.path || (item.path !== "/admin" && location.pathname.startsWith(item.path));
+          
+          // Style đặc biệt cho "Cấu hình hệ thống" khi active (xanh dương nhẹ)
+          const isSettings = item.path === "/admin/settings";
+          const activeStyle = isSettings && isActive 
+            ? "bg-blue-50 text-blue-600 shadow-sm border border-blue-100" 
+            : (isActive ? "bg-[rgb(40,169,224)] text-white shadow-sm" : "text-gray-600 hover:bg-gray-100");
+
           return (
             <Link
               key={item.path || item.name}
               to={item.path}
               title={item.name} 
               className={`flex items-center gap-3 py-2.5 px-4 rounded-lg transition-all
-                ${isActive ? "bg-[rgb(40,169,224)] text-white shadow-sm" : "text-gray-600 hover:bg-gray-100"}
+                ${activeStyle}
                 ${collapsed ? "justify-center" : ""}`}
             >
               {item.icon}
