@@ -1,7 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Home } from "lucide-react"; // Import icon Home
-import SearchInput from "../../components/common/Input/SearchInput";
 import AdminNotificationDropdown from "./AdminNotificationDropdown";
 import AdminProfileDropdown from "./AdminProfileDropdown";
 
@@ -10,10 +9,8 @@ const AdminHeader = () => {
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
       <div className="flex items-center justify-between h-16 px-6">
         
-        {/* 1. Thanh tìm kiếm (Left/Center) */}
-        <div className="w-full max-w-md hidden md:block">
-          <SearchInput placeholder="Tìm kiếm user, booking, khách sạn..." />
-        </div>
+        {/* Empty space for alignment if needed, or just let the right group align */}
+        <div className="flex-1"></div>
 
         {/* 2. Nhóm chức năng bên phải */}
         <div className="flex items-center gap-3 ml-auto">
