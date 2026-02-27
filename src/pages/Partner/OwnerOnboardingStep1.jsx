@@ -34,6 +34,7 @@ const OwnerOnboardingStep1 = () => {
     reset,
     setValue,
     watch,
+    getValues,
     formState: { errors }
   } = useForm({ 
       mode: "onChange",
@@ -43,6 +44,33 @@ const OwnerOnboardingStep1 = () => {
   useEffect(() => {
     reset(formData);
   }, [formData, reset]);
+
+  const handleMajorStepClick = (stepId) => {
+    // FIX: Chỉ lưu các trường thuộc Step 1 để bảo toàn propertyInfo và paymentInfo đã điền
+    const data = getValues();
+    updateFormData({
+        avatar: data.avatar,
+        cccdFront: data.cccdFront,
+        cccdBack: data.cccdBack,
+        identityCardNumber: data.identityCardNumber,
+        fullName: data.fullName,
+        dateOfBirth: data.dateOfBirth ? format(data.dateOfBirth, 'yyyy-MM-dd') : null,
+        gender: data.gender,
+        phoneNumber: data.phoneNumber,
+        streetAddress: data.streetAddress,
+        provinceCode: data.provinceCode,
+        districtCode: data.districtCode,
+        wardCode: data.wardCode,
+        provinceName: data.provinceName,
+        districtName: data.districtName,
+        wardName: data.wardName,
+    });
+    
+    if (stepId === 1) navigate("/partner/onboarding/step-1");
+    if (stepId === 2) navigate("/partner/onboarding/step-2");
+    if (stepId === 3) navigate("/partner/onboarding/step-3");
+    if (stepId === 4) navigate("/partner/onboarding/step-4");
+  };
 
   const onSubmit = (data) => {
     const profileData = {
@@ -67,8 +95,8 @@ const OwnerOnboardingStep1 = () => {
             </div>
             
             {/* Desktop Stepper */}
-            <div className="hidden md:block w-[400px]">
-               <OnboardingStepper currentStep={1} />
+            <div className="hidden md:block w-[500px]">
+                <OnboardingStepper currentStep={1} onStepClick={handleMajorStepClick} />
             </div>
 
             {/* Mobile: Simple Step Text */}
@@ -80,7 +108,7 @@ const OwnerOnboardingStep1 = () => {
 
       {/* Mobile Stepper */}
       <div className="md:hidden px-4 mt-4">
-          <OnboardingStepper currentStep={1} />
+          <OnboardingStepper currentStep={1} onStepClick={handleMajorStepClick} />
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
