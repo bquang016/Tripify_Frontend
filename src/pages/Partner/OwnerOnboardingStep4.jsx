@@ -14,6 +14,22 @@ const OwnerOnboardingStep4 = () => {
     const navigate = useNavigate();
     const { formData } = useOnboarding(); 
     
+    // 1. CHUYỂN TẤT CẢ HOOKS LÊN TRÊN CÙNG (Quy tắc bắt buộc của React)
+    const [isLoading, setIsLoading] = useState(false);
+    const [submissionStatus, setSubmissionStatus] = useState(null);
+    const [errorMessage, setErrorMessage] = useState('');
+
+    // 2. THÊM HÀM XỬ LÝ CLICK STEPPER NGANG
+    const handleMajorStepClick = (stepId) => {
+        // Ở bước Review này không có form để lưu (không dùng getValues), 
+        // nên chúng ta chỉ cần chuyển trang trực tiếp
+        if (stepId === 1) navigate("/partner/onboarding/step-1");
+        if (stepId === 2) navigate("/partner/onboarding/step-2");
+        if (stepId === 3) navigate("/partner/onboarding/step-3");
+        if (stepId === 4) navigate("/partner/onboarding/step-4");
+    };
+    
+    // 3. EARLY RETURN ĐẶT SAU HOOKS
     // Safety check for context data
     if (!formData || !formData.temporaryToken) {
         return (
@@ -26,10 +42,6 @@ const OwnerOnboardingStep4 = () => {
             </div>
         );
     }
-
-    const [isLoading, setIsLoading] = useState(false);
-    const [submissionStatus, setSubmissionStatus] = useState(null);
-    const [errorMessage, setErrorMessage] = useState('');
 
     const onFinalSubmit = async () => {
         // 1. Validation cơ bản
@@ -59,7 +71,6 @@ const OwnerOnboardingStep4 = () => {
             } = propertyInfo;
             
             // --- XỬ LÝ ĐỊA CHỈ AN TOÀN (FIX LỖI UNDEFINED) ---
-            // Kiểm tra và lấy giá trị từ nhiều nguồn biến khác nhau để tránh null/undefined
             const street = personalInfo.streetAddress || "";
             const ward = personalInfo.wardName || personalInfo.ward || "";
             const district = personalInfo.districtName || personalInfo.district || "";
@@ -127,7 +138,7 @@ const OwnerOnboardingStep4 = () => {
             // 3. Đóng gói FormData
             const finalFormData = new FormData();
             
-            // Append JSON với Content-Type application/json (Quan trọng cho Spring Boot @RequestPart)
+            // Append JSON với Content-Type application/json
             finalFormData.append("request", new Blob([JSON.stringify(submitPayload)], { type: 'application/json' }));
 
             // Append Single Files
@@ -211,7 +222,8 @@ const OwnerOnboardingStep4 = () => {
                         <span className="font-bold text-slate-700 tracking-tight">Xác nhận</span>
                     </div>
                     <div className="hidden md:block w-[500px]">
-                        <OnboardingStepper currentStep={4} />
+                        {/* Đã truyền hàm handleMajorStepClick thành công */}
+                        <OnboardingStepper currentStep={4} onStepClick={handleMajorStepClick} />
                     </div>
                      <Button variant="ghost" onClick={() => navigate('/')}>Thoát</Button>
                 </div>
