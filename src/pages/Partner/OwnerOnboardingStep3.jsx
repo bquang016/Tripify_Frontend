@@ -31,7 +31,7 @@ const OwnerOnboardingStep3 = () => {
     const navigate = useNavigate();
     const { formData, updateFormData } = useOnboarding();
 
-    const { register, handleSubmit, watch, reset, formState: { errors } } = useForm({
+    const { register, handleSubmit, watch, reset, getValues, formState: { errors } } = useForm({
         resolver: yupResolver(schema),
         defaultValues: formData.paymentInfo,
     });
@@ -39,6 +39,18 @@ const OwnerOnboardingStep3 = () => {
     useEffect(() => {
         reset(formData.paymentInfo);
     }, [formData, reset]);
+
+    const handleMajorStepClick = (stepId) => {
+    // Lưu tạm dữ liệu người dùng đã nhập
+    updateFormData({ paymentInfo: getValues() });
+    
+    // Điều hướng dựa trên step được click (Thực tế ở step 1 thì họ chỉ có thể click lại step 1, 
+    // nhưng ta cứ viết đủ logic để tránh lỗi khi mở rộng)
+    if (stepId === 1) navigate("/partner/onboarding/step-1");
+    if (stepId === 2) navigate("/partner/onboarding/step-2");
+    if (stepId === 3) navigate("/partner/onboarding/step-3");
+    if (stepId === 4) navigate("/partner/onboarding/step-4");
+  };
 
     const paymentMethod = watch('paymentMethod');
 
@@ -57,7 +69,7 @@ const OwnerOnboardingStep3 = () => {
                         <span className="font-bold text-slate-700 tracking-tight">Partner Center</span>
                     </div>
                     <div className="hidden md:block w-[500px]">
-                        <OnboardingStepper currentStep={3} />
+                        <OnboardingStepper currentStep={3} onStepClick={handleMajorStepClick} />
                     </div>
                     <div className="md:hidden text-sm font-semibold text-[#28A9E0]">
                         Bước 3/4
