@@ -19,6 +19,7 @@ import UserManagementPage from "../pages/Admin/Users/UserManagementPage";
 // 👇 Import Component Quản lý Giao dịch (đảm bảo đường dẫn đúng với alias @ hoặc tương đối)
 import TransactionManagementPage from "../pages/Admin/Transactions/TransactionManagementPage";
 import RoleManagementPage from "../pages/Admin/Roles/RoleManagementPage";
+import SystemSettingsPage from "../pages/Admin/Settings/SystemSettingsPage";
 
 const adminRoutes = [
     {
@@ -37,6 +38,16 @@ const adminRoutes = [
             <AdminLayout>
                 <ProtectedRoute requiredRole="ADMIN" isSuperRequired={true}>
                     <RoleManagementPage />
+                </ProtectedRoute>
+            </AdminLayout>
+        ),
+    },
+    {
+        path: "/admin/settings",
+        element: (
+            <AdminLayout>
+                <ProtectedRoute requiredRole="ADMIN" isSuperRequired={true}>
+                    <SystemSettingsPage />
                 </ProtectedRoute>
             </AdminLayout>
         ),
