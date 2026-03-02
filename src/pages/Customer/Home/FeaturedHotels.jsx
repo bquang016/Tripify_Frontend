@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-    ArrowRight, MapPin, Star, Heart, 
-    Sparkles 
+import {
+    ArrowRight, MapPin, Star, Heart,
+    Sparkles // Đã xóa Zap khỏi import
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -14,24 +14,29 @@ import { formatPrice } from "@/utils/priceUtils";
 import { useLanguage } from "@/context/LanguageContext";
 
 // Cấu hình đường dẫn ảnh
-const BASE_IMAGE_URL = "http://localhost:8386/images/"; 
+const BASE_IMAGE_URL = "http://localhost:8386/images/";
 
 // ====================================================================
 // 1. SUB-COMPONENT: HEADER
 // ====================================================================
-const SectionHeader = ({ onSeeAll }) => {
-    const { t } = useTranslation();
-    return (
-        <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-10 px-2">
-            <div className="max-w-2xl">
-                <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
-                    {t('home.featured_title').split(' ').map((word, i) => 
-                        i >= 2 ? <span key={i} className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 ml-1">{word} </span> : word + ' '
-                    )}
-                </h2>
-                <p className="text-gray-500 mt-3 font-medium text-base leading-relaxed">
-                    {t('home.featured_subtitle')}
-                </p>
+const SectionHeader = ({ onSeeAll }) => (
+    <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-10 px-2">
+        <div className="max-w-2xl">
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
+                Điểm Đến <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Nổi Bật Nhất</span>
+            </h2>
+            <p className="text-gray-500 mt-3 font-medium text-base leading-relaxed">
+                Được bình chọn bởi cộng đồng du lịch, mang lại trải nghiệm nghỉ dưỡng đẳng cấp và tiện nghi vượt trội.
+            </p>
+        </div>
+
+        <button
+            onClick={onSeeAll}
+            className="hidden md:flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-blue-600 transition-all bg-white px-5 py-2.5 rounded-full border border-gray-200 hover:border-blue-200 shadow-sm hover:shadow-md group"
+        >
+            Xem tất cả
+            <div className="bg-gray-100 group-hover:bg-blue-100 p-1 rounded-full transition-colors">
+                <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
             </div>
 
             <button 
@@ -55,7 +60,7 @@ const ModernHotelCard = ({ hotel, currentCurrency }) => {
     const { t } = useTranslation();
 
     return (
-        <div 
+        <div
             onClick={() => navigate(`/hotels/${hotel.id}`)}
             className="group relative bg-white rounded-[1.5rem] overflow-hidden border border-gray-100 shadow-lg shadow-gray-200/50 hover:shadow-2xl hover:shadow-blue-900/10 transition-all duration-300 cursor-pointer h-full flex flex-col"
         >
@@ -65,7 +70,7 @@ const ModernHotelCard = ({ hotel, currentCurrency }) => {
                     src={hotel.image}
                     alt={hotel.name}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    onError={(e) => { e.target.src = placeholderImg; }} 
+                    onError={(e) => { e.target.src = placeholderImg; }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
 
@@ -117,7 +122,8 @@ const ModernHotelCard = ({ hotel, currentCurrency }) => {
                             <span className="text-sm text-gray-400 font-medium">/{t('home.night')}</span>
                         </div>
                     </div>
-                    
+
+                    {/* ✅ ĐÃ THAY THẾ ICON TẠI ĐÂY */}
                     <button className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
                         <ArrowRight size={20} />
                     </button>
@@ -139,18 +145,18 @@ const FeaturedHotels = () => {
 
     const getCoverImage = (item) => {
         if (item.coverImage) {
-            return item.coverImage.startsWith("http") 
-                ? item.coverImage 
+            return item.coverImage.startsWith("http")
+                ? item.coverImage
                 : `${BASE_IMAGE_URL}${item.coverImage}`;
         }
 
         if (item.images && item.images.length > 0) {
             const firstImg = item.images[0];
-            return firstImg.startsWith("http") 
-                ? firstImg 
+            return firstImg.startsWith("http")
+                ? firstImg
                 : `${BASE_IMAGE_URL}${firstImg}`;
         }
-        
+
         return placeholderImg;
     };
 
@@ -158,21 +164,23 @@ const FeaturedHotels = () => {
         const fetchHotels = async () => {
             try {
                 setLoading(true);
-                
+
+                // 1. Dùng hàm chuyên biệt (đã thêm ở bước trước) thay vì searchProperties thủ công
                 const res = await propertyService.getFeaturedProperties();
-                console.log(">>> [DEBUG] Dữ liệu thô từ API Featured:", res);
+
+                console.log("Featured Data:", res); // Debug log
 
                 let rawData = [];
 
                 if (res && res.result && Array.isArray(res.result.content)) {
                     rawData = res.result.content;
-                } 
+                }
                 else if (res && res.data && Array.isArray(res.data.content)) {
                     rawData = res.data.content;
-                } 
+                }
                 else if (res && Array.isArray(res.content)) {
                     rawData = res.content;
-                } 
+                }
                 else if (Array.isArray(res)) {
                     rawData = res;
                 }
@@ -185,9 +193,9 @@ const FeaturedHotels = () => {
                     formattedPrice: formatPrice(item.minPrice, item.convertedMinPrice, item.currency || currency),
                     isConverted: !!item.convertedMinPrice,
                     image: getCoverImage(item),
-                    rating: item.rating || 5.0,
-                    reviews: item.reviewCount || 0,
-                    isPopular: (item.rating || 0) >= 4.5
+                    rating: item.rating ?? 0,
+                    reviews: item.reviewCount ?? 0,
+                    isPopular: (item.rating ?? 0) >= 4.5
                 }));
 
                 setHotels(mapped.slice(0, 4));
