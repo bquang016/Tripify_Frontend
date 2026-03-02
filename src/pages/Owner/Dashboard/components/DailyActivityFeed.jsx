@@ -1,7 +1,10 @@
 import React from "react";
 import { FileText, Clock, CheckCircle, XCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const DailyActivityFeed = ({ bookings }) => {
+    const { i18n } = useTranslation();
+    const isVi = i18n.language === 'vi';
     
     // Hàm chọn icon dựa trên trạng thái booking
     const getIcon = (status) => {
@@ -14,18 +17,30 @@ const DailyActivityFeed = ({ bookings }) => {
     };
 
     const getMessage = (booking) => {
-        switch(booking.status) {
-            case 'CONFIRMED': return `đã đặt phòng ${booking.propertyName}`;
-            case 'CANCELLED': return `đã hủy đơn đặt tại ${booking.propertyName}`;
-            case 'PENDING_PAYMENT': return `vừa tạo đơn mới tại ${booking.propertyName}`;
-            case 'CHECKED_IN': return `đã check-in tại ${booking.propertyName}`;
-            default: return `đã tương tác với ${booking.propertyName}`;
+        if (isVi) {
+            switch(booking.status) {
+                case 'CONFIRMED': return `đã đặt phòng ${booking.propertyName}`;
+                case 'CANCELLED': return `đã hủy đơn đặt tại ${booking.propertyName}`;
+                case 'PENDING_PAYMENT': return `vừa tạo đơn mới tại ${booking.propertyName}`;
+                case 'CHECKED_IN': return `đã check-in tại ${booking.propertyName}`;
+                default: return `đã tương tác với ${booking.propertyName}`;
+            }
+        } else {
+            switch(booking.status) {
+                case 'CONFIRMED': return `booked ${booking.propertyName}`;
+                case 'CANCELLED': return `cancelled booking at ${booking.propertyName}`;
+                case 'PENDING_PAYMENT': return `created a new order at ${booking.propertyName}`;
+                case 'CHECKED_IN': return `checked-in at ${booking.propertyName}`;
+                default: return `interacted with ${booking.propertyName}`;
+            }
         }
     };
 
     return (
         <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-full flex flex-col">
-            <h3 className="text-lg font-bold text-gray-800 mb-6">Hoạt động gần đây</h3>
+            <h3 className="text-lg font-bold text-gray-800 mb-6">
+                {isVi ? "Hoạt động gần đây" : "Recent Activity"}
+            </h3>
             
             <div className="flex-1 overflow-y-auto custom-scrollbar pr-2 space-y-5">
                 {bookings?.slice(0, 5).map((item) => (
@@ -54,7 +69,9 @@ const DailyActivityFeed = ({ bookings }) => {
                 ))}
 
                 {(!bookings || bookings.length === 0) && (
-                    <p className="text-center text-gray-400 py-10">Chưa có hoạt động mới</p>
+                    <p className="text-center text-gray-400 py-10">
+                        {isVi ? "Chưa có hoạt động mới" : "No recent activity"}
+                    </p>
                 )}
             </div>
         </div>

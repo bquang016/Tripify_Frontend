@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Home } from "lucide-react";
 import AdminNotificationDropdown from "./AdminNotificationDropdown";
 import AdminProfileDropdown from "./AdminProfileDropdown";
+import LanguageSwitcher from "../CustomerLayout/LanguageSwitcher";
 import { useTranslation } from "react-i18next";
 
 const AdminHeader = () => {
@@ -12,7 +13,12 @@ const AdminHeader = () => {
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
       <div className="flex items-center justify-between h-16 px-6">
         <div className="flex-1"></div>
-        <div className="flex items-center gap-3 ml-auto">
+        <div className="flex items-center gap-4 ml-auto">
+          {/* Language Switcher */}
+          <div className="border-r border-gray-200 pr-4">
+            <LanguageSwitcher navLinkClass="flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors px-3 py-1.5 rounded-lg hover:bg-gray-50" />
+          </div>
+
           <Link 
             to="/" 
             className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 hover:text-blue-600 rounded-lg transition-all border border-gray-200 mr-2"

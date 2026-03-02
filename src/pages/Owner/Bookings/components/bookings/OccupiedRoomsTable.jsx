@@ -1,19 +1,24 @@
 import React from "react";
 import { LogIn, LogOut, Eye, Calendar, User, Phone, CreditCard, BedDouble } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/context/LanguageContext";
 
 const OccupiedRoomsTable = ({ data, loading, onCheckIn, onCheckOut, onViewDetail }) => {
-  
+  const { t, i18n } = useTranslation();
+  const { currency } = useLanguage();
+  const isVi = i18n.language === 'vi';
+
   const formatDate = (date) => {
       if (!date) return "---";
-      return new Date(date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      return new Date(date).toLocaleDateString(isVi ? 'vi-VN' : 'en-US', { day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
-  const formatTime = (date) => {
-      if (!date) return "";
-      return new Date(date).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-  }
-
-  const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+  const formatCurrency = (val) => {
+      if (currency === 'USD') {
+          return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val / 25000);
+      }
+      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val);
+  };
 
   if (loading) {
       return (
@@ -29,20 +34,19 @@ const OccupiedRoomsTable = ({ data, loading, onCheckIn, onCheckOut, onViewDetail
       return (
         <div className="p-16 text-center flex flex-col items-center justify-center text-slate-400 bg-slate-50/50">
             <BedDouble size={48} className="mb-4 opacity-20" />
-            <p className="text-lg font-medium text-slate-600">Chưa có dữ liệu phòng</p>
-            <p className="text-sm">Không tìm thấy đơn đặt phòng nào phù hợp với bộ lọc hiện tại.</p>
+            <p className="text-lg font-medium text-slate-600">{t('owner.no_booking_data')}</p>
+            <p className="text-sm">{t('owner.no_booking_match')}</p>
         </div>
       );
   }
 
-  // Helper render trạng thái với style đẹp hơn
   const renderStatusBadge = (status) => {
       const styles = {
-          'PENDING_PAYMENT': { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', label: 'Chờ thanh toán' },
-          'CONFIRMED': { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', label: 'Sắp đến' },
-          'CHECKED_IN': { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', label: 'Đang lưu trú' },
-          'COMPLETED': { bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-200', label: 'Hoàn thành' },
-          'CANCELLED': { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200', label: 'Đã hủy' },
+          'PENDING_PAYMENT': { bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-200', label: t('owner.status_pending_pay') },
+          'CONFIRMED': { bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-200', label: t('owner.status_upcoming') },
+          'CHECKED_IN': { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', label: t('owner.status_inhouse') },
+          'COMPLETED': { bg: 'bg-slate-100', text: 'text-slate-600', border: 'border-slate-200', label: t('owner.status_completed') },
+          'CANCELLED': { bg: 'bg-rose-50', text: 'text-rose-700', border: 'border-rose-200', label: t('owner.status_cancelled') },
       };
 
       const style = styles[status] || { bg: 'bg-gray-50', text: 'text-gray-600', border: 'border-gray-200', label: status };
@@ -60,31 +64,26 @@ const OccupiedRoomsTable = ({ data, loading, onCheckIn, onCheckOut, onViewDetail
       <table className="w-full text-left text-sm border-collapse">
         <thead className="bg-slate-50/80 backdrop-blur text-slate-500 uppercase text-[11px] font-bold tracking-wider border-b border-slate-200">
           <tr>
-            <th className="px-6 py-4 w-[250px]">Thông tin Phòng & Khách</th>
-            <th className="px-6 py-4 w-[200px]">Lịch trình</th>
-            <th className="px-6 py-4 text-right w-[150px]">Thanh toán</th>
-            <th className="px-6 py-4 text-center w-[150px]">Trạng thái</th>
-            <th className="px-6 py-4 text-right w-[180px]">Thao tác</th>
+            <th className="px-6 py-4 w-[250px]">{t('owner.room_guest_info')}</th>
+            <th className="px-6 py-4 w-[200px]">{t('owner.schedule')}</th>
+            <th className="px-6 py-4 text-right w-[150px]">{t('owner.payment')}</th>
+            <th className="px-6 py-4 text-center w-[150px]">{t('owner.status')}</th>
+            <th className="px-6 py-4 text-right w-[180px]">{t('owner.actions')}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100 bg-white">
           {data.map((item) => (
             <tr key={item.bookingId} className="hover:bg-blue-50/30 transition-all duration-200 group">
-              
-              {/* Cột 1: Phòng & Khách */}
               <td className="px-6 py-4">
                 <div className="flex flex-col gap-1">
                     <div className="flex items-center justify-between">
                         <span className="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors">
                             {item.roomName}
                         </span>
-                        {/* Mã Booking nhỏ */}
                         <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
                             #{item.bookingId}
                         </span>
                     </div>
-                    
-                    {/* Thông tin khách */}
                     <div className="flex items-center gap-2 mt-1">
                         <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 shrink-0 border border-slate-200">
                             <User size={14} />
@@ -99,7 +98,6 @@ const OccupiedRoomsTable = ({ data, loading, onCheckIn, onCheckOut, onViewDetail
                 </div>
               </td>
 
-              {/* Cột 2: Lịch trình */}
               <td className="px-6 py-4">
                 <div className="bg-slate-50 rounded-lg p-2 border border-slate-100 space-y-1.5 w-fit min-w-[160px]">
                     <div className="flex items-center justify-between text-xs">
@@ -113,11 +111,10 @@ const OccupiedRoomsTable = ({ data, loading, onCheckIn, onCheckOut, onViewDetail
                     </div>
                 </div>
                 <div className="text-[10px] text-slate-400 mt-1.5 ml-1 font-medium">
-                    {item.guestCount} • {Math.ceil((new Date(item.checkOut) - new Date(item.checkIn))/(1000*60*60*24))} đêm
+                    {item.guestCount} • {Math.ceil((new Date(item.checkOut) - new Date(item.checkIn))/(1000*60*60*24))} {t('owner.nights')}
                 </div>
               </td>
 
-              {/* Cột 3: Thanh toán */}
               <td className="px-6 py-4 text-right">
                 <div className="flex flex-col items-end gap-1">
                     <span className="font-bold text-slate-800 text-base">
@@ -131,49 +128,43 @@ const OccupiedRoomsTable = ({ data, loading, onCheckIn, onCheckOut, onViewDetail
                         : 'bg-amber-50 text-amber-600 border-amber-100'
                     }`}>
                         <CreditCard size={10} />
-                        {item.paymentStatus === 'APPROVED' || item.paymentStatus === 'PAID' ? 'Đã TT' 
-                         : item.paymentStatus === 'REFUNDED' ? 'Đã hoàn'
-                         : 'Chưa TT'}
+                        {item.paymentStatus === 'APPROVED' || item.paymentStatus === 'PAID' ? t('owner.paid') 
+                         : item.paymentStatus === 'REFUNDED' ? t('owner.refunded')
+                         : t('owner.unpaid')}
                     </span>
                 </div>
               </td>
 
-              {/* Cột 4: Trạng thái */}
               <td className="px-6 py-4 text-center">
                 {renderStatusBadge(item.status)}
               </td>
 
-              {/* Cột 5: Thao tác */}
               <td className="px-6 py-4 text-right">
                 <div className="flex justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
-                    
-                    {/* Nút Check-in */}
                     {item.status === 'CONFIRMED' && (
                         <button 
                             onClick={() => onCheckIn(item.bookingId)}
                             className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-xs font-medium shadow-sm shadow-blue-200 transition-all active:scale-95"
-                            title="Check In (Khách nhận phòng)"
+                            title={isVi ? "Check In (Khách nhận phòng)" : "Check In"}
                         >
                             <LogIn size={14} /> Check-in
                         </button>
                     )}
 
-                    {/* Nút Check-out */}
                     {item.status === 'CHECKED_IN' && (
                         <button 
                             onClick={() => onCheckOut(item.bookingId)}
                             className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-md text-xs font-medium shadow-sm shadow-emerald-200 transition-all active:scale-95"
-                            title="Check Out (Khách trả phòng)"
+                            title={isVi ? "Check Out (Khách trả phòng)" : "Check Out"}
                         >
                             <LogOut size={14} /> Check-out
                         </button>
                     )}
 
-                    {/* Nút Chi tiết */}
                     <button 
                         onClick={() => onViewDetail(item)}
                         className="p-1.5 bg-white border border-slate-200 text-slate-500 rounded-md hover:bg-slate-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm"
-                        title="Xem chi tiết"
+                        title={t('owner.view_detail')}
                     >
                         <Eye size={16} />
                     </button>
