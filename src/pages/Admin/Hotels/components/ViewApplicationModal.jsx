@@ -4,7 +4,7 @@ import {
     X, User, Mail, Phone, Calendar, Briefcase, MapPin, CreditCard, 
     CheckCircle, XCircle, Image as ImageIcon, ShieldCheck, AlertOctagon, 
     Cake, Home, DollarSign, Users as UsersIcon, Maximize, Clock, Info, Banknote, Map,
-    Sparkles, Compass
+    Sparkles, Compass, BedDouble
 } from "lucide-react";
 import Button from "@/components/common/Button/Button";
 import ImageViewerModal from "./ImageViewerModal";
@@ -93,6 +93,7 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
 
   const { propertyInfo = {}, paymentInfo = {} } = application;
   const policies = propertyInfo.policies || {};
+  const unitData = propertyInfo.unitData; // Lấy unitData
 
   const personalImages = [
     { url: getImgUrl(application.cardFrontImage), caption: "CCCD Mặt trước" },
@@ -105,12 +106,20 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
 
   const propertyImages = (propertyInfo.propertyImageUrls || []).map((url, idx) => ({
     url: getImgUrl(url),
-    caption: `Ảnh chỗ nghỉ ${idx + 1}`
+    caption: `Ảnh khuôn viên ${idx + 1}`
   }));
 
-  const allImages = [...personalImages, ...businessImages, ...propertyImages];
+  // Gộp thêm ảnh của nguyên căn (nếu có)
+  const unitImages = (propertyInfo.unitImageUrls || []).map((url, idx) => ({
+    url: getImgUrl(url),
+    caption: `Ảnh trong căn ${idx + 1}`
+  }));
+
+  const allImages = [...personalImages, ...businessImages, ...propertyImages, ...unitImages];
   const isReviewed = application.status !== "PENDING";
   const isRejected = application.status === "REJECTED";
+
+  const isWholeUnit = propertyInfo.propertyType === "VILLA" || propertyInfo.propertyType === "HOMESTAY";
 
   return (
     <ModalPortal>
@@ -148,7 +157,6 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
               
               {/* CỘT 1: THÔNG TIN CÁ NHÂN & THANH TOÁN */}
               <div className="lg:col-span-3 space-y-6">
-                {/* Personal Info */}
                 <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
                     <SectionTitle icon={User} title="Thông tin cá nhân" />
                     <div className="space-y-1">
@@ -158,12 +166,10 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
                         <InfoRow icon={<CreditCard size={14}/>} label="Số định danh (CCCD)" value={application.personalIdCard} />
                         <InfoRow icon={<Cake size={14}/>} label="Ngày sinh" value={formatDateVN(application.applicantDob)} />
                         <InfoRow icon={<UsersIcon size={14}/>} label="Giới tính" value={getGenderLabel(application.gender)} />
-                        {/* Hiển thị địa chỉ thường trú, nếu null thì hiện --- */}
                         <InfoRow icon={<MapPin size={14}/>} label="Địa chỉ" value={application.permanentAddress} />
                     </div>
                 </div>
 
-                {/* Payment Info */}
                 <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
                     <SectionTitle icon={Banknote} title="Thanh toán" />
                     <div className="space-y-1">
@@ -200,14 +206,12 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
               {/* CỘT 2: THÔNG TIN CHỖ NGHỈ & CHÍNH SÁCH */}
               <div className="lg:col-span-4 space-y-6">
                 <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                    <SectionTitle icon={Home} title="Thông tin chỗ nghỉ" />
+                    <SectionTitle icon={Home} title="Thông tin tổng quan" />
                     <div className="space-y-1">
                         <InfoRow icon={<Home size={14}/>} label="Tên chỗ nghỉ" value={propertyInfo.propertyName} />
                         <InfoRow icon={<Briefcase size={14}/>} label="Loại hình" value={getPropertyTypeLabel(propertyInfo.propertyType)} />
                         <InfoRow icon={<MapPin size={14}/>} label="Địa chỉ chỗ nghỉ" value={propertyInfo.propertyAddress} />
                         <InfoRow icon={<Map size={14}/>} label="Khu vực" value={`${propertyInfo.propertyWard || ''}, ${propertyInfo.propertyDistrict || ''}, ${propertyInfo.propertyCity || ''}`.replace(/, , /g, ', ').trim().replace(/^,|,$/g, '')} />
-                        
-                        {/* FIX LIÊN KẾT GOOGLE MAPS */}
                         <InfoRow icon={<Compass size={14}/>} label="Vị trí trên bản đồ">
                             {propertyInfo.latitude && propertyInfo.longitude ? (
                                 <a 
@@ -222,23 +226,55 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
                                 <span className="text-gray-400 text-xs italic">Chưa có tọa độ</span>
                             )}
                         </InfoRow>
-
                         <InfoRow icon={<Info size={14}/>} label="Mô tả">
                            <p className="text-sm font-medium text-gray-800 whitespace-pre-line line-clamp-4 hover:line-clamp-none transition-all cursor-default">
                                {propertyInfo.description || '---'}
                            </p>
                         </InfoRow>
-                        <InfoRow icon={<DollarSign size={14}/>} label="Giá cơ bản" value={formatCurrency(propertyInfo.price)} />
-                        <InfoRow icon={<DollarSign size={14}/>} label="Giá cuối tuần" value={formatCurrency(propertyInfo.weekendPrice)} />
-                        <InfoRow icon={<UsersIcon size={14}/>} label="Sức chứa" value={`${propertyInfo.capacity || 0} người lớn`} />
-                        <InfoRow icon={<Maximize size={14}/>} label="Diện tích" value={`${propertyInfo.area || 0} m²`} />
+                        
+                        {/* Chỉ hiện Area ở đây nếu KHÔNG phải Villa/Homestay, hoặc hiển thị Area của property */}
+                        <InfoRow icon={<Maximize size={14}/>} label="Diện tích khuôn viên" value={`${propertyInfo.area || 0} m²`} />
                         <InfoRow icon={<ShieldCheck size={14}/>} label="Giấy phép KD" value={propertyInfo.businessLicenseNumber || application.businessLicenseNumber} isHighlight />
                     </div>
                 </div>
 
+                {/* --- THÊM PHẦN CHI TIẾT NGUYÊN CĂN NẾU LÀ VILLA/HOMESTAY --- */}
+                {isWholeUnit && unitData && (
+                     <div className="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 shadow-sm">
+                        <SectionTitle icon={BedDouble} title="Chi tiết Nguyên Căn" />
+                        <div className="space-y-1">
+                            <InfoRow icon={<Home size={14}/>} label="Tên căn" value={unitData.name} />
+                            <InfoRow icon={<DollarSign size={14}/>} label="Giá cơ bản/đêm" value={formatCurrency(propertyInfo.price)} />
+                            <InfoRow icon={<DollarSign size={14}/>} label="Giá cuối tuần/đêm" value={formatCurrency(propertyInfo.weekendPrice)} />
+                            <InfoRow icon={<UsersIcon size={14}/>} label="Sức chứa tiêu chuẩn" value={`${propertyInfo.capacity || 0} người`} />
+                            <InfoRow icon={<Maximize size={14}/>} label="Diện tích sử dụng" value={`${unitData.area || 0} m²`} />
+                            
+                            <InfoRow icon={<Info size={14}/>} label="Mô tả căn">
+                               <p className="text-sm font-medium text-gray-800 whitespace-pre-line line-clamp-3 hover:line-clamp-none transition-all">
+                                   {unitData.description || '---'}
+                               </p>
+                            </InfoRow>
+                            
+                            {/* Tiện ích trong phòng (nếu có) */}
+                            {unitData.amenityNames && unitData.amenityNames.length > 0 && (
+                                <InfoRow icon={<Sparkles size={14}/>} label="Tiện nghi trong căn">
+                                    <div className="flex flex-wrap gap-1.5 mt-1">
+                                        {unitData.amenityNames.map((am, i) => (
+                                            <span key={i} className="text-[11px] font-medium bg-white text-blue-700 px-2 py-0.5 rounded border border-blue-200">
+                                                {am}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </InfoRow>
+                            )}
+                        </div>
+                     </div>
+                )}
+                {/* -------------------------------------------------------- */}
+
                  {propertyInfo.amenityNames && propertyInfo.amenityNames.length > 0 && (
                     <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                        <SectionTitle icon={Sparkles} title="Tiện ích nổi bật" />
+                        <SectionTitle icon={Sparkles} title="Tiện ích khuôn viên chung" />
                         <div className="flex flex-wrap gap-2">
                             {propertyInfo.amenityNames.map((amenity, idx) => (
                                 <AmenityBadge key={idx} amenity={amenity} />
@@ -270,7 +306,7 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
                     
                     <div className="space-y-6">
                         {/* CCCD & License Group */}
-                        {([...personalImages, ...businessImages].length > 0) ? (
+                        {([...personalImages, ...businessImages].length > 0) && (
                             <div>
                                 <p className="text-xs font-bold text-gray-400 uppercase mb-3 px-1">Định danh & Pháp lý</p>
                                 <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
@@ -292,18 +328,14 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
                                     ))}
                                 </div>
                             </div>
-                        ) : (
-                            <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                                <p className="text-sm text-gray-400">Không có tài liệu pháp lý</p>
-                            </div>
                         )}
 
-                        {/* Property Images Group */}
-                        {propertyImages.length > 0 ? (
+                        {/* Property & Unit Images Group */}
+                        {([...propertyImages, ...unitImages].length > 0) ? (
                             <div>
-                                <p className="text-xs font-bold text-gray-400 uppercase mb-3 px-1">Ảnh Chỗ nghỉ</p>
+                                <p className="text-xs font-bold text-gray-400 uppercase mb-3 px-1">Ảnh Cơ sở lưu trú</p>
                                 <div className="grid grid-cols-3 gap-2">
-                                    {propertyImages.map((img, idx) => (
+                                    {[...propertyImages, ...unitImages].map((img, idx) => (
                                         <div 
                                             key={idx} 
                                             className="relative group cursor-pointer aspect-square rounded-lg overflow-hidden border border-gray-100 hover:border-blue-400 transition"
@@ -314,8 +346,8 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
                                             }}
                                         >
                                             <img src={img.url} alt={img.caption} className="w-full h-full object-cover" />
-                                            <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                                               <p className="text-[10px] text-white font-bold">{`Ảnh ${idx+1}`}</p>
+                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-1 text-center">
+                                               <p className="text-[10px] text-white font-bold leading-tight">{img.caption}</p>
                                             </div>
                                         </div>
                                     ))}
@@ -323,7 +355,7 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
                             </div>
                         ) : (
                             <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                                <p className="text-sm text-gray-400">Chưa tải lên ảnh chỗ nghỉ</p>
+                                <p className="text-sm text-gray-400">Chưa tải lên ảnh</p>
                             </div>
                         )}
                     </div>
