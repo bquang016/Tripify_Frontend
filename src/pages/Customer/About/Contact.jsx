@@ -1,13 +1,13 @@
 import React from "react";
 import { Mail, Phone, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
-
+import { useTranslation } from "react-i18next";
 
 const members = [
     {
-        name: "Từ Việt Thái",
+        name: "Đinh Trần Nguyên",
         role: "Leader",
-        email: "thaiviet22825@gmail.com",
+        email: "dinh46464@gmail.com",
         img: "https://i.pravatar.cc/150?img=3",
     },
     {
@@ -17,28 +17,22 @@ const members = [
         img: "/assets/images/avatar devteam/quangmtp.png",
     },
     {
-        name: "Lê Công Tôn Thắng",
+        name: "Nguyễn Khoa Minh ",
         role: "Developer",
-        email: "thangle20051111@gmail.com",
-        img: "/assets/images/avatar devteam/lethang.png",
+        email: "ngyenkhoaminh0104@gmail.com",
+        img: "/assets/images/avatar devteam/nkminh.jpg",
     },
     {
-        name: "Lương Huyền Trang",
+        name: "Bùi Trọng Nghĩa",
         role: "Developer",
-        email: "luongtrang140905@gmail.com",
+        email: "buitrongnghiaaaaa@gmail.com",
         img: "/assets/images/avatar devteam/lhtrang.png",
     },
     {
-        name: "Đào Quang Thành",
+        name: "Ngô Hoàng Phúc",
         role: "Developer",
-        email: "daoquangthanh0704@gmail.com",
+        email: "Phuccpzz1234@gmail.com",
         img: "/assets/images/avatar devteam/dqthanh.png",
-    },
-    {
-        name: "Bùi Tiến Thành",
-        role: "Developer",
-        email: "apksuyuki1@gmail.com",
-        img: "/assets/images/avatar devteam/tthanh.jpg",
     },
 ];
 
@@ -67,6 +61,8 @@ const MemberCard = ({ member, index }) => (
 );
 
 const Contact = () => {
+    const { t, i18n } = useTranslation();
+
     return (
         <section className="py-16 bg-gray-50" id="contact">
             <div className="max-w-6xl mx-auto px-4">
@@ -77,7 +73,7 @@ const Contact = () => {
                     viewport={{ once: true }}
                     className="text-3xl font-bold text-center mb-12 text-blue-700"
                 >
-                    Liên hệ & Hỗ trợ
+                    {i18n.language === 'vi' ? 'Liên hệ & Hỗ trợ' : 'Contact & Support'}
                 </motion.h2>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -89,7 +85,7 @@ const Contact = () => {
                         className="bg-white p-8 rounded-2xl shadow-sm"
                     >
                         <h3 className="text-xl font-semibold mb-4 text-blue-600">
-                            Thông tin liên hệ
+                            {t('support.info_title')}
                         </h3>
                         <ul className="space-y-4 text-gray-700">
                             <li className="flex items-center gap-3">
@@ -102,11 +98,11 @@ const Contact = () => {
                             </li>
                             <li className="flex items-center gap-3">
                                 <MapPin className="text-blue-500" size={20} />
-                                <span>Địa chỉ: 120 An Liễng</span>
+                                <span>{t('support.address')}: 120 An Liễng</span>
                             </li>
                         </ul>
                         <p className="mt-6 text-gray-600">
-                            Hỗ trợ 24/7 – sẵn sàng đồng hành cùng chuyến đi của bạn.
+                            {t('support.support_247')}
                         </p>
                     </motion.div>
 
@@ -119,10 +115,10 @@ const Contact = () => {
                         className="bg-white p-8 rounded-2xl shadow-sm"
                     >
                         <h3 className="text-xl font-semibold mb-4 text-blue-600">
-                            Đội ngũ phát triển
+                            {t('support.dev_team')}
                         </h3>
                         <p className="text-gray-600 mb-4">
-                            Nhóm phát triển dự án — 2S_TW.
+                            {t('support.project_desc')}
                         </p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             {members.map((member, index) => (
