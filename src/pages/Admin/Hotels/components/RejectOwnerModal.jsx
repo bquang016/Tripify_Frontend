@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import Modal from "@/components/common/Modal/Modal";
 import { UserX } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 /**
  * Modal TỪ CHỐI ĐƠN — giao diện mới, đẹp + disable nút khi không nhập lý do
  */
 const RejectOwnerModal = ({ open, onClose, onConfirm, application }) => {
+  const { t } = useTranslation();
   const [reason, setReason] = useState("");
 
   if (!application) return null;
@@ -33,17 +35,17 @@ const RejectOwnerModal = ({ open, onClose, onConfirm, application }) => {
         </div>
         <div>
           <h2 className="text-xl font-semibold text-gray-900">
-            Từ chối đơn đăng ký Chủ sở hữu
+            {t('owner_approvals.reject_modal.title')}
           </h2>
           <p className="text-sm text-gray-600 mt-1">
-            Vui lòng cung cấp lý do từ chối đơn đăng ký.
+            {t('owner_approvals.reject_modal.subtitle')}
           </p>
         </div>
       </div>
 
       {/* Applicant Info */}
       <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-        <p className="text-sm text-red-700">Bạn đang từ chối đơn của:</p>
+        <p className="text-sm text-red-700">{t('owner_approvals.reject_modal.rejecting_for')}</p>
 
         <p className="mt-1 font-semibold text-red-900 text-lg">
           {application.applicantFullName}
@@ -58,7 +60,7 @@ const RejectOwnerModal = ({ open, onClose, onConfirm, application }) => {
           htmlFor="reason"
           className="block text-sm font-medium text-gray-700 mb-1"
         >
-          Lý do từ chối <span className="text-red-600">*</span>
+          {t('owner_approvals.reject_modal.reason_label')} <span className="text-red-600">*</span>
         </label>
 
         <textarea
@@ -66,7 +68,7 @@ const RejectOwnerModal = ({ open, onClose, onConfirm, application }) => {
           rows={3}
           value={reason}
           onChange={(e) => setReason(e.target.value)}
-          placeholder="Ví dụ: Giấy phép kinh doanh không hợp lệ..."
+          placeholder={t('owner_approvals.reject_modal.reason_placeholder')}
           className="
             w-full p-3 border rounded-lg shadow-sm text-sm
             focus:ring-red-500 focus:border-red-500
@@ -80,7 +82,7 @@ const RejectOwnerModal = ({ open, onClose, onConfirm, application }) => {
           onClick={handleClose}
           className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition"
         >
-          Hủy
+          {t('owner_approvals.reject_modal.cancel')}
         </button>
 
         {/* Nút submit — DISABLED nếu không nhập lý do */}
@@ -95,7 +97,7 @@ const RejectOwnerModal = ({ open, onClose, onConfirm, application }) => {
             }
           `}
         >
-          Xác nhận từ chối
+          {t('owner_approvals.reject_modal.confirm')}
         </button>
       </div>
     </Modal>

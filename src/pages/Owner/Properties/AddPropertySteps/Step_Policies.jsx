@@ -1,14 +1,12 @@
 import React from "react";
-// ✅ SỬA LỖI: Thêm AnimatePresence vào đây
 import { motion, AnimatePresence } from "framer-motion"; 
 import { 
-  ShieldCheck, Ban, Dog, Baby, CreditCard, AlertTriangle, Check, LogIn, LogOut, Moon 
+  ShieldCheck, Ban, Dog, Baby, AlertTriangle, Check, LogIn, LogOut, Moon 
 } from "lucide-react";
 import TextField from "@/components/common/Input/TextField";
 import TextArea from "@/components/common/Input/TextArea";
 import PolicyTimeSelector from "./components/PolicyTimeSelector"; 
-
-// --- COMPONENT UI CON (Toggle & Card) ---
+import { useTranslation } from "react-i18next";
 
 const ToggleSwitch = ({ label, subLabel, checked, onChange, icon }) => (
   <div 
@@ -33,7 +31,6 @@ const ToggleSwitch = ({ label, subLabel, checked, onChange, icon }) => (
       </div>
     </div>
     
-    {/* Toggle UI */}
     <div className={`w-11 h-6 flex items-center rounded-full p-1 transition-colors duration-300 shrink-0 mt-1 ${checked ? 'bg-[rgb(40,169,224)]' : 'bg-gray-300'}`}>
       <div className={`bg-white w-4 h-4 rounded-full shadow-md transform transition-transform duration-300 ${checked ? 'translate-x-5' : ''}`} />
     </div>
@@ -50,9 +47,9 @@ const SectionCard = ({ title, children }) => (
   </div>
 );
 
-// --- MAIN COMPONENT ---
-
 const Step_Policies = ({ register, watch, setValue, errors }) => {
+  const { t, i18n } = useTranslation();
+  const isVi = i18n.language === 'vi';
   const policies = watch("policies") || {};
 
   const handleToggle = (field) => {
@@ -66,60 +63,54 @@ const Step_Policies = ({ register, watch, setValue, errors }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      {/* Header */}
       <div className="flex items-center gap-5 mb-8 border-b border-gray-100 pb-6">
         <div className="p-4 bg-[rgb(40,169,224)]/10 text-[rgb(40,169,224)] rounded-2xl shadow-sm">
           <ShieldCheck size={36} strokeWidth={2} />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Thiết lập Chính sách</h2>
+          <h2 className="text-2xl font-bold text-gray-800">{t('add_property_flow.step_policies')}</h2>
           <p className="text-gray-500 text-sm mt-1">
-            Thiết lập các quy tắc quan trọng để đảm bảo vận hành trơn tru.
+            {t('add_property_flow.policies_subtitle')}
           </p>
         </div>
       </div>
 
-      {/* 1. Thời gian Nhận/Trả phòng */}
-      <SectionCard title="Thời gian Nhận & Trả phòng">
+      <SectionCard title={t('add_property_flow.checkin_checkout')}>
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                
-                {/* Check-in */}
                 <div className="space-y-4">
                     <div className="flex items-center gap-2 text-[rgb(40,169,224)] mb-2">
                         <LogIn size={20} />
-                        <span className="font-bold text-gray-700">Giờ Nhận phòng</span>
+                        <span className="font-bold text-gray-700">{t('add_property_flow.checkin_from')}</span>
                     </div>
                     <PolicyTimeSelector 
-                        label="Bắt đầu nhận khách từ" 
+                        label={isVi ? "Bắt đầu nhận khách từ" : "Starts from"} 
                         value={policies.checkInTime} 
                         onChange={(val) => setValue("policies.checkInTime", val, { shouldValidate: true })} 
                     />
                     {errors?.policies?.checkInTime && <p className="text-red-500 text-xs ml-1">{errors.policies.checkInTime.message}</p>}
                 </div>
 
-                {/* Check-out */}
                 <div className="space-y-4">
                     <div className="flex items-center gap-2 text-orange-500 mb-2">
                         <LogOut size={20} />
-                        <span className="font-bold text-gray-700">Giờ Trả phòng</span>
+                        <span className="font-bold text-gray-700">{t('add_property_flow.checkout_until')}</span>
                     </div>
                     <PolicyTimeSelector 
-                        label="Khách phải trả phòng trước" 
+                        label={isVi ? "Khách phải trả phòng trước" : "Must check-out before"} 
                         value={policies.checkOutTime} 
                         onChange={(val) => setValue("policies.checkOutTime", val, { shouldValidate: true })} 
                     />
                     {errors?.policies?.checkOutTime && <p className="text-red-500 text-xs ml-1">{errors.policies.checkOutTime.message}</p>}
                 </div>
 
-                {/* Quiet Hours */}
                 <div className="md:col-span-2 pt-4 border-t border-dashed border-gray-200">
                      <div className="flex items-center gap-2 text-purple-500 mb-3">
                         <Moon size={18} />
-                        <span className="font-bold text-gray-700 text-sm">Khung giờ yên tĩnh (Tùy chọn)</span>
+                        <span className="font-bold text-gray-700 text-sm">{t('add_property_flow.quiet_hours')}</span>
                     </div>
                      <TextField 
-                        placeholder="Ví dụ: 22:00 - 07:00"
+                        placeholder={t('add_property_flow.quiet_hours_placeholder')}
                         {...register("policies.quietHours")}
                      />
                 </div>
@@ -127,14 +118,11 @@ const Step_Policies = ({ register, watch, setValue, errors }) => {
         </div>
       </SectionCard>
 
-      {/* 2. Quy định Cư trú */}
-      <SectionCard title="Quy định Cư trú">
+      <SectionCard title={t('add_property_flow.house_rules')}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          
-          {/* Hút thuốc */}
           <div className="space-y-3">
             <ToggleSwitch 
-              label="Cho phép hút thuốc" 
+              label={t('add_property_flow.smoking_allowed')} 
               checked={policies.smokingAllowed} 
               onChange={() => handleToggle("smokingAllowed")}
               icon={<Ban size={18} />}
@@ -142,16 +130,15 @@ const Step_Policies = ({ register, watch, setValue, errors }) => {
             <AnimatePresence>
                 {policies.smokingAllowed && (
                   <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height: "auto"}} exit={{opacity:0, height:0}}>
-                     <TextField placeholder="Khu vực được phép hút thuốc..." {...register("policies.smokingPolicyDescription")} />
+                     <TextField placeholder={t('add_property_flow.smoking_placeholder')} {...register("policies.smokingPolicyDescription")} />
                   </motion.div>
                 )}
             </AnimatePresence>
           </div>
 
-          {/* Thú cưng */}
           <div className="space-y-3">
             <ToggleSwitch 
-              label="Cho phép thú cưng" 
+              label={t('add_property_flow.pets_allowed')} 
               checked={policies.petsAllowed} 
               onChange={() => handleToggle("petsAllowed")}
               icon={<Dog size={18} />}
@@ -159,24 +146,23 @@ const Step_Policies = ({ register, watch, setValue, errors }) => {
             <AnimatePresence>
                 {policies.petsAllowed && (
                   <motion.div initial={{opacity:0, height:0}} animate={{opacity:1, height: "auto"}} exit={{opacity:0, height:0}}>
-                     <TextField placeholder="Phụ phí, giới hạn cân nặng..." {...register("policies.petPolicyDescription")} />
+                     <TextField placeholder={t('add_property_flow.pets_placeholder')} {...register("policies.petPolicyDescription")} />
                   </motion.div>
                 )}
             </AnimatePresence>
           </div>
           
-          {/* Trẻ em */}
           <div className="space-y-3 md:col-span-2">
             <ToggleSwitch 
-              label="Phù hợp với trẻ em" 
-              subLabel="Gia đình có trẻ nhỏ được chào đón"
+              label={t('add_property_flow.children_allowed')} 
+              subLabel={t('add_property_flow.children_welcome')}
               checked={policies.childrenAllowed} 
               onChange={() => handleToggle("childrenAllowed")}
               icon={<Baby size={18} />}
             />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
                 <div>
-                    <label className="text-xs font-bold text-gray-500 uppercase mb-1.5 block">Tuổi tối thiểu của khách chính</label>
+                    <label className="text-xs font-bold text-gray-500 uppercase mb-1.5 block">{t('add_property_flow.min_age_label')}</label>
                     <input 
                         type="number" 
                         className="w-full p-3 border border-gray-200 bg-white rounded-xl focus:border-[rgb(40,169,224)] outline-none transition-all"
@@ -186,11 +172,11 @@ const Step_Policies = ({ register, watch, setValue, errors }) => {
                 </div>
                 {policies.childrenAllowed && (
                     <div>
-                        <label className="text-xs font-bold text-gray-500 uppercase mb-1.5 block">Ghi chú về trẻ em</label>
+                        <label className="text-xs font-bold text-gray-500 uppercase mb-1.5 block">{t('add_property_flow.children_notes')}</label>
                         <input 
                             type="text" 
                             className="w-full p-3 border border-gray-200 bg-white rounded-xl focus:border-[rgb(40,169,224)] outline-none transition-all"
-                            placeholder="VD: Miễn phí cho trẻ dưới 6 tuổi..."
+                            placeholder={t('add_property_flow.children_notes_placeholder')}
                             {...register("policies.childrenPolicyDescription")}
                         />
                     </div>
@@ -200,16 +186,13 @@ const Step_Policies = ({ register, watch, setValue, errors }) => {
         </div>
       </SectionCard>
 
-      {/* 3. Hủy phòng & Thanh toán */}
-      <SectionCard title="Chính sách Hủy phòng & Thanh toán">
+      <SectionCard title={t('add_property_flow.cancel_payment_policy')}>
         <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-8">
-          
-          {/* Hủy phòng */}
           <div className="flex flex-col md:flex-row gap-8 items-start">
              <div className="flex-1 w-full">
                 <ToggleSwitch 
-                  label="Cho phép hủy miễn phí" 
-                  subLabel="Thu hút nhiều khách hàng hơn"
+                  label={t('add_property_flow.free_cancel')} 
+                  subLabel={t('add_property_flow.free_cancel_sub')}
                   checked={policies.allowFreeCancellation} 
                   onChange={() => handleToggle("allowFreeCancellation")}
                   icon={<Check size={18} />}
@@ -222,15 +205,15 @@ const Step_Policies = ({ register, watch, setValue, errors }) => {
                         className="flex-1 w-full space-y-4 bg-green-50 p-4 rounded-xl border border-green-100"
                     >
                        <TextField 
-                          label="Hủy miễn phí trước (ngày)" 
+                          label={t('add_property_flow.free_cancel_days')} 
                           type="number" 
-                          placeholder="VD: 3 ngày"
+                          placeholder="e.g. 3"
                           {...register("policies.freeCancellationDays", { valueAsNumber: true })}
                        />
                        <TextArea 
-                          label="Chi tiết chính sách hủy" 
+                          label={t('add_property_flow.cancel_policy_detail')} 
                           rows={2}
-                          placeholder="VD: Sau thời gian này sẽ tính phí 100% đêm đầu tiên..."
+                          placeholder={t('add_property_flow.cancel_policy_placeholder')}
                           {...register("policies.cancellationPolicyDescription")}
                        />
                     </motion.div>
@@ -240,41 +223,40 @@ const Step_Policies = ({ register, watch, setValue, errors }) => {
 
           <div className="w-full h-px bg-gray-100"></div>
 
-          {/* Đặt cọc */}
           <div className="space-y-4">
             <div className="flex items-center gap-2">
                 <AlertTriangle size={20} className="text-orange-500" />
-                <span className="font-bold text-gray-800">Yêu cầu đặt cọc / Thanh toán trước</span>
+                <span className="font-bold text-gray-800">{t('add_property_flow.deposit_prepay')}</span>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                <div className="space-y-3">
                   <label className="flex items-center gap-3 cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors">
                       <input type="checkbox" className="w-5 h-5 accent-[rgb(40,169,224)]" {...register("policies.requiresPrepayment")} />
-                      <span className="font-medium text-gray-700">Yêu cầu thanh toán trước</span>
+                      <span className="font-medium text-gray-700">{t('add_property_flow.prepay_req')}</span>
                   </label>
                   {policies.requiresPrepayment && (
-                      <TextArea rows={3} placeholder="VD: Chuyển khoản 50% khi đặt..." {...register("policies.prepaymentPolicy")} />
+                      <TextArea rows={3} placeholder={t('add_property_flow.prepay_placeholder')} {...register("policies.prepaymentPolicy")} />
                   )}
                </div>
 
                <div className="space-y-3">
                   <label className="flex items-center gap-3 cursor-pointer p-3 hover:bg-gray-50 rounded-lg transition-colors">
                       <input type="checkbox" className="w-5 h-5 accent-[rgb(40,169,224)]" {...register("policies.securityDepositRequired")} />
-                      <span className="font-medium text-gray-700">Yêu cầu đặt cọc hư hại</span>
+                      <span className="font-medium text-gray-700">{t('add_property_flow.damage_deposit')}</span>
                   </label>
                   {policies.securityDepositRequired && (
                       <div className="space-y-3 bg-gray-50 p-3 rounded-xl">
                          <input 
                             type="number" 
                             className="w-full p-3 text-sm border border-gray-200 bg-white rounded-lg outline-none focus:border-[rgb(40,169,224)]"
-                            placeholder="Số tiền cọc (VNĐ)"
+                            placeholder={t('add_property_flow.deposit_amount')}
                             {...register("policies.securityDepositAmount", { valueAsNumber: true })}
                          />
                          <input 
                             type="text" 
                             className="w-full p-3 text-sm border border-gray-200 bg-white rounded-lg outline-none focus:border-[rgb(40,169,224)]"
-                            placeholder="Quy định hoàn cọc..."
+                            placeholder={t('add_property_flow.deposit_refund_rules')}
                             {...register("policies.securityDepositDescription")}
                          />
                       </div>
@@ -282,7 +264,6 @@ const Step_Policies = ({ register, watch, setValue, errors }) => {
                </div>
             </div>
           </div>
-
         </div>
       </SectionCard>
     </motion.div>

@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import ImageViewerModal from "@/pages/Admin/Hotels/components/ImageViewerModal";
 import roomService from "@/services/room.service";
+import { formatPrice } from "@/utils/priceUtils";
 
 // ============================
 // CLOUDLFLARE PUBLIC DOMAIN
@@ -139,9 +140,6 @@ const RoomDetailModal = ({ room: initialRoom, open, onClose }) => {
         caption: `${roomDetail.roomName} - Ảnh ${idx + 1}`
     }));
 
-    const fmt = (p) =>
-        new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(p || 0);
-
     return (
         <>
             <Modal open={open} onClose={onClose} title="Chi tiết phòng nghỉ" maxWidth="max-w-5xl">
@@ -212,9 +210,13 @@ const RoomDetailModal = ({ room: initialRoom, open, onClose }) => {
                             <div className="flex justify-between items-end mb-3">
                                 <div>
                                     <p className="text-xs text-gray-500">Giá mỗi đêm từ</p>
-                                    <p className="line-through text-gray-400 text-sm">{fmt(roomDetail.pricePerNight * 1.2)}</p>
+                                    <p className="line-through text-gray-400 text-sm">
+                                        {formatPrice(roomDetail.pricePerNight * 1.2, roomDetail.convertedPricePerNight ? roomDetail.convertedPricePerNight * 1.2 : null, roomDetail.currency)}
+                                    </p>
                                 </div>
-                                <p className="text-3xl font-bold text-sky-500">{fmt(roomDetail.pricePerNight)}</p>
+                                <p className="text-3xl font-bold text-sky-500">
+                                    {formatPrice(roomDetail.pricePerNight, roomDetail.convertedPricePerNight, roomDetail.currency)}
+                                </p>
                             </div>
 
                             <div className="flex gap-3">

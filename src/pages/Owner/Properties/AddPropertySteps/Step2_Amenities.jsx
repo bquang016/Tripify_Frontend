@@ -3,28 +3,28 @@ import { motion } from "framer-motion";
 import { 
   Wifi, ParkingCircle, Droplet, Waves, Sparkles, Ban, 
   Plane, PawPrint, Dumbbell, Wind, ConciergeBell, Cigarette, 
-  Sparkle // Icon trang trí cho header
+  Sparkle 
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 // Import component con
 import AmenityOption from "./components/AmenityOption";
 
-const AMENITIES_LIST = [
-  { id: "pool", label: "Hồ bơi", icon: <Waves size={24} /> },
-  { id: "parking", label: "Bãi đỗ xe", icon: <ParkingCircle size={24} /> },
-  { id: "sauna", label: "Phòng xông hơi", icon: <Droplet size={24} /> },
-  { id: "spa", label: "Spa & Massage", icon: <Sparkles size={24} /> },
-  { id: "non_smoking", label: "Không hút thuốc", icon: <Ban size={24} /> },
-  { id: "wifi", label: "Wi-Fi miễn phí", icon: <Wifi size={24} /> },
-  { id: "airport_transfer", label: "Đưa đón sân bay", icon: <Plane size={24} /> },
-  { id: "pets", label: "Cho phép thú cưng", icon: <PawPrint size={24} /> },
-  { id: "gym", label: "Phòng Gym", icon: <Dumbbell size={24} /> },
-  { id: "smoking_area", label: "Khu vực hút thuốc", icon: <Cigarette size={24} /> },
-  { id: "reception_24h", label: "Lễ tân 24/7", icon: <ConciergeBell size={24} /> },
-  { id: "ac", label: "Điều hòa", icon: <Wind size={24} /> },
+const AMENITIES_LIST = (t) => [
+  { id: "pool", label: t('add_property_flow.amenities_list.pool'), icon: <Waves size={24} /> },
+  { id: "parking", label: t('add_property_flow.amenities_list.parking'), icon: <ParkingCircle size={24} /> },
+  { id: "sauna", label: t('add_property_flow.amenities_list.sauna'), icon: <Droplet size={24} /> },
+  { id: "spa", label: t('add_property_flow.amenities_list.spa'), icon: <Sparkles size={24} /> },
+  { id: "non_smoking", label: t('add_property_flow.amenities_list.non_smoking'), icon: <Ban size={24} /> },
+  { id: "wifi", label: t('add_property_flow.amenities_list.wifi'), icon: <Wifi size={24} /> },
+  { id: "airport_transfer", label: t('add_property_flow.amenities_list.airport_transfer'), icon: <Plane size={24} /> },
+  { id: "pets", label: t('add_property_flow.amenities_list.pets'), icon: <PawPrint size={24} /> },
+  { id: "gym", label: t('add_property_flow.amenities_list.gym'), icon: <Dumbbell size={24} /> },
+  { id: "smoking_area", label: t('add_property_flow.amenities_list.smoking_area'), icon: <Cigarette size={24} /> },
+  { id: "reception_24h", label: t('add_property_flow.amenities_list.reception_24h'), icon: <ConciergeBell size={24} /> },
+  { id: "ac", label: t('add_property_flow.amenities_list.ac'), icon: <Wind size={24} /> },
 ];
 
-// Animation variants
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -39,8 +39,9 @@ const itemVariants = {
 };
 
 export default function Step2_Amenities({ register, watch }) {
-  // Theo dõi toàn bộ object amenities để biết cái nào đang được chọn (true)
+  const { t } = useTranslation();
   const selectedAmenities = watch("amenities") || {};
+  const list = AMENITIES_LIST(t);
 
   return (
     <motion.div 
@@ -49,34 +50,31 @@ export default function Step2_Amenities({ register, watch }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      {/* 1. Header Section */}
       <div className="flex items-center gap-4 mb-8">
         <div className="p-4 bg-[rgb(40,169,224)]/10 text-[rgb(40,169,224)] rounded-2xl">
           <Sparkle size={32} strokeWidth={2} />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Tiện nghi & Dịch vụ</h2>
+          <h2 className="text-2xl font-bold text-gray-800">{t('add_property_flow.amenities_title')}</h2>
           <p className="text-gray-500 text-sm mt-1">
-            Chọn những tiện ích nổi bật nhất để thu hút khách hàng.
+            {t('add_property_flow.amenities_subtitle')}
           </p>
         </div>
       </div>
 
-      {/* 2. Grid Tiện nghi */}
       <motion.div 
         className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-5"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        {AMENITIES_LIST.map((item) => (
+        {list.map((item) => (
           <motion.div key={item.id} variants={itemVariants}>
             <AmenityOption
               id={item.id}
               label={item.label}
               icon={item.icon}
               register={register}
-              // Kiểm tra xem checkbox này có đang được chọn không
               isSelected={!!selectedAmenities[item.id]} 
             />
           </motion.div>

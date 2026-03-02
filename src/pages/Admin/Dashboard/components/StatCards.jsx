@@ -1,5 +1,7 @@
 import React from "react";
 import { DollarSign, Users, Building2, CalendarCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/context/LanguageContext";
 
 const StatCard = ({ title, value, icon, colorClass, subText }) => (
   <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300">
@@ -17,37 +19,46 @@ const StatCard = ({ title, value, icon, colorClass, subText }) => (
 );
 
 const StatCards = ({ stats }) => {
-  const formatCurrency = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val || 0);
+  const { t, i18n } = useTranslation();
+  const { currency } = useLanguage();
+  const isVi = i18n.language === 'vi';
+
+  const formatCurrency = (val) => {
+    if (currency === 'USD') {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val / 25000);
+    }
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val || 0);
+  };
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <StatCard 
-        title="Tổng Doanh Thu" 
+        title={t('admin.total_revenue')} 
         value={formatCurrency(stats?.totalRevenue)} 
         icon={<DollarSign size={24} />}
         colorClass="bg-gradient-to-r from-green-400 to-green-600"
-        subText="Toàn hệ thống"
+        subText={isVi ? "Toàn hệ thống" : "System-wide"}
       />
       <StatCard 
-        title="Người Dùng" 
+        title={t('admin.total_users')} 
         value={stats?.totalUsers || 0} 
         icon={<Users size={24} />}
         colorClass="bg-gradient-to-r from-blue-400 to-blue-600"
-        subText="Đang hoạt động"
+        subText={isVi ? "Đang hoạt động" : "Active now"}
       />
       <StatCard 
-        title="Cơ Sở Lưu Trú" 
+        title={isVi ? "Cơ Sở Lưu Trú" : "Properties"} 
         value={stats?.totalProperties || 0} 
         icon={<Building2 size={24} />}
         colorClass="bg-gradient-to-r from-purple-400 to-purple-600"
-        subText="Đã kiểm duyệt"
+        subText={isVi ? "Đã kiểm duyệt" : "Verified"}
       />
       <StatCard 
-        title="Booking Mới (24h)" 
+        title={isVi ? "Booking Mới (24h)" : "New Bookings (24h)"} 
         value={stats?.newBookings24h || 0} 
         icon={<CalendarCheck size={24} />}
         colorClass="bg-gradient-to-r from-orange-400 to-orange-600"
-        subText="Cần xử lý ngay"
+        subText={isVi ? "Cần xử lý ngay" : "Action required"}
       />
     </div>
   );

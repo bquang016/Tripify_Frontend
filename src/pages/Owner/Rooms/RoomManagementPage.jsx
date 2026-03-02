@@ -9,8 +9,11 @@ import api from "@/services/axios.config";
 import { motion, AnimatePresence } from "framer-motion";
 import Toast from "@/components/common/Notification/Toast";
 import ConfirmModal from "@/components/common/Modal/ConfirmModal";
+import { useTranslation } from "react-i18next";
 
 const RoomManagementPage = () => {
+  const { t, i18n } = useTranslation();
+  const isVi = i18n.language === 'vi';
   const { propertyId } = useParams();
   const navigate = useNavigate();
   
@@ -19,11 +22,8 @@ const RoomManagementPage = () => {
   const [loading, setLoading] = useState(true);
   const [toastData, setToastData] = useState(null);
 
-  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState(null);
-  
-  // Confirm State
   const [confirmData, setConfirmData] = useState({ open: false, id: null });
 
   const showToast = (message, type = "info") => {
@@ -31,61 +31,32 @@ const RoomManagementPage = () => {
     setTimeout(() => setToastData(null), 3000);
   };
 
-  // Fetch Data với Log chi tiết
   const fetchData = async () => {
-    console.log(`🚀 [RoomPage] Bắt đầu tải dữ liệu cho Property ID: ${propertyId}`);
-    const totalStart = performance.now();
-
     try {
       setLoading(true);
-
-      // 1. Đo thời gian lấy thông tin Property
-      const propStart = performance.now();
       const propRes = await api.get(`/property-details/${propertyId}`);
-      console.log(`   🔹 [API Property Info] Xong sau ${(performance.now() - propStart).toFixed(2)}ms`, propRes.data);
       setProperty(propRes.data.property);
 
-      // 2. Đo thời gian lấy danh sách phòng
-const roomStart = performance.now();
-const roomsRes = await roomService.getRoomsByProperty(propertyId);
-console.log(`   🔹 [API Get Rooms] Xong sau ${(performance.now() - roomStart).toFixed(2)}ms`, roomsRes.data);
+      const roomsRes = await roomService.getRoomsByProperty(propertyId);
+      const roomsData = roomsRes.data || [];
 
-// roomsRes.data = [{ roomId, roomName, images: [...] }, ...]
-
-const roomsData = roomsRes.data || [];
-
-const roomsWithCover = await Promise.all(
-    roomsData.map(async (room) => {
-        try {
-            const imgs = await roomService.getRoomImages(room.roomId); // [{roomImageId, imageUrl, isCover}, ...]
-
-            const cover = imgs.find(i => i.cover);
-
-            const coverImageUrl = cover ? cover.imageUrl : (imgs[0]?.imageUrl || null);
-
-            return {
-                ...room,
-                coverImage: coverImageUrl   // ★★ Quan trọng
-            };
-
-        } catch (err) {
-            console.error("Lỗi load ảnh phòng:", err);
-            return {
-                ...room,
-                coverImage: room.images?.[0] || null
-            };
-        }
-    })
-);
-
-setRooms(roomsWithCover); 
-      
+      const roomsWithCover = await Promise.all(
+          roomsData.map(async (room) => {
+              try {
+                  const imgs = await roomService.getRoomImages(room.roomId);
+                  const cover = imgs.find(i => i.cover);
+                  const coverImageUrl = cover ? cover.imageUrl : (imgs[0]?.imageUrl || null);
+                  return { ...room, coverImage: coverImageUrl };
+              } catch (err) {
+                  return { ...room, coverImage: room.images?.[0] || null };
+              }
+          })
+      );
+      setRooms(roomsWithCover); 
     } catch (error) {
-      console.error("❌ [RoomPage] Lỗi tải dữ liệu:", error);
-      showToast("Không thể tải dữ liệu", "error");
+      showToast(t('finance.fetch_error'), "error");
     } finally {
       setLoading(false);
-      console.log(`✅ [RoomPage] TỔNG THỜI GIAN: ${(performance.now() - totalStart).toFixed(2)}ms`);
     }
   };
 
@@ -93,7 +64,6 @@ setRooms(roomsWithCover);
     if (propertyId) fetchData();
   }, [propertyId]);
 
-  // Handlers
   const handleAddRoom = () => {
     setSelectedRoom(null);
     setIsModalOpen(true);
@@ -111,23 +81,19 @@ setRooms(roomsWithCover);
   const handleDeleteRoom = async () => {
       if (!confirmData.id) return;
       try {
-          console.time("DeleteRoomAPI");
           await roomService.deleteRoom(confirmData.id);
-          console.timeEnd("DeleteRoomAPI");
-          
-          showToast("Đã xóa phòng thành công", "success");
+          showToast(isVi ? "Đã xóa phòng thành công" : "Room deleted successfully", "success");
           setConfirmData({ open: false, id: null });
           fetchData(); 
       } catch (error) {
-          console.error("Lỗi xóa phòng:", error);
-          showToast("Xóa phòng thất bại", "error");
+          showToast(isVi ? "Xóa phòng thất bại" : "Failed to delete room", "error");
       }
   };
 
   const handleModalSuccess = () => {
       setIsModalOpen(false);
       fetchData();
-      showToast(selectedRoom ? "Cập nhật phòng thành công" : "Thêm phòng mới thành công", "success");
+      showToast(selectedRoom ? t('owner.update_success') : t('owner.create_success'), "success");
   };
 
   if (loading && !property) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={40}/></div>;
@@ -140,32 +106,30 @@ setRooms(roomsWithCover);
           open={confirmData.open}
           onClose={() => setConfirmData({ open: false, id: null })}
           onConfirm={handleDeleteRoom}
-          title="Xác nhận xóa phòng"
-          description="Bạn có chắc chắn muốn xóa phòng này không? Hành động này không thể hoàn tác."
-          confirmText="Xóa ngay"
-          cancelText="Hủy"
+          title={isVi ? "Xác nhận xóa phòng" : "Confirm Delete"}
+          description={isVi ? "Bạn có chắc chắn muốn xóa phòng này không? Hành động này không thể hoàn tác." : "Are you sure you want to delete this room? This action cannot be undone."}
+          confirmText={isVi ? "Xóa ngay" : "Delete"}
+          cancelText={t('common.cancel')}
           isDanger={true}
       />
 
-      {/* Header */}
       <div className="flex items-center gap-4 mb-8">
         <Button variant="ghost" iconOnly onClick={() => navigate("/owner/rooms")} className="hover:bg-gray-200">
             <ArrowLeft size={20} />
         </Button>
         <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                Quản lý phòng <span className="text-gray-400 font-light">|</span> <span className="text-blue-600">{property?.propertyName}</span>
+                {t('owner.room_mgmt')} <span className="text-gray-400 font-light">|</span> <span className="text-blue-600">{property?.propertyName}</span>
             </h1>
-            <p className="text-gray-500 text-sm mt-1">Thiết lập các loại phòng và giá cho cơ sở này</p>
+            <p className="text-gray-500 text-sm mt-1">{isVi ? "Thiết lập các loại phòng và giá cho cơ sở này" : "Set up room types and prices for this property"}</p>
         </div>
         <div className="ml-auto">
             <Button onClick={handleAddRoom} leftIcon={<Plus size={20} />} className="shadow-lg shadow-blue-500/20">
-                Thêm phòng mới
+                {t('owner.add_room')}
             </Button>
         </div>
       </div>
 
-      {/* Room Grid */}
       {rooms.length > 0 ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             <AnimatePresence>
@@ -187,13 +151,12 @@ setRooms(roomsWithCover);
               <div className="bg-blue-50 p-6 rounded-full mb-4">
                   <BedDouble size={48} className="text-blue-400" />
               </div>
-              <h3 className="text-lg font-bold text-gray-900">Chưa có phòng nào</h3>
-              <p className="text-gray-500 mb-6">Hãy tạo các hạng phòng để khách hàng có thể đặt lịch.</p>
-              <Button onClick={handleAddRoom} variant="outline">Tạo phòng đầu tiên</Button>
+              <h3 className="text-lg font-bold text-gray-900">{isVi ? "Chưa có phòng nào" : "No rooms yet"}</h3>
+              <p className="text-gray-500 mb-6">{isVi ? "Hãy tạo các hạng phòng để khách hàng có thể đặt lịch." : "Please create room types so customers can book."}</p>
+              <Button onClick={handleAddRoom} variant="outline">{isVi ? "Tạo phòng đầu tiên" : "Create first room"}</Button>
           </motion.div>
       )}
 
-      {/* Edit/Add Modal */}
       <EditRoomModal 
          open={isModalOpen} 
          onClose={() => setIsModalOpen(false)}
