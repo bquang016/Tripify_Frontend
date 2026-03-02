@@ -1,11 +1,12 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Map, ArrowRight } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 // Components
 import DestinationCard from "@/components/common/Card/DestinationCard";
 
-// Dữ liệu mẫu
+// Dữ liệu mẫu (Tên thành phố giữ nguyên là danh từ riêng)
 const DESTINATIONS = [
   {
     id: 1,
@@ -51,33 +52,34 @@ const DESTINATIONS = [
   }
 ];
 
-const SectionHeader = ({ onSeeAll }) => (
-  <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-8 px-2">
-      <div className="max-w-2xl">
-          <div className="flex items-center gap-2 mb-3">
+const SectionHeader = ({ onSeeAll }) => {
+  const { t } = useTranslation();
+  return (
+    <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-8 px-2">
+        <div className="max-w-2xl">
+            <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
+                {t('home.hot_destinations.title').split(' ').map((word, i) => 
+                    i >= 2 ? <span key={i} className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600 ml-1">{word} </span> : word + ' '
+                )}
+            </h2>
+            
+            <p className="text-gray-500 mt-3 font-medium text-base leading-relaxed">
+                {t('home.hot_destinations.subtitle')}
+            </p>
+        </div>
 
-          </div>
-          
-          <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
-              Điểm Đến <span className="text-transparent bg-clip-text bg-gradient-to-r from-orange-500 to-red-600">Yêu Thích</span>
-          </h2>
-          
-          <p className="text-gray-500 mt-3 font-medium text-base leading-relaxed">
-              Lên kế hoạch cho chuyến đi tiếp theo của bạn đến những địa danh du lịch hàng đầu được cộng đồng TravelMate bình chọn.
-          </p>
-      </div>
-
-      <button 
-          onClick={onSeeAll}
-          className="hidden md:flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-orange-600 transition-all bg-white px-5 py-2.5 rounded-full border border-gray-200 hover:border-orange-200 shadow-sm hover:shadow-md group"
-      >
-          Khám phá ngay 
-          <div className="bg-gray-100 group-hover:bg-orange-100 p-1 rounded-full transition-colors">
-              <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
-          </div>
-      </button>
-  </div>
-);
+        <button 
+            onClick={onSeeAll}
+            className="hidden md:flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-orange-600 transition-all bg-white px-5 py-2.5 rounded-full border border-gray-200 hover:border-orange-200 shadow-sm hover:shadow-md group"
+        >
+            {t('home.hot_destinations.explore_now')}
+            <div className="bg-gray-100 group-hover:bg-orange-100 p-1 rounded-full transition-colors">
+                <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+            </div>
+        </button>
+    </div>
+  );
+};
 
 const HotDestinations = () => {
   const navigate = useNavigate();

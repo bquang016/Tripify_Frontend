@@ -1,10 +1,11 @@
 import React from "react";
 import { Map as MapIcon, Check, Star, Navigation } from "lucide-react";
+import { formatPrice } from "@/utils/priceUtils";
 
 // Dùng ảnh map tĩnh làm nền (Placeholder đẹp)
 const MAP_PLACEHOLDER = "https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&w=600&q=80";
 
-const HotelSidebar = ({ location, rating, minPrice, lat, lng }) => {
+const HotelSidebar = ({ location, rating, minPrice, convertedMinPrice, currency, lat, lng }) => {
 
   const handleOpenMap = () => {
     if (lat && lng) {
@@ -89,7 +90,7 @@ const HotelSidebar = ({ location, rating, minPrice, lat, lng }) => {
             <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-sm text-center space-y-3">
                 <p className="text-sm text-slate-500">Giá tốt nhất chỉ từ</p>
                 <p className="text-2xl font-extrabold text-[rgb(40,169,224)]">
-                    {minPrice ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(minPrice) : "Liên hệ"}
+                    {formatPrice(minPrice, convertedMinPrice, currency)}
                     <span className="text-sm font-normal text-slate-400">/đêm</span>
                 </p>
                 <button 
@@ -105,70 +106,4 @@ const HotelSidebar = ({ location, rating, minPrice, lat, lng }) => {
   );
 };
 
-export default HotelSidebar;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             0.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+export default HotelSidebar;
