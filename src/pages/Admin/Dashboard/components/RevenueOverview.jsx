@@ -1,27 +1,38 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 import { PieChart as PieIcon } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/context/LanguageContext";
 
 const COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
 
 const RevenueOverview = ({ data }) => {
-  // Hàm dịch loại hình sang tiếng Việt
+  const { t, i18n } = useTranslation();
+  const { currency } = useLanguage();
+  const isVi = i18n.language === 'vi';
+
   const translateType = (type) => {
     const map = {
-      'HOTEL': 'Khách sạn',
-      'VILLA': 'Biệt thự',
-      'RESORT': 'Khu nghỉ dưỡng',
-      'HOMESTAY': 'Homestay',
-      'APARTMENT': 'Căn hộ'
+      'HOTEL': isVi ? 'Khách sạn' : 'Hotel',
+      'VILLA': isVi ? 'Biệt thự' : 'Villa',
+      'RESORT': isVi ? 'Khu nghỉ dưỡng' : 'Resort',
+      'HOMESTAY': isVi ? 'Homestay' : 'Homestay',
+      'APARTMENT': isVi ? 'Căn hộ' : 'Apartment'
     };
     return map[type] || type;
   };
 
-  // Map dữ liệu sang tên tiếng Việt trước khi đưa vào biểu đồ
-  const formattedData = (data || []).map(item => ({
+  const formattedData = useMemo(() => (data || []).map(item => ({
     ...item,
     name: translateType(item.name)
-  }));
+  })), [data, isVi]);
+
+  const formatMoney = (val) => {
+    if (currency === 'USD') {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val / 25000);
+    }
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+  };
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-full flex flex-col">
@@ -29,11 +40,14 @@ const RevenueOverview = ({ data }) => {
          <div className="p-2 bg-purple-50 rounded-lg text-purple-600">
             <PieIcon size={20} />
          </div>
-         <h3 className="text-lg font-bold text-gray-800">Cơ Cấu Doanh Thu</h3>
+         <h3 className="text-lg font-bold text-gray-800">
+           {isVi ? "Cơ Cấu Doanh Thu" : "Revenue Breakdown"}
+         </h3>
       </div>
-      <p className="text-sm text-gray-500 mb-6 ml-10">Theo loại hình kinh doanh</p>
+      <p className="text-sm text-gray-500 mb-6 ml-10">
+        {isVi ? "Theo loại hình kinh doanh" : "By business type"}
+      </p>
       
-      {/* ✅ FIX LỖI WIDTH(-1): Đặt height cố định cho container cha */}
       <div className="w-full h-[300px]">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -49,7 +63,7 @@ const RevenueOverview = ({ data }) => {
               ))}
             </Pie>
             <Tooltip 
-                formatter={(val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val)} 
+                formatter={(val) => formatMoney(val)} 
                 contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
             />
             <Legend 

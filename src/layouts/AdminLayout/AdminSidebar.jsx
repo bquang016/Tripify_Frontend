@@ -23,7 +23,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useTranslation } from "react-i18next";
 
 const AdminSidebar = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
   const [openSubMenu, setOpenSubMenu] = useState(""); 
   const location = useLocation();
@@ -32,29 +32,29 @@ const AdminSidebar = () => {
   const menuItems = [
     { name: t('admin.dashboard'), icon: <LayoutDashboard size={20} />, path: "/admin" },
     { 
-      name: i18n.language === 'vi' ? "Quản lý Users" : "Manage Users", 
+      name: t('admin.manage_users'), 
       icon: <Users size={20} />, 
       path: "/admin/users",
       permission: "USER_VIEW" 
     },
     ...(currentUser?.isSuper ? [
-      { name: i18n.language === 'vi' ? "Quản lý Phân quyền" : "Manage Roles", icon: <ShieldCheck size={20} />, path: "/admin/roles" }
+      { name: t('admin.manage_roles'), icon: <ShieldCheck size={20} />, path: "/admin/roles" }
     ] : []),
     
     { 
-      name: i18n.language === 'vi' ? "Quản lý nơi cư trú" : "Manage Residences", 
+      name: t('admin.manage_residences'), 
       icon: <Building2 size={20} />, 
       key: "residences",
       permission: "PROPERTY_VIEW",
       children: [
         { 
-          name: i18n.language === 'vi' ? "Duyệt nơi cư trú" : "Approve Residences", 
+          name: t('admin.approve_residences'), 
           path: "/admin/hotels/submissions", 
           icon: <CheckSquare size={16} />,
           permission: "PROPERTY_APPROVE"
         },
         { 
-          name: i18n.language === 'vi' ? "Danh sách nơi cư trú" : "Residences List",
+          name: t('admin.residences_list'),
           path: "/admin/hotels/list",
           icon: <List size={16} /> 
         },
@@ -62,18 +62,18 @@ const AdminSidebar = () => {
     },
     
     { 
-      name: i18n.language === 'vi' ? "Quản lý dòng tiền" : "Financial Mgmt", 
+      name: t('admin.financial_mgmt'), 
       icon: <DollarSign size={20} />, 
       key: "finance", 
       permission: "TRANSACTION_VIEW",
       children: [
         { 
-          name: i18n.language === 'vi' ? "Quản lý thanh toán" : "Payments Mgmt", 
+          name: t('admin.payments_mgmt'), 
           path: "/admin/transactions", 
           icon: <CreditCard size={16} /> 
         },
         { 
-          name: i18n.language === 'vi' ? "Quản lý hoàn tiền" : "Refunds Mgmt",
+          name: t('admin.refunds_mgmt'),
           path: "/admin/refunds",
           icon: <RotateCcw size={16} />,
           permission: "REFUND_MANAGE"
@@ -82,27 +82,27 @@ const AdminSidebar = () => {
     },
 
     { 
-      name: i18n.language === 'vi' ? "Quản lý Khuyến mãi" : "Promotions Mgmt", 
+      name: t('admin.promotions_mgmt'), 
       icon: <Ticket size={20} />, 
       path: "/admin/promotions",
       permission: "PROMOTION_VIEW"
     },
 
     { 
-      name: i18n.language === 'vi' ? "Duyệt Chủ sở hữu" : "Owner Approvals", 
+      name: t('admin.owner_approvals'), 
       icon: <CheckSquare size={20} />, 
       path: "/admin/approvals",
       permission: "OWNER_APPROVE"
     },
 
     {
-      name: i18n.language === 'vi' ? "Thông báo" : "Notifications",
+      name: t('admin.notifications'),
       icon: <Bell size={20} />, 
       path: "/admin/notifications"
     },
 
     {
-      name: i18n.language === 'vi' ? "Lịch sử hệ thống" : "Audit Logs",
+      name: t('admin.audit_logs'),
       icon: <FileSearch size={20} />,
       path: "/admin/audit-logs",
       permission: "AUDIT_VIEW"
@@ -193,7 +193,7 @@ const AdminSidebar = () => {
       <div className="p-3 border-t border-gray-200">
         <button
           onClick={() => {
-            if (confirm(i18n.language === 'vi' ? "Bạn có chắc muốn đăng xuất?" : "Are you sure you want to logout?")) {
+            if (confirm(t('admin.logout_confirm'))) {
               logout();
             }
           }}

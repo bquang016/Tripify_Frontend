@@ -2,18 +2,11 @@ import React, { useState, useEffect, useRef } from "react";
 import { 
   Settings, 
   Globe, 
-  Shield, 
-  Bell, 
   CreditCard, 
   Save, 
   RefreshCcw,
-  AlertTriangle,
   Upload,
-  Trash2,
-  Check,
-  Loader2,
-  ToggleLeft,
-  ToggleRight
+  Loader2
 } from "lucide-react";
 import { systemSettingsService } from "../../../services/systemSettings.service";
 import toast from "react-hot-toast";
@@ -21,14 +14,13 @@ import { extractErrorMessage } from "@/utils/errorHandler";
 import { useTranslation } from "react-i18next";
 
 const SystemSettingsPage = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isVi = i18n.language === 'vi';
   const [activeTab, setActiveTab] = useState("general");
-  const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Form states
   const [settings, setSettings] = useState({
     appName: "",
     defaultLanguage: "vi",
@@ -45,7 +37,6 @@ const SystemSettingsPage = () => {
     { id: "payments", label: t('settings.payment_tab'), icon: <CreditCard size={18} /> },
   ];
 
-  // Fetch initial data
   useEffect(() => {
     fetchData();
   }, []);
@@ -56,9 +47,8 @@ const SystemSettingsPage = () => {
       const settingsResponse = await systemSettingsService.getSettings();
       const ratesResponse = await systemSettingsService.getExchangeRates();
       
-      // Handle the case where backend returns 200 but code 403 in body
       if (settingsResponse.code === 403 || ratesResponse.code === 403) {
-        toast.error("Access denied.");
+        toast.error(isVi ? "Truy cập bị từ chối." : "Access denied.");
         setIsLoading(false);
         return;
       }
@@ -67,7 +57,7 @@ const SystemSettingsPage = () => {
       setExchangeRates(ratesResponse.data || ratesResponse.result || ratesResponse);
     } catch (error) {
       console.error("Fetch data error:", error);
-      toast.error(extractErrorMessage(error, "Failed to load config."));
+      toast.error(extractErrorMessage(error, isVi ? "Không thể tải cấu hình." : "Failed to load config."));
     } finally {
       setIsLoading(false);
     }
@@ -87,16 +77,16 @@ const SystemSettingsPage = () => {
       });
 
       if (response.code === 403 || response.success === false) {
-        const errorMsg = response.message || "Action denied.";
+        const errorMsg = response.message || (isVi ? "Hành động bị từ chối." : "Action denied.");
         toast.error(errorMsg);
       } else {
-        toast.success("Success! Reloading...");
+        toast.success(isVi ? "Thành công! Đang tải lại..." : "Success! Reloading...");
         setTimeout(() => {
           window.location.reload();
         }, 1500);
       }
     } catch (error) {
-      toast.error(extractErrorMessage(error, "Update failed"));
+      toast.error(extractErrorMessage(error, isVi ? "Cập nhật thất bại" : "Update failed"));
     } finally {
       setIsSaving(false);
     }
@@ -108,65 +98,15 @@ const SystemSettingsPage = () => {
     try {
       const response = await systemSettingsService.uploadLogo(file);
       if (response.code === 403) {
-        toast.error("Upload denied.");
+        toast.error(isVi ? "Tải lên bị từ chối." : "Upload denied.");
       } else {
         setSettings(prev => ({ ...prev, logoUrl: response.data }));
-        toast.success("Logo uploaded!");
+        toast.success(isVi ? "Đã tải lên logo!" : "Logo uploaded!");
       }
     } catch (error) {
-      toast.error(extractErrorMessage(error, "Upload failed"));
+      toast.error(extractErrorMessage(error, isVi ? "Tải lên thất bại" : "Upload failed"));
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handleDeleteLogo = async () => {
-    if (!confirm("Are you sure?")) return;
-    setIsSaving(true);
-    try {
-      const response = await systemSettingsService.deleteLogo();
-      if (response.code === 403) {
-        toast.error("Delete denied.");
-      } else {
-        setSettings(prev => ({ ...prev, logoUrl: null }));
-        toast.success("Logo deleted");
-      }
-    } catch (error) {
-      toast.error(extractErrorMessage(error, "Delete failed"));
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const handleUpdateRate = async (pair, newRate) => {
-    try {
-      const response = await systemSettingsService.updateExchangeRate({ pair, rate: parseFloat(newRate) });
-      if (response.code === 403) {
-        toast.error("Update denied.");
-      } else {
-        setExchangeRates(prev => prev.map(r => r.pair === pair ? { ...r, rate: parseFloat(newRate) } : r));
-        toast.success(`Updated ${pair}`);
-      }
-    } catch (error) {
-      toast.error(extractErrorMessage(error, "Update failed"));
-    }
-  };
-
-  const handleToggleMaintenance = async () => {
-    const nextState = !settings.isMaintenanceMode;
-    try {
-      const response = await systemSettingsService.updateMaintenanceMode({
-        isEnabled: nextState,
-        message: settings.maintenanceMessage
-      });
-      if (response.code === 403) {
-        toast.error("Toggle denied.");
-      } else {
-        setSettings(prev => ({ ...prev, isMaintenanceMode: nextState }));
-        toast.success(`Maintenance ${nextState ? "ON" : "OFF"}`);
-      }
-    } catch (error) {
-      toast.error("Action failed");
     }
   };
 
@@ -189,7 +129,7 @@ const SystemSettingsPage = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <Loader2 className="animate-spin text-blue-500" size={40} />
-        <p className="text-gray-500 font-medium tracking-tight">Loading...</p>
+        <p className="text-gray-500 font-medium tracking-tight">{t('common.loading')}</p>
       </div>
     );
   }
@@ -269,7 +209,7 @@ const SystemSettingsPage = () => {
                   <Card title={t('settings.logo_section')} description={t('settings.logo_desc')}>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
                       <div className="flex flex-col gap-3">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Current Logo</label>
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">{isVi ? "Logo hiện tại" : "Current Logo"}</label>
                         <div className="flex-1 min-h-[160px] bg-gray-50 rounded-2xl border border-gray-100 flex items-center justify-center p-6 transition-all hover:bg-gray-100/50">
                           {settings.logoUrl ? (
                             <img src={settings.logoUrl} alt="Logo" className="max-h-20 w-auto object-contain" />
@@ -279,11 +219,11 @@ const SystemSettingsPage = () => {
                         </div>
                       </div>
                       <div className="flex flex-col gap-3">
-                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">Upload New</label>
+                        <label className="text-xs font-bold text-gray-400 uppercase tracking-wider">{isVi ? "Tải lên mới" : "Upload New"}</label>
                         <input type="file" ref={fileInputRef} onChange={(e) => handleLogoUpload(e.target.files[0])} className="hidden" accept="image/*" />
                         <div onClick={() => fileInputRef.current.click()} className="flex-1 min-h-[160px] border-2 border-dashed rounded-2xl flex flex-col items-center justify-center p-4 cursor-pointer hover:border-blue-300 bg-white transition-all">
                           <Upload size={20} className="text-gray-400 mb-2" />
-                          <p className="text-xs font-bold text-gray-700">Click to upload</p>
+                          <p className="text-xs font-bold text-gray-700">{isVi ? "Nhấn để tải lên" : "Click to upload"}</p>
                         </div>
                       </div>
                     </div>

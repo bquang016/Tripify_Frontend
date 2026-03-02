@@ -7,11 +7,15 @@ import AdminRefundModal from "./components/AdminRefundModal";
 import AdminRefundDetailModal from "./components/AdminRefundDetailModal";
 import Toast from "../../../components/common/Notification/Toast";
 import ToastPortal from "../../../components/common/Notification/ToastPortal";
+import { useTranslation } from "react-i18next";
 
-// Component con hiển thị từng dòng (Đảm bảo bạn đã tạo file này)
+// Component con hiển thị từng dòng
 import RefundRow from "./components/RefundRow";
 
 const RefundManagementPage = () => {
+  const { t, i18n } = useTranslation();
+  const isVi = i18n.language === 'vi';
+
   const [refunds, setRefunds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState("PENDING"); 
@@ -34,7 +38,7 @@ const RefundManagementPage = () => {
       const data = res.data || res;
       
       const refundList = Array.isArray(data) 
-        ? data.filter(t => t.refundInfo !== null)
+        ? data.filter(t_item => t_item.refundInfo !== null)
         : [];
       
       // Sắp xếp: Mới nhất lên đầu
@@ -42,17 +46,15 @@ const RefundManagementPage = () => {
         
       setRefunds(refundList);
     } catch (error) {
-      console.error("Lỗi tải dữ liệu:", error);
-      showToast("Lỗi tải dữ liệu: " + error.message, "error");
+      console.error("Fetch data error:", error);
+      showToast(t('finance.fetch_error') + ": " + error.message, "error");
     } finally {
       setLoading(false);
     }
   };
 
-  // Hàm helper hiển thị Toast
   const showToast = (message, type = "success") => {
     setToast({ show: true, message, type });
-    // Tự động tắt sau 3 giây
     setTimeout(() => {
       setToast({ show: false, message: "", type: "info" });
     }, 3000);
@@ -80,38 +82,33 @@ const RefundManagementPage = () => {
 
     try {
       await paymentService.processRefundRequest(refundRequestId, confirmType === 'APPROVE', note);
-      
-      showToast("Xử lý yêu cầu thành công!", "success"); // ✅ Dùng hàm helper
-      
+      showToast(t('finance.process_success'), "success");
       setConfirmType(null);
       setIsDetailOpen(false);
       setSelectedRefund(null);
       fetchData(); 
     } catch (error) {
-      showToast(error.message || "Có lỗi xảy ra", "error"); // ✅ Dùng hàm helper
+      showToast(error.message || (isVi ? "Có lỗi xảy ra" : "An error occurred"), "error");
     }
   };
 
   return (
     <div className="p-6 space-y-6 animate-fade-in relative">
-      
-      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-            <RotateCcw className="text-orange-600" /> Quản lý Hoàn tiền
+            <RotateCcw className="text-orange-600" /> {t('finance.refund_mgmt_title')}
           </h1>
-          <p className="text-slate-500 text-sm">Xử lý các yêu cầu hoàn tiền và khiếu nại từ khách hàng.</p>
+          <p className="text-slate-500 text-sm">{t('finance.refund_mgmt_subtitle')}</p>
         </div>
       </div>
 
-      {/* Toolbar */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-4 justify-between">
         <div className="relative w-full md:w-96">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input 
             type="text" 
-            placeholder="Tìm theo Mã đơn hoặc Tên chủ tài khoản..." 
+            placeholder={t('finance.refund_search_placeholder')} 
             className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 outline-none"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -119,10 +116,10 @@ const RefundManagementPage = () => {
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 custom-scrollbar">
           {[
-            { id: "PENDING", label: "Chờ xử lý", color: "bg-orange-100 text-orange-700 border-orange-200" },
-            { id: "APPROVED", label: "Đã hoàn tiền", color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
-            { id: "REJECTED", label: "Từ chối", color: "bg-slate-100 text-slate-600 border-slate-200" },
-            { id: "ALL", label: "Tất cả", color: "bg-white text-slate-600 border-slate-200 hover:bg-slate-50" }
+            { id: "PENDING", label: t('finance.filter_pending'), color: "bg-orange-100 text-orange-700 border-orange-200" },
+            { id: "APPROVED", label: t('finance.filter_approved'), color: "bg-emerald-100 text-emerald-700 border-emerald-200" },
+            { id: "REJECTED", label: t('finance.filter_rejected'), color: "bg-slate-100 text-slate-600 border-slate-200" },
+            { id: "ALL", label: t('finance.filter_all'), color: "bg-white text-slate-600 border-slate-200 hover:bg-slate-50" }
           ].map(tab => (
             <button
               key={tab.id}
@@ -139,25 +136,24 @@ const RefundManagementPage = () => {
         </div>
       </div>
 
-      {/* Table */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-xs font-semibold">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase text-[11px] font-bold tracking-wider">
               <tr>
-                <th className="px-6 py-4">Mã đơn</th>
-                <th className="px-6 py-4">Ngày yêu cầu</th>
-                <th className="px-6 py-4">Số tiền cần hoàn</th>
-                <th className="px-6 py-4">Chủ tài khoản</th>
-                <th className="px-6 py-4 text-center">Trạng thái</th>
-                <th className="px-6 py-4 text-right">Thao tác</th>
+                <th className="px-6 py-4">{t('finance.table_order_id')}</th>
+                <th className="px-6 py-4">{t('finance.table_request_date')}</th>
+                <th className="px-6 py-4">{t('finance.table_refund_amount')}</th>
+                <th className="px-6 py-4">{t('finance.table_account_holder')}</th>
+                <th className="px-6 py-4 text-center">{t('finance.table_status')}</th>
+                <th className="px-6 py-4 text-right">{t('finance.table_actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr><td colSpan="6" className="p-8 text-center text-slate-500"><Loader2 className="animate-spin mx-auto"/></td></tr>
               ) : filteredData.length === 0 ? (
-                <tr><td colSpan="6" className="p-8 text-center text-slate-500 italic">Không tìm thấy yêu cầu nào.</td></tr>
+                <tr><td colSpan="6" className="p-8 text-center text-slate-500 italic">{t('finance.no_requests')}</td></tr>
               ) : (
                 filteredData.map((item) => (
                   <RefundRow 
@@ -187,7 +183,6 @@ const RefundManagementPage = () => {
         type={confirmType}
       />
 
-      {/* ✅ FIX TOAST: Thêm vị trí cố định để Toast luôn nổi lên trên */}
       <ToastPortal>
         {toast.show && (
             <div className="fixed bottom-5 right-5 z-[9999] animate-slideInRight">

@@ -1,33 +1,44 @@
 import React from "react";
 import { Receipt } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/context/LanguageContext";
 
 const RecentBookingsTable = ({ bookings }) => {
+  const { t, i18n } = useTranslation();
+  const { currency } = useLanguage();
+  const isVi = i18n.language === 'vi';
   
-  // Hàm dịch trạng thái sang Tiếng Việt và lấy màu tương ứng
+  // Hàm dịch trạng thái và lấy màu tương ứng
   const getStatusConfig = (status) => {
     switch (status) {
       case 'CONFIRMED': 
-        return { label: 'Đã xác nhận', style: 'bg-green-100 text-green-700 border-green-200' };
+        return { label: isVi ? 'Đã xác nhận' : 'Confirmed', style: 'bg-green-100 text-green-700 border-green-200' };
       case 'PENDING_PAYMENT': 
-        return { label: 'Chờ thanh toán', style: 'bg-yellow-100 text-yellow-700 border-yellow-200' };
+        return { label: isVi ? 'Chờ thanh toán' : 'Pending', style: 'bg-yellow-100 text-yellow-700 border-yellow-200' };
       case 'CANCELLED': 
-        return { label: 'Đã hủy', style: 'bg-red-100 text-red-700 border-red-200' };
+        return { label: isVi ? 'Đã hủy' : 'Cancelled', style: 'bg-red-100 text-red-700 border-red-200' };
       case 'COMPLETED': 
-        return { label: 'Hoàn thành', style: 'bg-blue-100 text-blue-700 border-blue-200' };
+        return { label: isVi ? 'Hoàn thành' : 'Completed', style: 'bg-blue-100 text-blue-700 border-blue-200' };
       case 'CHECKED_IN': 
-        return { label: 'Đã nhận phòng', style: 'bg-purple-100 text-purple-700 border-purple-200' };
+        return { label: isVi ? 'Đã nhận phòng' : 'Checked-in', style: 'bg-purple-100 text-purple-700 border-purple-200' };
       case 'REFUNDED':
-        return { label: 'Đã hoàn tiền', style: 'bg-gray-100 text-gray-700 border-gray-200' };
+        return { label: isVi ? 'Đã hoàn tiền' : 'Refunded', style: 'bg-gray-100 text-gray-700 border-gray-200' };
       default: 
         return { label: status, style: 'bg-gray-100 text-gray-700 border-gray-200' };
     }
   };
 
-  const formatMoney = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+  const formatMoney = (val) => {
+    if (currency === 'USD') {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val / 25000);
+    }
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+  };
+
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
     const date = new Date(dateStr);
-    return date.toLocaleDateString('vi-VN');
+    return date.toLocaleDateString(isVi ? 'vi-VN' : 'en-US');
   };
 
   return (
@@ -37,21 +48,37 @@ const RecentBookingsTable = ({ bookings }) => {
             <div className="p-2 bg-teal-50 rounded-lg text-teal-600">
                 <Receipt size={20} />
             </div>
-            <h3 className="text-lg font-bold text-gray-800">Giao Dịch Gần Đây</h3>
+            <h3 className="text-lg font-bold text-gray-800">
+              {isVi ? "Giao Dịch Gần Đây" : "Recent Transactions"}
+            </h3>
         </div>
-        <button className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">Xem tất cả</button>
+        <button className="text-sm text-blue-600 hover:text-blue-700 font-medium transition-colors">
+          {isVi ? "Xem tất cả" : "View all"}
+        </button>
       </div>
 
       <div className="overflow-x-auto custom-scrollbar flex-1">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-gray-100">
-              <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Mã Đơn</th>
-              <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Khách Hàng</th>
-              <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Cơ Sở</th>
-              <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Ngày Đặt</th>
-              <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">Tổng Tiền</th>
-              <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">Trạng Thái</th>
+              <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                {isVi ? "Mã Đơn" : "Order ID"}
+              </th>
+              <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                {isVi ? "Khách Hàng" : "Customer"}
+              </th>
+              <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                {isVi ? "Cơ Sở" : "Property"}
+              </th>
+              <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                {isVi ? "Ngày Đặt" : "Date"}
+              </th>
+              <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                {isVi ? "Tổng Tiền" : "Total"}
+              </th>
+              <th className="py-3 px-4 text-xs font-semibold text-gray-500 uppercase tracking-wider text-center">
+                {isVi ? "Trạng Thái" : "Status"}
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-50">
@@ -74,7 +101,9 @@ const RecentBookingsTable = ({ bookings }) => {
             })}
             {(!bookings || bookings.length === 0) && (
               <tr>
-                <td colSpan="6" className="py-10 text-center text-gray-400">Chưa có giao dịch nào</td>
+                <td colSpan="6" className="py-10 text-center text-gray-400">
+                  {t('common.no_data')}
+                </td>
               </tr>
             )}
           </tbody>

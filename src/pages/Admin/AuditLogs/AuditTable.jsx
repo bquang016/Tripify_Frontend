@@ -3,8 +3,11 @@
 import React from "react";
 import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { formatAuditValue, getActionColor } from "@/utils/auditValueMapper";
+import { useTranslation } from "react-i18next";
 
 export default function AuditTable({ logs, sortConfig, onSort, onViewDetail }) {
+    const { t, i18n } = useTranslation();
+    const isVi = i18n.language === 'vi';
     
     // Helper để render icon sort
     const renderSortIcon = (key) => {
@@ -25,25 +28,25 @@ export default function AuditTable({ logs, sortConfig, onSort, onViewDetail }) {
                 <thead className="bg-gray-50/50 border-b border-gray-100">
                     <tr>
                         <th className={headerClass('logId')} onClick={() => onSort('logId')}>
-                            <div className="flex items-center">ID {renderSortIcon('logId')}</div>
+                            <div className="flex items-center">{t('logs.table_id')} {renderSortIcon('logId')}</div>
                         </th>
                         <th className={headerClass('createdAt')} onClick={() => onSort('createdAt')}>
-                            <div className="flex items-center">Thời gian {renderSortIcon('createdAt')}</div>
+                            <div className="flex items-center">{t('logs.table_time')} {renderSortIcon('createdAt')}</div>
                         </th>
                         <th className={headerClass('action')} onClick={() => onSort('action')}>
-                            <div className="flex items-center">Hành động {renderSortIcon('action')}</div>
+                            <div className="flex items-center">{t('logs.table_action')} {renderSortIcon('action')}</div>
                         </th>
                         <th className="px-6 py-4 text-sm font-semibold text-gray-700">
-                            Đối tượng
+                            {t('logs.table_target')}
                         </th>
                         <th className="px-6 py-4 text-sm font-semibold text-gray-700">
-                            Mô tả
+                            {t('logs.table_desc')}
                         </th>
                         <th className="px-6 py-4 text-sm font-semibold text-gray-700">
-                            Người thực hiện
+                            {t('logs.table_actor')}
                         </th>
                         <th className="px-6 py-4 text-sm font-semibold text-gray-700 text-right">
-                            Thao tác
+                            {t('logs.table_actions')}
                         </th>
                     </tr>
                 </thead>
@@ -62,18 +65,18 @@ export default function AuditTable({ logs, sortConfig, onSort, onViewDetail }) {
                                         #{log.logId}
                                     </td>
                                     <td className="px-6 py-5 text-sm text-gray-500 font-medium">
-                                        {new Date(log.createdAt).toLocaleString("vi-VN")}
+                                        {new Date(log.createdAt).toLocaleString(isVi ? "vi-VN" : "en-US")}
                                     </td>
                                     
                                     <td className="px-6 py-5">
                                         <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold border ${actionStyle.bg} ${actionStyle.text} ${actionStyle.border}`}>
-                                            {formatAuditValue(log.action)}
+                                            {formatAuditValue(log.action, t)}
                                         </span>
                                     </td>
                                     
                                     <td className="px-6 py-5">
                                         <span className="inline-flex items-center px-3 py-1.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600 border border-gray-200">
-                                            {formatAuditValue(log.entityType)}
+                                            {formatAuditValue(log.entityType, t)}
                                         </span>
                                     </td>
                                     
@@ -95,7 +98,7 @@ export default function AuditTable({ logs, sortConfig, onSort, onViewDetail }) {
                                             onClick={() => onViewDetail(log.logId)}
                                             className="text-[rgb(40,169,224)] hover:text-blue-700 font-bold text-sm transition-all underline-offset-2 hover:underline"
                                         >
-                                            Xem chi tiết
+                                            {t('logs.view_detail')}
                                         </button>
                                     </td>
                                 </tr>
@@ -104,7 +107,7 @@ export default function AuditTable({ logs, sortConfig, onSort, onViewDetail }) {
                     ) : (
                         <tr>
                             <td colSpan="7" className="px-6 py-16 text-center text-gray-400 font-medium text-sm italic">
-                                Không có dữ liệu nhật ký hệ thống
+                                {t('logs.no_data')}
                             </td>
                         </tr>
                     )}
