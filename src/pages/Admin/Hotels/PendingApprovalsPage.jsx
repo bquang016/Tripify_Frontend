@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Users, Loader2, RefreshCw, ShieldCheck } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 // Components
 import Card from "@/components/common/Card/Card";
@@ -22,6 +23,7 @@ import RejectOwnerModal from "./components/RejectOwnerModal";
 import adminService from "@/services/admin.service";
 
 const PendingApprovalsPage = () => {
+  const { t } = useTranslation();
   const [applications, setApplications] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isActionLoading, setIsActionLoading] = useState(false); // Loading khi thực hiện hành động duyệt/từ chối
@@ -65,11 +67,11 @@ const PendingApprovalsPage = () => {
       const mappedData = data.map((app) => ({
         ...app,
         id: app.id, 
-        fullName: app.fullName || app.applicantFullName || "Chưa rõ",
+        fullName: app.fullName || app.applicantFullName || t('owner_approvals.unknown'),
         email: app.email || app.applicantEmail,
-        phoneNumber: app.phoneNumber || app.applicantPhoneNumber || "Chưa cập nhật",
+        phoneNumber: app.phoneNumber || app.applicantPhoneNumber || t('owner_approvals.not_updated'),
         avatar: app.avatar || app.applicantAvatar, 
-        businessName: app.propertyInfo?.businessLicenseNumber || app.businessLicenseNumber ? `GPKD: ${app.propertyInfo?.businessLicenseNumber || app.businessLicenseNumber}` : "Cá nhân",
+        businessName: app.propertyInfo?.businessLicenseNumber || app.businessLicenseNumber ? `${t('owner_approvals.business_license_prefix')}${app.propertyInfo?.businessLicenseNumber || app.businessLicenseNumber}` : t('owner_approvals.individual'),
         status: app.status,
         submittedDate: app.createdAt ? new Date(app.createdAt).toLocaleDateString("vi-VN") : "N/A",
       }));
@@ -80,7 +82,7 @@ const PendingApprovalsPage = () => {
 
     } catch (error) {
       console.error(error);
-      showToast("Lỗi tải dữ liệu.", "error");
+      showToast(t('owner_approvals.fetch_error'), "error");
     } finally {
       setIsLoading(false);
     }
@@ -122,11 +124,11 @@ const PendingApprovalsPage = () => {
       // Gọi endpoint /approve
       await adminService.approveOwnerApplication(selectedApp.id);
       
-      showToast(`Đã duyệt chủ sở hữu ${selectedApp.fullName}`, "success");
+      showToast(t('owner_approvals.approve_success', { name: selectedApp.fullName }), "success");
       await fetchApplications(); // Refresh lại danh sách
       closeModals();
     } catch (error) {
-      showToast(error.message || "Lỗi khi duyệt hồ sơ", "error");
+      showToast(error.message || t('owner_approvals.approve_error'), "error");
     } finally {
       setIsActionLoading(false);
     }
@@ -140,11 +142,11 @@ const PendingApprovalsPage = () => {
       // Gọi endpoint /reject
       await adminService.rejectOwnerApplication(selectedApp.id, reason);
       
-      showToast(`Đã từ chối đơn của ${selectedApp.fullName}`, "success");
+      showToast(t('owner_approvals.reject_success', { name: selectedApp.fullName }), "success");
       await fetchApplications(); // Refresh lại danh sách
       closeModals();
     } catch (error) {
-      showToast(error.message || "Lỗi khi từ chối hồ sơ", "error");
+      showToast(error.message || t('owner_approvals.reject_error'), "error");
     } finally {
       setIsActionLoading(false);
     }
@@ -155,19 +157,19 @@ const PendingApprovalsPage = () => {
       {toastData && <div className="fixed top-24 right-6 z-[9999]"><Toast message={toastData.message} type={toastData.type} /></div>}
       
       {/* Hiển thị Loading Overlay khi đang gọi API Approve/Reject */}
-      {isActionLoading && <LoadingOverlay message="Đang xử lý hồ sơ..." />}
+      {isActionLoading && <LoadingOverlay message={t('owner_approvals.processing')} />}
 
       <Card className="overflow-hidden min-h-screen bg-gray-50/50 border-none shadow-none">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-          <CardHeader title="Phê duyệt Đối tác" subtitle="Xác minh hồ sơ đăng ký chủ sở hữu" icon={<Users className="text-blue-600" />} className="p-0" />
-          <Button variant="outline" size="sm" onClick={fetchApplications} leftIcon={<RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />}>Làm mới</Button>
+          <CardHeader title={t('owner_approvals.title')} subtitle={t('owner_approvals.subtitle')} icon={<Users className="text-blue-600" />} className="p-0" />
+          <Button variant="outline" size="sm" onClick={fetchApplications} leftIcon={<RefreshCw size={16} className={isLoading ? "animate-spin" : ""} />}>{t('hotels.refresh')}</Button>
         </div>
 
         <div className="flex flex-col gap-4 bg-white p-5 rounded-2xl shadow-sm border border-gray-200 mb-6">
           <SubmissionStatusFilter currentStatus={filterStatus} onStatusChange={setFilterStatus} />
           <div className="h-px bg-gray-100 w-full"></div>
           <div className="w-full md:w-1/2">
-            <SubmissionSearchBar onSearch={setSearchTerm} initialValue={searchTerm} placeholder="Tìm theo tên, email, số điện thoại..." />
+            <SubmissionSearchBar onSearch={setSearchTerm} initialValue={searchTerm} placeholder={t('owner_approvals.search_placeholder')} />
           </div>
         </div>
 
@@ -175,7 +177,7 @@ const PendingApprovalsPage = () => {
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-24 bg-white rounded-2xl border border-dashed border-gray-200">
               <Loader2 className="animate-spin text-blue-500 mb-3" size={42} />
-              <p className="text-gray-500 text-sm">Đang tải dữ liệu...</p>
+              <p className="text-gray-500 text-sm">{t('owner_approvals.loading_data')}</p>
             </div>
           ) : (
             <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -189,7 +191,7 @@ const PendingApprovalsPage = () => {
                 ) : (
                   <div className="col-span-full">
                     <motion.div initial={{opacity:0}} animate={{opacity:1}} className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm">
-                        <EmptyState title="Không tìm thấy đơn đăng ký" description="Danh sách trống hoặc không khớp bộ lọc." icon={<ShieldCheck className="text-gray-300 w-16 h-16 mb-4" />} />
+                        <EmptyState title={t('owner_approvals.no_applications')} description={t('owner_approvals.no_applications_desc')} icon={<ShieldCheck className="text-gray-300 w-16 h-16 mb-4" />} />
                     </motion.div>
                   </div>
                 )}

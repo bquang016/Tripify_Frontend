@@ -1,10 +1,11 @@
-// src/pages/Admin/HotelSubmissions/components/RejectHotelModal.jsx
+// src/pages/Admin/Hotels/components/RejectHotelModal.jsx
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { XCircle } from "lucide-react";
 import Button from "@/components/common/Button/Button";
 import ModalPortal from "@/components/common/Modal/ModalPortal";
 import TextArea from "@/components/common/Input/TextArea";
+import { useTranslation } from "react-i18next";
 
 export default function RejectHotelModal({
   open,
@@ -12,6 +13,8 @@ export default function RejectHotelModal({
   onConfirm,
   application,
 }) {
+  const { t, i18n } = useTranslation();
+  const isVi = i18n.language === 'vi';
   const [reason, setReason] = useState("");
   const [error, setError] = useState(false);
 
@@ -49,11 +52,11 @@ export default function RejectHotelModal({
                 <XCircle size={32} className="text-red-500" />
 
                 <h3 className="text-lg font-semibold text-gray-800">
-                  Từ chối cơ sở
+                  {isVi ? "Từ chối cơ sở" : "Reject Property"}
                 </h3>
 
                 <p className="text-gray-500 text-sm">
-                  Bạn sắp từ chối cơ sở{" "}
+                  {isVi ? "Bạn sắp từ chối cơ sở" : "You are about to reject property"}{" "}
                   <span className="font-semibold text-gray-800">
                     {application?.hotelName}
                   </span>
@@ -64,22 +67,22 @@ export default function RejectHotelModal({
               {/* Input */}
               <div className="mt-4">
                 <TextArea
-                  label="Lý do từ chối"
-                  placeholder="Vui lòng nêu rõ lý do..."
+                  label={isVi ? "Lý do từ chối" : "Reason for rejection"}
+                  placeholder={t('hotels.reason_placeholder')}
                   rows={4}
                   value={reason}
                   onChange={(e) => {
                     setReason(e.target.value);
                     if (error) setError(false);
                   }}
-                  error={error ? "Lý do từ chối không được để trống." : null}
+                  error={error ? (isVi ? "Lý do từ chối không được để trống." : "Rejection reason cannot be empty.") : null}
                 />
               </div>
 
               {/* Buttons */}
               <div className="flex justify-end gap-3 mt-6">
                 <Button variant="ghost" onClick={onClose}>
-                  Hủy
+                  {t('common.cancel')}
                 </Button>
 
                 <Button
@@ -92,7 +95,7 @@ export default function RejectHotelModal({
                   disabled={!reason.trim()}
                   onClick={handleReject}
                 >
-                  Từ chối
+                  {t('hotels.reject')}
                 </Button>
               </div>
             </motion.div>

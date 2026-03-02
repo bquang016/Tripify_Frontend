@@ -1,24 +1,25 @@
 import React from "react";
 import PropTypes from "prop-types";
 import Badge from "@/components/common/Badge/Badge";
+import { useTranslation } from "react-i18next";
 
-// ✅ QUAN TRỌNG: Phải có chữ 'default' ở đây
 export default function UserStatusBadge({ status }) {
+    const { t } = useTranslation();
+    
     const getConfig = (s) => {
-        // Chuẩn hóa input để tránh lỗi case sensitive
         const normalizedStatus = s ? s.toUpperCase() : "";
 
         switch (normalizedStatus) {
             case "ACTIVE":
-                return { color: "success", label: "Hoạt động" };
+                return { color: "success", label: t('users.active_accounts') };
             case "BANNED":
-                return { color: "danger", label: "Đã khóa" };
+                return { color: "danger", label: t('users.banned_accounts') };
             case "PENDING":
-                return { color: "warning", label: "Chờ duyệt" };
+                return { color: "warning", label: t('hotels.pending') };
             case "INACTIVE":
-                return { color: "gray", label: "Không hoạt động" };
+                return { color: "gray", label: t('owner.inactive') };
             default:
-                return { color: "primary", label: s || "Không rõ" };
+                return { color: "primary", label: s || t('common.no_data') };
         }
     };
 

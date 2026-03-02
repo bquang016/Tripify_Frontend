@@ -1,8 +1,21 @@
 import React from "react";
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { BarChart3 } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/context/LanguageContext";
 
 const RevenueChart = ({ data }) => {
+  const { t, i18n } = useTranslation();
+  const { currency } = useLanguage();
+  const isVi = i18n.language === 'vi';
+
+  const formatMoney = (val) => {
+    if (currency === 'USD') {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val / 25000);
+    }
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
+  };
+
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-full">
       <div className="flex items-center justify-between mb-6">
@@ -11,13 +24,16 @@ const RevenueChart = ({ data }) => {
               <BarChart3 size={20} />
            </div>
            <div>
-              <h3 className="text-lg font-bold text-gray-800">Biểu đồ Doanh Thu</h3>
-              <p className="text-xs text-gray-500 mt-0.5">Thống kê theo từng tháng (Năm nay)</p>
+              <h3 className="text-lg font-bold text-gray-800">
+                {isVi ? "Biểu đồ Doanh Thu" : "Revenue Chart"}
+              </h3>
+              <p className="text-xs text-gray-500 mt-0.5">
+                {isVi ? "Thống kê theo từng tháng (Năm nay)" : "Monthly statistics (This Year)"}
+              </p>
            </div>
         </div>
       </div>
       
-      {/* ✅ FIX LỖI WIDTH(-1): Đặt height cố định */}
       <div className="w-full h-[320px]">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data || []} barSize={40}>
@@ -33,13 +49,13 @@ const RevenueChart = ({ data }) => {
                 axisLine={false} 
                 tickLine={false} 
                 tick={{fill: '#6b7280', fontSize: 12}} 
-                tickFormatter={(val) => `${(val/1000000).toFixed(0)}Tr`} 
+                tickFormatter={(val) => currency === 'USD' ? `$${(val/25000).toFixed(0)}` : `${(val/1000000).toFixed(0)}Tr`} 
                 width={45}
             />
             <Tooltip 
                 cursor={{fill: '#f8fafc'}}
                 contentStyle={{borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)'}}
-                formatter={(value) => [new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value), "Doanh thu"]}
+                formatter={(value) => [formatMoney(value), isVi ? "Doanh thu" : "Revenue"]}
                 labelStyle={{ color: '#6b7280', marginBottom: '0.25rem' }}
             />
             <Bar 

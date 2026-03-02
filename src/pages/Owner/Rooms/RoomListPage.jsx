@@ -5,7 +5,6 @@ import propertyService from "@/services/property.service";
 import Button from "@/components/common/Button/Button";
 import { useTranslation } from "react-i18next";
 
-// Helper xử lý ảnh
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8386/api/v1").replace("/api/v1", "");
 const getFullImageUrl = (url) => {
   if (!url) return "/assets/images/placeholder.png";
@@ -34,7 +33,7 @@ const RoomListPage = () => {
         const res = await propertyService.getOwnerActiveProperties();
         setProperties(res.data || []);
       } catch (error) {
-        console.error("❌ [RoomListPage] Lỗi khi gọi API:", error);
+        console.error("❌ [RoomListPage] Fetch error:", error);
       } finally {
         setLoading(false);
       }
@@ -110,7 +109,7 @@ const RoomListPage = () => {
     <div className="p-6 min-h-screen bg-gray-50/30">
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">
-            {isVi ? "Quản lý Phòng nghỉ" : "Room Management"}
+            {t('owner.room_mgmt')}
         </h1>
         <p className="text-gray-500 mt-1">
             {isVi ? "Chọn một cơ sở lưu trú để thiết lập và quản lý danh sách phòng" : "Select a property to set up and manage room lists"}
@@ -122,7 +121,7 @@ const RoomListPage = () => {
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input
             type="text"
-            placeholder={isVi ? "Tìm kiếm cơ sở lưu trú..." : "Search properties..."}
+            placeholder={t('owner.search_properties_placeholder')}
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border-none bg-gray-50 focus:bg-white focus:ring-2 focus:ring-blue-100 text-sm transition-all outline-none"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}

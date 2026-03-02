@@ -40,7 +40,7 @@ const PropertyListPage = () => {
       const res = await propertyService.getOwnerProperties();
       setProperties(res.data || []); 
     } catch (error) {
-      showToast(isVi ? "Không thể tải danh sách tài sản" : "Failed to load properties", "error");
+      showToast(t('owner.fetch_properties_failed'), "error");
     } finally {
       setLoading(false);
     }
@@ -66,8 +66,8 @@ const PropertyListPage = () => {
         const isTurningOff = property.active; 
         showToast(
             isTurningOff 
-                ? (isVi ? `Đã tạm ngưng hoạt động "${property.propertyName}"` : `Deactivated "${property.propertyName}"`) 
-                : (isVi ? `Đã kích hoạt lại "${property.propertyName}"` : `Activated "${property.propertyName}"`), 
+                ? t('owner.deactivate_success', { name: property.propertyName })
+                : t('owner.activate_success', { name: property.propertyName }), 
             "success"
         );
     } catch (error) {
@@ -135,8 +135,8 @@ const PropertyListPage = () => {
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{isVi ? "Tài sản của tôi" : "My Properties"}</h1>
-          <p className="text-gray-500 mt-1">{isVi ? "Quản lý và theo dõi trạng thái các cơ sở lưu trú của bạn" : "Manage and track the status of your properties"}</p>
+          <h1 className="text-2xl font-bold text-gray-900">{t('owner.my_properties')}</h1>
+          <p className="text-gray-500 mt-1">{t('owner.manage_track_status')}</p>
         </div>
         <Button onClick={() => navigate("/owner/properties/new")} leftIcon={<Plus size={20} />}>
           {t('owner.add_property')}
@@ -149,7 +149,7 @@ const PropertyListPage = () => {
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input 
                     type="text"
-                    placeholder={isVi ? "Tìm kiếm tài sản..." : "Search properties..."}
+                    placeholder={t('owner.search_properties_placeholder')}
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all text-sm"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -157,17 +157,17 @@ const PropertyListPage = () => {
              </div>
              <div className="flex p-1 bg-gray-100 rounded-xl overflow-hidden w-full lg:w-auto">
                 {[
-                    { id: "ALL", label: isVi ? "Tất cả" : "All" },
-                    { id: "ACTIVE", label: isVi ? "Hoạt động" : "Active" },
-                    { id: "PENDING", label: isVi ? "Chờ duyệt" : "Pending" }
+                    { id: "ALL", label: t('owner.all') },
+                    { id: "ACTIVE", label: t('owner.active') },
+                    { id: "PENDING", label: t('owner.pending') }
                 ].map(tab => (
                     <button key={tab.id} onClick={() => setFilterStatus(tab.id)} className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex-1 lg:flex-none ${filterStatus === tab.id ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:bg-gray-200/50"}`}>{tab.label}</button>
                 ))}
              </div>
              <div className="hidden xl:flex gap-4 text-sm text-gray-500">
-                 <span>{isVi ? "Tổng" : "Total"}: <b>{stats.total}</b></span>
+                 <span>{t('owner.total')}: <b>{stats.total}</b></span>
                  <span className="text-gray-300">|</span>
-                 <span className="text-green-600">{isVi ? "Hoạt động" : "Active"}: <b>{stats.active}</b></span>
+                 <span className="text-green-600">{t('owner.active')}: <b>{stats.active}</b></span>
              </div>
          </div>
       </div>
@@ -195,8 +195,8 @@ const PropertyListPage = () => {
       ) : (
         <div className="flex flex-col items-center justify-center h-96 bg-white rounded-3xl border border-dashed border-gray-200 shadow-sm">
             <Building2 size={64} className="text-blue-400 mb-6" />
-            <h3 className="text-xl font-bold text-gray-900 mb-2">{searchTerm ? (isVi ? "Không tìm thấy kết quả" : "No results found") : (isVi ? "Bạn chưa có cơ sở lưu trú nào" : "No properties yet")}</h3>
-            {!searchTerm && <Button onClick={() => navigate("/owner/properties/new")}>{isVi ? "Đăng ký ngay" : "Register now"}</Button>}
+            <h3 className="text-xl font-bold text-gray-900 mb-2">{searchTerm ? t('owner.no_results_found') : t('owner.no_properties_yet')}</h3>
+            {!searchTerm && <Button onClick={() => navigate("/owner/properties/new")}>{t('owner.register_now')}</Button>}
         </div>
       )}
 

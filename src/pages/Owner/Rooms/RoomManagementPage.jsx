@@ -54,7 +54,7 @@ const RoomManagementPage = () => {
       );
       setRooms(roomsWithCover); 
     } catch (error) {
-      showToast(isVi ? "Không thể tải dữ liệu" : "Failed to load data", "error");
+      showToast(t('finance.fetch_error'), "error");
     } finally {
       setLoading(false);
     }
@@ -93,7 +93,7 @@ const RoomManagementPage = () => {
   const handleModalSuccess = () => {
       setIsModalOpen(false);
       fetchData();
-      showToast(selectedRoom ? (isVi ? "Cập nhật phòng thành công" : "Room updated successfully") : (isVi ? "Thêm phòng mới thành công" : "Room added successfully"), "success");
+      showToast(selectedRoom ? t('owner.update_success') : t('owner.create_success'), "success");
   };
 
   if (loading && !property) return <div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-blue-600" size={40}/></div>;
@@ -119,7 +119,7 @@ const RoomManagementPage = () => {
         </Button>
         <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                {isVi ? "Quản lý phòng" : "Room Management"} <span className="text-gray-400 font-light">|</span> <span className="text-blue-600">{property?.propertyName}</span>
+                {t('owner.room_mgmt')} <span className="text-gray-400 font-light">|</span> <span className="text-blue-600">{property?.propertyName}</span>
             </h1>
             <p className="text-gray-500 text-sm mt-1">{isVi ? "Thiết lập các loại phòng và giá cho cơ sở này" : "Set up room types and prices for this property"}</p>
         </div>

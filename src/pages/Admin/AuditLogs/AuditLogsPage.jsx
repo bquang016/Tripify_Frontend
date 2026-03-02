@@ -9,8 +9,12 @@ import AuditTable from "./AuditTable";
 import AuditDetailModal from "./AuditDetailModal";
 import systemLogService from "@/services/systemLog.service";
 import toast from "react-hot-toast";
+import { useTranslation } from "react-i18next";
 
 export default function AuditLogsPage() {
+    const { t, i18n } = useTranslation();
+    const isVi = i18n.language === 'vi';
+
     const [logs, setLogs] = useState([]);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(0);
@@ -25,11 +29,10 @@ export default function AuditLogsPage() {
     const [activeFilter, setActiveFilter] = useState("ALL");
     const [sortConfig, setSortConfig] = useState({ sortBy: 'createdAt', sortDir: 'desc' });
 
-    // 1. FETCH LOGS (Chỉ lấy dữ liệu từ Server theo trang)
+    // 1. FETCH LOGS
     const fetchLogs = useCallback(async (pageIndex = 1) => {
         try {
             const res = await systemLogService.getLogs(pageIndex - 1); 
-            // Đảm bảo mapping đúng với cấu trúc BE cũ (res.content hoặc res.data.content)
             const content = res.content || (res.data && res.data.content) || [];
             setLogs(content);
             setTotalPages(res.totalPages || (res.data && res.data.totalPages) || 0);
@@ -43,11 +46,10 @@ export default function AuditLogsPage() {
         fetchLogs(page);
     }, [fetchLogs, page]);
 
-    // 2. LOGIC XỬ LÝ TẠI MÁY KHÁCH (Dành cho Search, Filter, Sort khi BE chưa có)
+    // 2. LOGIC XỬ LÝ TẠI MÁY KHÁCH
     const displayLogs = useMemo(() => {
         let result = [...logs];
 
-        // Tìm kiếm (Local)
         if (searchTerm) {
             const lowSearch = searchTerm.toLowerCase();
             result = result.filter(log => 
@@ -58,17 +60,14 @@ export default function AuditLogsPage() {
             );
         }
 
-        // Lọc theo Action (Local)
         if (activeFilter !== "ALL") {
             result = result.filter(log => log.action === activeFilter);
         }
 
-        // Sắp xếp (Local)
         result.sort((a, b) => {
             let valA = a[sortConfig.sortBy];
             let valB = b[sortConfig.sortBy];
             
-            // Xử lý ngày tháng
             if (sortConfig.sortBy === 'createdAt') {
                 valA = new Date(valA).getTime();
                 valB = new Date(valB).getTime();
@@ -83,13 +82,13 @@ export default function AuditLogsPage() {
     }, [logs, searchTerm, activeFilter, sortConfig]);
 
     const handleExport = async () => {
-        const loadingToast = toast.loading("Đang chuẩn bị báo cáo...");
+        const loadingToast = toast.loading(t('logs.export_loading'));
         try {
             await systemLogService.exportLogs({});
-            toast.success("Tải báo cáo thành công!", { id: loadingToast });
+            toast.success(t('logs.export_success'), { id: loadingToast });
         } catch (error) {
             console.error("Export Error:", error);
-            toast.error("Lỗi khi xuất báo cáo.");
+            toast.error(t('logs.export_error'));
             toast.dismiss(loadingToast);
         }
     };
@@ -134,12 +133,12 @@ export default function AuditLogsPage() {
     };
 
     const filterOptions = [
-        { label: "Tất cả", value: "ALL" },
-        { label: "Tạo mới", value: "CREATE" },
-        { label: "Cập nhật", value: "UPDATE" },
-        { label: "Xóa", value: "DELETE" },
-        { label: "Phê duyệt", value: "APPROVE" },
-        { label: "Đình chỉ", value: "SUSPEND" },
+        { label: t('logs.filter_all'), value: "ALL" },
+        { label: t('logs.filter_create'), value: "CREATE" },
+        { label: t('logs.filter_update'), value: "UPDATE" },
+        { label: t('logs.filter_delete'), value: "DELETE" },
+        { label: t('logs.filter_approve'), value: "APPROVE" },
+        { label: t('logs.filter_suspend'), value: "SUSPEND" },
     ];
 
     return (
@@ -151,13 +150,13 @@ export default function AuditLogsPage() {
                         <History size={20} />
                     </div>
                     <div>
-                        <h1 className="text-xl font-semibold text-gray-800">Nhật ký hệ thống</h1>
-                        <p className="text-xs text-gray-400 font-medium">Giám sát dữ liệu hoạt động</p>
+                        <h1 className="text-xl font-semibold text-gray-800">{t('logs.title')}</h1>
+                        <p className="text-xs text-gray-400 font-medium">{t('logs.subtitle')}</p>
                     </div>
                 </div>
                 <div className="flex gap-2">
                      <button onClick={handleExport} className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-50 transition-all shadow-sm">
-                        <Download size={16} /> Xuất báo cáo
+                        <Download size={16} /> {t('logs.export')}
                      </button>
                      <button onClick={() => fetchLogs(page)} className="p-2 bg-white border border-gray-200 rounded-lg text-gray-400 hover:text-[rgb(40,169,224)] transition-all shadow-sm">
                         <RefreshCcw size={18} />
@@ -188,7 +187,7 @@ export default function AuditLogsPage() {
                     </div>
                     <input 
                         type="text" 
-                        placeholder="Tìm kiếm hành động, email, id..."
+                        placeholder={t('logs.search_placeholder')}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-full text-sm font-medium focus:outline-none focus:bg-white focus:border-[rgb(40,169,224)] transition-all duration-200 shadow-sm"
@@ -199,7 +198,7 @@ export default function AuditLogsPage() {
             {/* Table */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <AuditTable
-                    logs={displayLogs} // Sử dụng danh sách đã được lọc/sắp xếp local
+                    logs={displayLogs}
                     sortConfig={sortConfig}
                     onSort={handleSort}
                     onViewDetail={(id) => {
@@ -212,7 +211,7 @@ export default function AuditLogsPage() {
                 <div className="bg-gray-50/50 border-t border-gray-100 px-6 py-4">
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                         <span className="text-xs font-medium text-gray-400 uppercase tracking-widest">
-                            Hiển thị <span className="text-gray-700 font-bold">{displayLogs.length}</span> / <span className="text-gray-700 font-bold">{totalElements}</span> kết quả
+                            {t('logs.showing')} <span className="text-gray-700 font-bold">{displayLogs.length}</span> / <span className="text-gray-700 font-bold">{totalElements}</span> {t('logs.results')}
                         </span>
                         <div className="flex items-center gap-3 justify-end flex-1">
                             <div className="flex items-center gap-1.5">
@@ -238,7 +237,7 @@ export default function AuditLogsPage() {
                                 </button>
                             </div>
                             <div className="flex items-center gap-2 ml-4 pl-4 border-l border-gray-200">
-                                <span className="text-[11px] font-bold text-gray-400 uppercase">Đi đến:</span>
+                                <span className="text-[11px] font-bold text-gray-400 uppercase">{t('logs.go_to')}</span>
                                 <div className="flex items-center gap-1">
                                     <input type="text" className="w-10 h-8 rounded-lg border border-gray-200 text-xs font-bold text-center outline-none focus:border-[rgb(40,169,224)]" value={jumpPage} onChange={(e) => setJumpPage(e.target.value.replace(/\D/, ''))} onKeyDown={handleJumpPage} />
                                     <button onClick={handleJumpPage} className="h-8 px-3 bg-gray-800 rounded-lg text-[10px] font-bold text-white hover:bg-gray-700 uppercase">Go</button>
