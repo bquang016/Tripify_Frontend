@@ -4,11 +4,14 @@ import {
     ArrowRight, MapPin, Star, Heart,
     Sparkles // Đã xóa Zap khỏi import
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 // Components & Services
 import Skeleton from "@/components/common/Loading/Skeleton";
 import propertyService from "@/services/property.service";
 import placeholderImg from "@/assets/images/placeholder.png";
+import { formatPrice } from "@/utils/priceUtils";
+import { useLanguage } from "@/context/LanguageContext";
 
 // Cấu hình đường dẫn ảnh
 const BASE_IMAGE_URL = "http://localhost:8386/images/";
@@ -35,15 +38,26 @@ const SectionHeader = ({ onSeeAll }) => (
             <div className="bg-gray-100 group-hover:bg-blue-100 p-1 rounded-full transition-colors">
                 <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
             </div>
-        </button>
-    </div>
-);
+
+            <button 
+                onClick={onSeeAll}
+                className="hidden md:flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-blue-600 transition-all bg-white px-5 py-2.5 rounded-full border border-gray-200 hover:border-blue-200 shadow-sm hover:shadow-md group"
+            >
+                {t('home.see_all')}
+                <div className="bg-gray-100 group-hover:bg-blue-100 p-1 rounded-full transition-colors">
+                    <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                </div>
+            </button>
+        </div>
+    );
+};
 
 // ====================================================================
 // 2. SUB-COMPONENT: HOTEL CARD
 // ====================================================================
-const ModernHotelCard = ({ hotel }) => {
+const ModernHotelCard = ({ hotel, currentCurrency }) => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     return (
         <div
@@ -64,7 +78,7 @@ const ModernHotelCard = ({ hotel }) => {
                 <div className="absolute top-4 left-4 flex gap-2">
                     {hotel.isPopular && (
                         <span className="bg-rose-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1">
-                            <Sparkles size={10} fill="currentColor" /> POPULAR
+                            <Sparkles size={10} fill="currentColor" /> {t('home.popular')}
                         </span>
                     )}
                 </div>
@@ -100,12 +114,12 @@ const ModernHotelCard = ({ hotel }) => {
 
                 <div className="flex items-center justify-between mt-4">
                     <div>
-                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Giá chỉ từ</p>
+                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">{t('home.price_from')}</p>
                         <div className="flex items-baseline gap-1">
                             <span className="text-xl font-black text-blue-600">
                                 {hotel.formattedPrice}
                             </span>
-                            <span className="text-sm text-gray-400 font-medium">₫/đêm</span>
+                            <span className="text-sm text-gray-400 font-medium">/{t('home.night')}</span>
                         </div>
                     </div>
 
@@ -124,6 +138,8 @@ const ModernHotelCard = ({ hotel }) => {
 // ====================================================================
 const FeaturedHotels = () => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
+    const { currency } = useLanguage();
     const [hotels, setHotels] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -154,52 +170,46 @@ const FeaturedHotels = () => {
 
                 console.log("Featured Data:", res); // Debug log
 
-                // 2. Bóc tách dữ liệu an toàn (Xử lý mọi trường hợp cấu trúc JSON)
                 let rawData = [];
 
                 if (res && res.result && Array.isArray(res.result.content)) {
-                    // TRƯỜNG HỢP CHUẨN (ApiResponse): { result: { content: [...] } }
                     rawData = res.result.content;
                 }
                 else if (res && res.data && Array.isArray(res.data.content)) {
-                    // Trường hợp dự phòng: { data: { content: [...] } }
                     rawData = res.data.content;
                 }
                 else if (res && Array.isArray(res.content)) {
-                    // Trường hợp Page trực tiếp: { content: [...] }
                     rawData = res.content;
                 }
                 else if (Array.isArray(res)) {
-                    // Trường hợp trả về mảng trực tiếp
                     rawData = res;
                 }
 
-                // 3. Map dữ liệu (Lúc này rawData chắc chắn là Array)
                 const mapped = rawData.map(item => ({
                     id: item.propertyId,
                     name: item.propertyName,
                     location: item.address || item.city || "Việt Nam",
-                    price: item.minPrice || 0, // Giá thấp nhất
-                    formattedPrice: new Intl.NumberFormat('vi-VN').format(item.minPrice || 0),
+                    price: item.minPrice || 0,
+                    formattedPrice: formatPrice(item.minPrice, item.convertedMinPrice, item.currency || currency),
+                    isConverted: !!item.convertedMinPrice,
                     image: getCoverImage(item),
                     rating: item.rating ?? 0,
                     reviews: item.reviewCount ?? 0,
                     isPopular: (item.rating ?? 0) >= 4.5
                 }));
 
-                setHotels(mapped.slice(0, 4)); // Chỉ lấy 4 cái
+                setHotels(mapped.slice(0, 4));
             } catch (err) {
                 console.error("❌ Lỗi khi tải khách sạn nổi bật:", err);
-                setHotels([]); // Set mảng rỗng để tránh lỗi render
+                setHotels([]);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchHotels();
-    }, []);
+    }, [currency]);
 
-    // Skeleton
     const renderSkeletons = () => (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {[...Array(4)].map((_, i) => (
@@ -226,12 +236,12 @@ const FeaturedHotels = () => {
                 renderSkeletons()
             ) : hotels.length === 0 ? (
                 <div className="text-center py-20 bg-gray-50 rounded-[2rem] border border-dashed border-gray-200">
-                    <p className="text-gray-500">Hệ thống đang cập nhật danh sách khách sạn...</p>
+                    <p className="text-gray-500">{t('home.updating')}</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                     {hotels.map((h) => (
-                        <ModernHotelCard key={h.id} hotel={h} />
+                        <ModernHotelCard key={h.id} hotel={h} currentCurrency={currency} />
                     ))}
                 </div>
             )}

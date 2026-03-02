@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   ShieldCheck, 
   Crown, 
@@ -9,6 +9,7 @@ import {
   Loader2
 } from 'lucide-react';
 import { roleService } from '../../../services/role.service';
+import { useTranslation } from "react-i18next";
 
 const Toggle = ({ enabled, onChange, disabled }) => {
   return (
@@ -31,6 +32,9 @@ const Toggle = ({ enabled, onChange, disabled }) => {
 };
 
 const RoleManagementPage = () => {
+  const { t, i18n } = useTranslation();
+  const isVi = i18n.language === 'vi';
+
   const [roles, setRoles] = useState([]);
   const [groupedPermissions, setGroupedPermissions] = useState({});
   const [selectedRole, setSelectedRole] = useState(null);
@@ -41,7 +45,6 @@ const RoleManagementPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState(null);
 
-  // 1. Fetch danh sách Roles & Permissions Group khi mount
   useEffect(() => {
     const initData = async () => {
       try {
@@ -51,7 +54,6 @@ const RoleManagementPage = () => {
           roleService.getGroupedPermissions()
         ]);
         
-        // Kiểm tra data hợp lệ trước khi set
         const finalRoles = Array.isArray(rolesData) ? rolesData : [];
         const finalPerms = permsData || {};
         
@@ -62,7 +64,7 @@ const RoleManagementPage = () => {
           handleSelectRole(finalRoles[0]);
         }
       } catch (err) {
-        const msg = err.response?.data?.message || err.response?.data?.error || "Không thể tải dữ liệu phân quyền. Vui lòng kiểm tra lại Server/Database.";
+        const msg = err.response?.data?.message || err.response?.data?.error || t('roles.fetch_error');
         setError(msg);
         console.error(err);
       } finally {
@@ -70,20 +72,18 @@ const RoleManagementPage = () => {
       }
     };
     initData();
-  }, []);
+  }, [t]);
 
-  // 2. Fetch chi tiết quyền của một Role khi chọn
   const handleSelectRole = async (role) => {
     setSelectedRole(role);
     setIsLoadingPermissions(true);
     setError(null);
     try {
       const data = await roleService.getRoleWithPermissions(role.id);
-      // Chuyển danh sách object permission thành mảng code để dễ quản lý state
       const codes = data.permissions.map(p => p.code);
       setActivePermissionCodes(codes);
     } catch (err) {
-      setError(`Không thể tải quyền hạn cho vai trò ${role.name}`);
+      setError(t('roles.fetch_perms_error', { name: role.name }));
       console.error(err);
     } finally {
       setIsLoadingPermissions(false);
@@ -107,13 +107,12 @@ const RoleManagementPage = () => {
     setError(null);
     try {
       await roleService.updateRolePermissions(selectedRole.id, activePermissionCodes);
-      // Cập nhật lại số lượng quyền hiển thị ở danh sách bên trái
       setRoles(prev => prev.map(r => 
         r.id === selectedRole.id ? { ...r, permissionCount: activePermissionCodes.length } : r
       ));
-      alert('Đã cập nhật quyền thành công!');
+      alert(t('roles.save_success'));
     } catch (err) {
-      setError("Cập nhật thất bại. Vui lòng kiểm tra lại quyền truy cập.");
+      setError(t('roles.save_error'));
       console.error(err);
     } finally {
       setIsSaving(false);
@@ -124,7 +123,7 @@ const RoleManagementPage = () => {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <Loader2 className="animate-spin text-[#00AEEF]" size={40} />
-        <p className="text-gray-500 font-medium">Đang tải dữ liệu phân quyền...</p>
+        <p className="text-gray-500 font-medium">{t('roles.loading_data')}</p>
       </div>
     );
   }
@@ -134,8 +133,8 @@ const RoleManagementPage = () => {
       <div className="max-w-7xl mx-auto">
         <div className="mb-6 flex justify-between items-end">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Quản lý Phân quyền</h1>
-            <p className="text-gray-500">Thiết lập và tùy chỉnh quyền hạn dựa trên vai trò hệ thống.</p>
+            <h1 className="text-2xl font-bold text-gray-800">{t('roles.title')}</h1>
+            <p className="text-gray-500">{t('roles.subtitle')}</p>
           </div>
           {error && (
             <div className="bg-red-50 text-red-600 px-4 py-2 rounded-lg flex items-center gap-2 border border-red-100 text-sm font-medium">
@@ -146,11 +145,10 @@ const RoleManagementPage = () => {
         </div>
 
         <div className="flex gap-6">
-          {/* Cột Trái: Danh sách Roles */}
           <div className="w-1/4">
             <div className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col h-[calc(100vh-200px)] border border-gray-100">
               <div className="p-4 border-b border-gray-100 bg-gray-50/50">
-                <span className="text-sm font-bold text-gray-400 uppercase tracking-wider">Danh sách vai trò</span>
+                <span className="text-sm font-bold text-gray-400 uppercase tracking-wider">{t('roles.role_list')}</span>
               </div>
               
               <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -177,7 +175,7 @@ const RoleManagementPage = () => {
                       <div>
                         <div className="font-bold text-sm">{role.name}</div>
                         <div className={`text-[11px] ${selectedRole?.id === role.id ? 'text-[#00AEEF]/80' : 'text-gray-400'}`}>
-                          {role.isSuper ? 'Toàn quyền' : 'Tùy chỉnh quyền'}
+                          {role.isSuper ? t('roles.full_access') : t('roles.custom_access')}
                         </div>
                       </div>
                     </div>
@@ -191,16 +189,14 @@ const RoleManagementPage = () => {
               <div className="p-4 border-t border-gray-100 bg-gray-50/30">
                 <button className="w-full flex items-center justify-center gap-2 py-2.5 px-4 border-2 border-dashed border-gray-200 rounded-lg text-gray-500 hover:border-[#00AEEF] hover:text-[#00AEEF] transition-all font-bold text-sm">
                   <Plus size={18} />
-                  Thêm vai trò mới
+                  {t('roles.add_new')}
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Cột Phải: Permission Matrix */}
           <div className="w-3/4">
             <div className="bg-white rounded-xl shadow-lg flex flex-col h-[calc(100vh-200px)] overflow-hidden border border-gray-100">
-              {/* Sticky Header */}
               <div className="sticky top-0 z-10 bg-white p-4 border-b border-gray-100 flex items-center justify-between shadow-sm">
                 <div className="flex items-center gap-4">
                   <div className={`p-2 rounded-lg ${selectedRole?.isSuper ? 'bg-yellow-50' : 'bg-blue-50'}`}>
@@ -208,9 +204,9 @@ const RoleManagementPage = () => {
                   </div>
                   <div>
                     <h2 className="text-lg font-black text-gray-800">
-                      Quyền hạn: <span className="text-[#00AEEF]">{selectedRole?.name}</span>
+                      {t('roles.permissions_for')}: <span className="text-[#00AEEF]">{selectedRole?.name}</span>
                     </h2>
-                    <p className="text-xs text-gray-500 font-medium">{selectedRole?.description || 'Cấu hình các module mà vai trò này được phép truy cập'}</p>
+                    <p className="text-xs text-gray-500 font-medium">{selectedRole?.description || t('roles.permissions_desc')}</p>
                   </div>
                 </div>
                 
@@ -228,16 +224,15 @@ const RoleManagementPage = () => {
                   ) : (
                     <Save size={18} />
                   )}
-                  Lưu thay đổi
+                  {t('common.save')}
                 </button>
               </div>
 
-              {/* Matrix Content */}
               <div className="flex-1 overflow-y-auto p-6 space-y-8 custom-scrollbar">
                 {isLoadingPermissions ? (
                   <div className="flex flex-col items-center justify-center h-full gap-3 py-20">
                     <Loader2 className="animate-spin text-[#00AEEF]" size={32} />
-                    <p className="text-gray-400 text-sm">Đang tải ma trận quyền hạn...</p>
+                    <p className="text-gray-400 text-sm">{t('roles.loading_perms')}</p>
                   </div>
                 ) : (
                   <>
@@ -247,10 +242,9 @@ const RoleManagementPage = () => {
                           <Info size={18} />
                         </div>
                         <div>
-                          <p className="font-black text-sm uppercase tracking-tight">Hệ thống bảo vệ: Super Admin</p>
+                          <p className="font-black text-sm uppercase tracking-tight">{t('roles.super_admin_warning')}</p>
                           <p className="text-sm opacity-80 mt-1 leading-relaxed">
-                            Vai trò <strong>{selectedRole.name}</strong> là vai trò gốc của hệ thống. 
-                            Tất cả các quyền hạn đã được kích hoạt mặc định và không thể bị tước bỏ để tránh rủi ro bảo mật.
+                            {t('roles.super_admin_desc', { name: selectedRole.name })}
                           </p>
                         </div>
                       </div>
@@ -272,7 +266,7 @@ const RoleManagementPage = () => {
                                     {permission.name}
                                   </div>
                                   <div className="text-xs text-gray-400 mt-1 font-medium">
-                                    {permission.description || `Mã quyền: ${permission.code}`}
+                                    {permission.description || `${isVi ? 'Mã quyền' : 'Code'}: ${permission.code}`}
                                   </div>
                                 </div>
                                 <Toggle 
@@ -290,10 +284,9 @@ const RoleManagementPage = () => {
                 )}
               </div>
 
-              {/* Footer info */}
               <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center gap-2 text-gray-400 text-[10px] font-bold uppercase tracking-wider">
                 <AlertCircle size={14} className="text-[#00AEEF]" />
-                Thay đổi quyền hạn sẽ có hiệu lực sau khi vai trò được lưu và người dùng đăng nhập lại.
+                {t('roles.footer_note')}
               </div>
             </div>
           </div>

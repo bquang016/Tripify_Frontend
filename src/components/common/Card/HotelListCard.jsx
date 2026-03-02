@@ -2,6 +2,7 @@ import React from "react";
 import { MapPin, Star, Wifi, Coffee, Car, Check, ArrowRight, Heart } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Button from "@/components/common/Button/Button";
+import { formatPrice } from "@/utils/priceUtils";
 
 // Cấu hình Base URL
 const BASE_URL = "http://localhost:8386"; 
@@ -22,11 +23,6 @@ const HotelListCard = ({ hotel }) => {
     const amenitiesObj = hotel.amenitiesJson ? JSON.parse(hotel.amenitiesJson) : {};
     amenities = Object.keys(amenitiesObj).filter(key => amenitiesObj[key] === true);
   } catch (e) { amenities = []; }
-
-  const formatCurrency = (amount) => {
-    if (!amount) return "Liên hệ";
-    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-  };
 
   const renderAmenityIcon = (key) => {
     switch (key.toLowerCase()) {
@@ -113,19 +109,19 @@ const HotelListCard = ({ hotel }) => {
           <div className="flex flex-col">
             <span className="text-xs text-gray-400 mb-1">Giá phòng / đêm</span>
             
-            {/* ✅ ĐÃ SỬA: Dùng chung size text-xl và màu chủ đạo cho cả khoảng giá */}
+            {/* ✅ ĐÃ CẬP NHẬT: Ưu tiên giá quy đổi và currency từ Backend */}
             <div className="flex items-baseline flex-wrap gap-1">
-               {hotel.minPrice ? (
+               {hotel.minPrice || hotel.convertedMinPrice ? (
                   <>
                     <span className="text-xl font-bold text-[rgb(40,169,224)]">
-                        {formatCurrency(hotel.minPrice)}
+                        {formatPrice(hotel.minPrice, hotel.convertedMinPrice, hotel.currency)}
                     </span>
                     
-                    {(hotel.maxPrice && hotel.minPrice !== hotel.maxPrice) && (
+                    {(hotel.maxPrice && hotel.minPrice !== hotel.maxPrice && !hotel.convertedMinPrice) && (
                        <>
                         <span className="text-gray-400 text-sm mx-1">-</span>
                         <span className="text-xl font-bold text-[rgb(40,169,224)]">
-                            {formatCurrency(hotel.maxPrice)}
+                            {formatPrice(hotel.maxPrice, null, hotel.currency)}
                         </span>
                        </>
                     )}

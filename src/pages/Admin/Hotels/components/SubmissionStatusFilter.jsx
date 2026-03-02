@@ -2,15 +2,18 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { CheckCircle2, Clock, XCircle, Layers } from "lucide-react";
-
-const STATUS_OPTIONS = [
-  { id: "ALL", label: "Tất cả", icon: Layers, color: "text-gray-600", bg: "bg-gray-100" },
-  { id: "PENDING", label: "Chờ duyệt", icon: Clock, color: "text-yellow-600", bg: "bg-yellow-50" },
-  { id: "APPROVED", label: "Đã duyệt", icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
-  { id: "REJECTED", label: "Từ chối", icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
-];
+import { useTranslation } from "react-i18next";
 
 const SubmissionStatusFilter = ({ currentStatus, onStatusChange }) => {
+  const { t } = useTranslation();
+
+  const STATUS_OPTIONS = [
+    { id: "ALL", label: t('hotels.all'), icon: Layers, color: "text-gray-600", bg: "bg-gray-100" },
+    { id: "PENDING", label: t('hotels.pending'), icon: Clock, color: "text-yellow-600", bg: "bg-yellow-50" },
+    { id: "APPROVED", label: t('hotels.approved'), icon: CheckCircle2, color: "text-green-600", bg: "bg-green-50" },
+    { id: "REJECTED", label: t('hotels.rejected'), icon: XCircle, color: "text-red-600", bg: "bg-red-50" },
+  ];
+
   return (
     <div className="flex space-x-1 bg-gray-100/80 p-1 rounded-xl overflow-x-auto no-scrollbar">
       {STATUS_OPTIONS.map((status) => {

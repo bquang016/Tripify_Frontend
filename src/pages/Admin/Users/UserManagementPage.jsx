@@ -1,61 +1,46 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-
-// ✅ Import các component Common
 import ConfirmModal from "@/components/common/Modal/ConfirmModal";
 import Modal from "@/components/common/Modal/Modal";
 import Button from "@/components/common/Button/Button";
-
 import ToastPortal from "@/components/common/Notification/ToastPortal";
-import LoadingOverlay from "@/components/common/Loading/LoadingOverlay"; // ✅ Component này sẽ hiện khi isLoading = true
+import LoadingOverlay from "@/components/common/Loading/LoadingOverlay";
 import Pagination from "@/pages/Owner/Bookings/components/common/Pagination";
-
-// Import các component con
 import UserStats from "./components/UserStats";
 import UserFilterBar from "./components/UserFilterBar";
 import UserTable from "./components/UserTable";
-
-// Import Service
 import adminService from "@/services/admin.service";
+import { useTranslation } from "react-i18next";
 
 export default function UserManagementPage() {
+    const { t, i18n } = useTranslation();
     const toastRef = useRef();
 
-    // State dữ liệu
     const [users, setUsers] = useState([]);
-
-    // ✅ Biến này sẽ điều khiển Loading toàn trang (cả lúc lấy data và lúc bấm nút Khóa)
     const [isLoading, setIsLoading] = useState(false);
-
-    // State tìm kiếm & Filter
     const [searchTerm, setSearchTerm] = useState("");
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
     const [roleFilter, setRoleFilter] = useState("ALL");
     const [rankFilter, setRankFilter] = useState("ALL");
 
-    // Pagination
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize] = useState(10);
     const [totalPages, setTotalPages] = useState(0);
     const [totalElements, setTotalElements] = useState(0);
 
-    // Stats
     const [stats, setStats] = useState({ total: 0, active: 0, banned: 0 });
 
-    // State cho Modal Khóa (Có nhập lý do)
     const [isLockModalOpen, setIsLockModalOpen] = useState(false);
     const [selectedUserForLock, setSelectedUserForLock] = useState(null);
     const [lockReason, setLockReason] = useState("");
 
-    // State cho Modal Mở khóa
     const [confirmModal, setConfirmModal] = useState({
-        open: false, title: "", message: "", type: "info", confirmText: "Xác nhận", onConfirm: null,
+        open: false, title: "", message: "", type: "info", confirmText: t('common.confirm'), onConfirm: null,
     });
 
     const addToast = (message, mode = "info") => {
         if (toastRef.current) toastRef.current.addMessage({ mode, message });
     };
 
-    // Debounce tìm kiếm
     useEffect(() => {
         const handler = setTimeout(() => {
             setDebouncedSearchTerm(searchTerm);
@@ -64,9 +49,8 @@ export default function UserManagementPage() {
         return () => clearTimeout(handler);
     }, [searchTerm]);
 
-    // Gọi API lấy danh sách
     const fetchUsers = useCallback(async () => {
-        setIsLoading(true); // ✅ Bật loading toàn trang
+        setIsLoading(true);
         try {
             const response = await adminService.getAllUsers(
                 currentPage - 1,
@@ -90,48 +74,43 @@ export default function UserManagementPage() {
             }
         } catch (error) {
             console.error("Failed:", error);
-            addToast("Không thể tải danh sách người dùng", "error");
+            addToast(i18n.language === 'vi' ? "Không thể tải danh sách người dùng" : "Failed to load user list", "error");
         } finally {
-            setIsLoading(false); // ✅ Tắt loading
+            setIsLoading(false);
         }
-    }, [currentPage, pageSize, debouncedSearchTerm, roleFilter, rankFilter]);
+    }, [currentPage, pageSize, debouncedSearchTerm, roleFilter, rankFilter, i18n.language]);
 
     useEffect(() => {
         fetchUsers();
     }, [fetchUsers]);
 
-    // Handlers
     const handleSearchChange = (value) => setSearchTerm(value);
     const handleRoleChange = (role) => { setRoleFilter(role); setCurrentPage(1); };
     const handleRankChange = (rank) => { setRankFilter(rank); setCurrentPage(1); };
     const handlePageChange = (page) => setCurrentPage(page);
 
-    // Xử lý click nút trạng thái
     const handleStatusClick = (userId, currentStatus) => {
         const user = users.find(u => u.userId === userId);
 
         if (currentStatus === "ACTIVE") {
-            // Mở Modal Khóa
             setSelectedUserForLock(user);
             setLockReason("");
             setIsLockModalOpen(true);
         } else {
-            // Mở Modal Mở khóa
             setConfirmModal({
                 open: true,
-                title: "Mở khóa tài khoản",
-                message: `Bạn có chắc chắn muốn mở khóa cho tài khoản ${user?.fullName}?`,
+                title: t('admin.users.unlock_account'),
+                message: t('admin.users.unlock_message', { name: user?.fullName }),
                 type: "success",
-                confirmText: "Mở khóa",
+                confirmText: i18n.language === 'vi' ? 'Mở khóa' : 'Unlock',
                 onConfirm: () => executeStatusChange(userId, "ACTIVE", "")
             });
         }
     };
 
-    // Handler xác nhận khóa từ Modal
     const handleConfirmLock = () => {
         if (!lockReason.trim()) {
-            addToast("Vui lòng nhập lý do khóa tài khoản", "warning");
+            addToast(i18n.language === 'vi' ? "Vui lòng nhập lý do khóa tài khoản" : "Please enter a reason for locking", "warning");
             return;
         }
         if (selectedUserForLock) {
@@ -139,91 +118,66 @@ export default function UserManagementPage() {
         }
     };
 
-    // Hàm gọi API thực thi
     const executeStatusChange = async (userId, newStatus, reason) => {
-        // ✅ BẬT LOADING TOÀN TRANG (LoadingOverlay sẽ hiện lên)
         setIsLoading(true);
-
         try {
             await adminService.updateUserStatus(userId, newStatus, reason);
-
-            const actionText = newStatus === "BANNED" ? "Đã khóa" : "Đã mở khóa";
-            addToast(`${actionText} tài khoản thành công`, "success");
-
-            // Đóng modal & reload
+            const successMsg = newStatus === "BANNED" ? t('admin.users.lock_success') : t('admin.users.unlock_success');
+            addToast(successMsg, "success");
             setIsLockModalOpen(false);
             setConfirmModal(prev => ({ ...prev, open: false }));
-            fetchUsers(); // fetchUsers cũng sẽ set isLoading=true/false lại nhưng không sao, nó sẽ nối tiếp nhau
+            fetchUsers();
         } catch (error) {
-            const errorMessage = error.response?.data?.message || "Lỗi cập nhật trạng thái";
+            const errorMessage = error.response?.data?.message || (i18n.language === 'vi' ? "Lỗi cập nhật trạng thái" : "Status update error");
             addToast(errorMessage, "error");
-            // Tắt Loading nếu lỗi để người dùng còn thao tác tiếp
             setIsLoading(false);
-
-            // Nếu lỗi không phải do khóa (ví dụ mở khóa lỗi), thì đóng modal confirm
             if(newStatus !== "BANNED") {
                 setConfirmModal(prev => ({ ...prev, open: false }));
             }
         }
-        // Lưu ý: Không để setIsLoading(false) ở finally ở đây vì fetchUsers() sẽ được gọi ngay sau đó
-        // và fetchUsers() sẽ tự quản lý việc tắt loading khi tải xong dữ liệu mới.
     };
 
     return (
         <div className="p-6 min-h-screen bg-gray-50/50 space-y-6 relative">
-
-            {/* ✅ LoadingOverlay sẽ hiện ra khi isLoading = true */}
             {isLoading && <LoadingOverlay />}
-
             <ToastPortal ref={toastRef} autoClose={true} />
 
-            {/* ✅ Modal Khóa Tài Khoản */}
             <Modal
                 open={isLockModalOpen}
-                onClose={() => !isLoading && setIsLockModalOpen(false)} // Chặn đóng khi đang load
-                title="Khóa tài khoản"
+                onClose={() => !isLoading && setIsLockModalOpen(false)}
+                title={t('admin.users.lock_account')}
             >
                 <div className="p-1 space-y-4">
                     <p className="text-gray-600 text-sm">
-                        Bạn đang khóa tài khoản <strong>{selectedUserForLock?.fullName}</strong>.
+                        {i18n.language === 'vi' ? `Bạn đang khóa tài khoản ${selectedUserForLock?.fullName}.` : `You are locking account ${selectedUserForLock?.fullName}.`}
                         <br/>
-                        Vui lòng nhập lý do để thông báo cho người dùng.
+                        {i18n.language === 'vi' ? 'Vui lòng nhập lý do để thông báo cho người dùng.' : 'Please enter a reason to notify the user.'}
                     </p>
 
-                    {/* Ô nhập lý do */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            Lý do khóa <span className="text-red-500">*</span>
+                            {t('admin.users.lock_reason_label')} <span className="text-red-500">*</span>
                         </label>
                         <textarea
                             value={lockReason}
                             onChange={(e) => setLockReason(e.target.value)}
-                            placeholder="Ví dụ: Vi phạm chính sách cộng đồng..."
-                            disabled={isLoading} // Disable khi đang loading
+                            placeholder={t('admin.users.lock_reason_placeholder')}
+                            disabled={isLoading}
                             className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm min-h-[100px] disabled:bg-gray-100 disabled:text-gray-500"
                         />
                     </div>
 
                     <div className="flex justify-end gap-3 pt-2">
-                        <Button
-                            variant="text"
-                            onClick={() => setIsLockModalOpen(false)}
-                            disabled={isLoading}
-                        >
-                            Hủy bỏ
+                        <Button variant="text" onClick={() => setIsLockModalOpen(false)} disabled={isLoading}>
+                            {t('common.cancel')}
                         </Button>
-                        <Button
-                            variant="danger"
-                            onClick={handleConfirmLock}
-                            disabled={isLoading} // Disable nút khi đang chạy
-                        >
-                            Xác nhận khóa
+                        <Button variant="danger" onClick={handleConfirmLock} disabled={isLoading}>
+                            {t('admin.users.confirm_lock')}
                         </Button>
                     </div>
                 </div>
             </Modal>
 
-            {/* Modal Mở khóa */}
             <ConfirmModal
                 open={confirmModal.open}
                 title={confirmModal.title}
@@ -231,12 +185,11 @@ export default function UserManagementPage() {
                 type={confirmModal.type}
                 confirmText={confirmModal.confirmText}
                 onConfirm={confirmModal.onConfirm}
-                // ConfirmModal thường không cần prop loading nếu dùng LoadingOverlay phủ lên trên
                 onClose={() => setConfirmModal((prev) => ({ ...prev, open: false }))}
             />
 
             <div className="flex flex-col gap-1">
-                <h1 className="text-2xl font-bold text-gray-800">Quản lý người dùng</h1>
+                <h1 className="text-2xl font-bold text-gray-800">{t('admin.users.title')}</h1>
             </div>
 
             <UserStats stats={stats} />

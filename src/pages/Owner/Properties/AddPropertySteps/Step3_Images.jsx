@@ -2,8 +2,11 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Images, Info, UploadCloud, Sparkles } from "lucide-react";
 import ImageUploadGrid from "@/components/common/Input/ImageUploadGrid";
+import { useTranslation } from "react-i18next";
 
 export default function Step3_Images({ errors, watch, setValue }) {
+  const { t } = useTranslation();
+
   return (
     <motion.div
       className="max-w-5xl mx-auto"
@@ -17,9 +20,9 @@ export default function Step3_Images({ errors, watch, setValue }) {
           <Images size={32} strokeWidth={2} />
         </div>
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Thư viện Hình ảnh</h2>
+          <h2 className="text-2xl font-bold text-gray-800">{t('add_property_flow.step_images')}</h2>
           <p className="text-gray-500 text-sm mt-1">
-            Hình ảnh đẹp là chìa khóa để thu hút khách hàng đặt phòng.
+            {t('add_property_flow.images_subtitle')}
           </p>
         </div>
       </div>
@@ -30,11 +33,11 @@ export default function Step3_Images({ errors, watch, setValue }) {
             <Sparkles size={18} className="text-[rgb(40,169,224)]" />
         </div>
         <div className="text-sm text-gray-700 leading-relaxed">
-          <h4 className="font-bold text-gray-900 mb-1">Mẹo để có hình ảnh chất lượng:</h4>
+          <h4 className="font-bold text-gray-900 mb-1">{t('add_property_flow.images_tips_title')}</h4>
           <ul className="list-disc list-inside space-y-1 text-gray-600 marker:text-[rgb(40,169,224)]">
-             <li>Đăng tải ít nhất <strong>3 ảnh</strong> để hiển thị đầy đủ không gian.</li>
-             <li>Ảnh đầu tiên bạn chọn sẽ là <strong>Ảnh bìa (Thumbnail)</strong> trên kết quả tìm kiếm.</li>
-             <li>Khuyến khích dùng ảnh ngang, ánh sáng tự nhiên, định dạng <strong>JPG/PNG/WEBP</strong>.</li>
+             <li>{t('add_property_flow.images_tip_1')}</li>
+             <li>{t('add_property_flow.images_tip_2')}</li>
+             <li>{t('add_property_flow.images_tip_3')}</li>
           </ul>
         </div>
       </div>
@@ -44,10 +47,10 @@ export default function Step3_Images({ errors, watch, setValue }) {
          <div className="mb-6 flex items-center justify-between pb-4 border-b border-gray-100">
             <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
                <UploadCloud size={20} className="text-[rgb(40,169,224)]"/>
-               Tải ảnh lên
+               {t('add_property_flow.images_upload_title')}
             </h3>
             <span className="text-xs font-bold px-3 py-1 bg-gray-100 rounded-full text-gray-500">
-               Bắt buộc
+               {t('add_property_flow.required')}
             </span>
          </div>
 

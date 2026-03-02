@@ -1,3 +1,4 @@
+// src/pages/Admin/Transactions/components/TransactionRow.jsx
 import React from 'react';
 import { 
     User, Building, Calendar, Mail, Phone, ArrowRight, 
@@ -5,50 +6,54 @@ import {
 } from 'lucide-react';
 import Button from '@/components/common/Button/Button';
 import Badge from '@/components/common/Badge/Badge';
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/context/LanguageContext";
 
 // --- 1. ĐỊNH NGHĨA BADGE TRỰC TIẾP TẠI ĐÂY ---
 const StatusBadge = ({ status }) => {
+    const { t } = useTranslation();
+    
     switch (status) {
         case 'APPROVED': 
             return (
                 <Badge className="bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center gap-1.5 px-3 py-1 rounded-full">
                     <CheckCircle2 size={14} strokeWidth={2.5} /> 
-                    <span className="font-bold text-xs">Thành công</span>
+                    <span className="font-bold text-xs">{t('finance.status_success', 'Success')}</span>
                 </Badge>
             );
         case 'REFUND_REQUESTED': 
             return (
                 <Badge className="bg-orange-100 text-orange-700 border border-orange-200 flex items-center gap-1.5 px-3 py-1 rounded-full">
                     <AlertTriangle size={14} strokeWidth={2.5} /> 
-                    <span className="font-bold text-xs">Yêu cầu hoàn tiền</span>
+                    <span className="font-bold text-xs">{t('finance.status_refund_req', 'Refund Requested')}</span>
                 </Badge>
             );
         case 'REFUNDED': 
             return (
                 <Badge className="bg-purple-100 text-purple-700 border border-purple-200 flex items-center gap-1.5 px-3 py-1 rounded-full">
                     <CornerUpLeft size={14} strokeWidth={2.5} /> 
-                    <span className="font-bold text-xs">Đã hoàn tiền</span>
+                    <span className="font-bold text-xs">{t('finance.status_refunded', 'Refunded')}</span>
                 </Badge>
             );
         case 'FAILED': 
             return (
                 <Badge className="bg-rose-100 text-rose-700 border border-rose-200 flex items-center gap-1.5 px-3 py-1 rounded-full">
                     <XCircle size={14} strokeWidth={2.5} /> 
-                    <span className="font-bold text-xs">Thất bại</span>
+                    <span className="font-bold text-xs">{t('finance.status_failed', 'Failed')}</span>
                 </Badge>
             );
         case 'REJECTED':
             return (
                 <Badge className="bg-slate-100 text-slate-600 border border-slate-200 flex items-center gap-1.5 px-3 py-1 rounded-full">
                     <Ban size={14} strokeWidth={2.5} /> 
-                    <span className="font-bold text-xs">Đã từ chối</span>
+                    <span className="font-bold text-xs">{t('finance.filter_rejected', 'Rejected')}</span>
                 </Badge>
             );
         default: 
             return (
                 <Badge className="bg-gray-100 text-gray-500 border border-gray-200 flex items-center gap-1.5 px-3 py-1 rounded-full">
                     <Clock size={14} strokeWidth={2} />
-                    <span className="font-medium text-xs">{status || 'Chờ xử lý'}</span>
+                    <span className="font-medium text-xs">{status || t('finance.filter_pending', 'Pending')}</span>
                 </Badge>
             );
     }
@@ -56,18 +61,26 @@ const StatusBadge = ({ status }) => {
 
 // --- 2. COMPONENT ROW CHÍNH ---
 const TransactionRow = ({ transaction, onViewDetail }) => {
-    // Destructure dữ liệu từ API
+    const { t, i18n } = useTranslation();
+    const { currency } = useLanguage();
+    const isVi = i18n.language === 'vi';
+
     const {
         paymentId, bookingId, userName, userEmail, userPhone,
         propertyName, amount, refundedAmount,
         paymentStatus, paymentDate
     } = transaction || {};
 
-    const formatMoney = (val) => new Intl.NumberFormat('vi-VN').format(val || 0);
+    const formatMoney = (val) => {
+        if (currency === 'USD') {
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format((val || 0) / 25000);
+        }
+        return new Intl.NumberFormat('vi-VN').format(val || 0) + '₫';
+    };
     
     const formatDate = (str) => {
         if (!str) return 'N/A';
-        return new Date(str).toLocaleDateString('vi-VN', { 
+        return new Date(str).toLocaleDateString(isVi ? 'vi-VN' : 'en-US', { 
             day: '2-digit', month: '2-digit', year: 'numeric', 
             hour: '2-digit', minute: '2-digit' 
         });
@@ -97,7 +110,7 @@ const TransactionRow = ({ transaction, onViewDetail }) => {
                     </div>
                     <div className="overflow-hidden min-w-0">
                         <p className="text-sm font-semibold text-gray-800 truncate" title={userName}>
-                            {userName || "Khách vãng lai"}
+                            {userName || t('finance.guest_walk_in')}
                         </p>
                         <div className="flex flex-col gap-0.5 mt-0.5">
                             <span className="flex items-center gap-1 text-xs text-gray-500 truncate" title={userEmail}>
@@ -124,10 +137,10 @@ const TransactionRow = ({ transaction, onViewDetail }) => {
             {/* Cột 4: Số tiền & Trạng thái */}
             <div className="w-full md:w-[25%] flex flex-row md:flex-col justify-between md:justify-center items-center md:items-end pl-0 md:pl-4 md:border-l border-gray-100">
                 <div className="text-right">
-                    <span className="block text-lg font-bold text-blue-600">{formatMoney(amount)}₫</span>
+                    <span className="block text-lg font-bold text-blue-600">{formatMoney(amount)}</span>
                     {refundedAmount > 0 && (
                         <span className="block text-xs text-purple-600 font-medium bg-purple-50 px-1.5 py-0.5 rounded mt-0.5">
-                            - {formatMoney(refundedAmount)}₫ (Hoàn)
+                            - {formatMoney(refundedAmount)} ({t('finance.status_refunded')})
                         </span>
                     )}
                 </div>
@@ -150,11 +163,11 @@ const TransactionRow = ({ transaction, onViewDetail }) => {
                 >
                     {paymentStatus === 'REFUND_REQUESTED' ? (
                         <span className="flex items-center font-bold">
-                            <AlertTriangle size={14} className="mr-1.5" /> Xử lý
+                            <AlertTriangle size={14} className="mr-1.5" /> {t('finance.process', 'Process')}
                         </span>
                     ) : (
                         <span className="flex items-center">
-                            Xem chi tiết <ArrowRight size={14} className="ml-1" />
+                            {t('hotels.details', 'Details')} <ArrowRight size={14} className="ml-1" />
                         </span>
                     )}
                 </Button>

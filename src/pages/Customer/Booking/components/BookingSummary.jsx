@@ -4,6 +4,7 @@ import { MapPin, Users, BedDouble, CheckCircle2 } from 'lucide-react';
 import Card from '@/components/common/Card/Card';
 import Button from '@/components/common/Button/Button';
 import Divider from '@/components/common/Divider/Divider';
+import { formatCurrency } from "@/utils/priceUtils";
 
 const BookingSummary = ({ hotel, room, dateRange, onSubmit, disabled, submitting, calculationData }) => {
     if (!hotel || !room) return null;
@@ -11,11 +12,8 @@ const BookingSummary = ({ hotel, room, dateRange, onSubmit, disabled, submitting
     const nights = Math.max(1, differenceInCalendarDays(dateRange.endDate, dateRange.startDate));
 
     // ✅ Logic mới: Ưu tiên lấy tổng tiền đã tính toán (có giá cuối tuần)
-    // Nếu không có calculationData (trường hợp cũ), fallback về cách tính đơn giản
     const totalPrice = calculationData ? calculationData.total : (room.price * nights);
-
-    // Helper format tiền tệ
-    const formatMoney = (v) => new Intl.NumberFormat('vi-VN').format(v);
+    const currency = calculationData?.currency || room.currency || 'VND';
 
     return (
         <Card className="sticky top-24 p-6 border border-slate-200 shadow-xl rounded-xl overflow-hidden">
@@ -71,7 +69,7 @@ const BookingSummary = ({ hotel, room, dateRange, onSubmit, disabled, submitting
                             <div className="flex justify-between text-sm">
                                 <span className="text-slate-500">Giá ngày thường (x{calculationData.weekdayCount})</span>
                                 <span className="font-medium text-slate-700">
-                            {formatMoney(calculationData.prices.weekday * calculationData.weekdayCount)}₫
+                            {formatCurrency(calculationData.prices.weekday * calculationData.weekdayCount, currency)}
                         </span>
                             </div>
                         )}
@@ -80,7 +78,7 @@ const BookingSummary = ({ hotel, room, dateRange, onSubmit, disabled, submitting
                             <div className="flex justify-between text-sm">
                                 <span className="text-slate-500">Giá cuối tuần (x{calculationData.weekendCount})</span>
                                 <span className="font-medium text-orange-600">
-                            {formatMoney(calculationData.prices.weekend * calculationData.weekendCount)}₫
+                            {formatCurrency(calculationData.prices.weekend * calculationData.weekendCount, currency)}
                         </span>
                             </div>
                         )}
@@ -89,7 +87,7 @@ const BookingSummary = ({ hotel, room, dateRange, onSubmit, disabled, submitting
                     // Trường hợp 2: Fallback (Giống hệt code cũ)
                     <div className="flex justify-between text-sm">
                         <span className="text-slate-500">Giá phòng (x{nights} đêm)</span>
-                        <span className="font-medium text-slate-700">{formatMoney(totalPrice)}₫</span>
+                        <span className="font-medium text-slate-700">{formatCurrency(totalPrice, currency)}</span>
                     </div>
                 )}
 
@@ -100,7 +98,7 @@ const BookingSummary = ({ hotel, room, dateRange, onSubmit, disabled, submitting
 
                 <div className="flex justify-between items-end pt-4 mt-2 border-t border-dashed border-slate-300">
                     <span className="font-bold text-slate-700">Tổng cộng</span>
-                    <span className="text-2xl font-extrabold text-blue-600">{formatMoney(totalPrice)}₫</span>
+                    <span className="text-2xl font-extrabold text-blue-600">{formatCurrency(totalPrice, currency)}</span>
                 </div>
             </div>
 
