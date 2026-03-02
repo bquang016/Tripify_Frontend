@@ -23,7 +23,8 @@
     "confirm": "Xác nhận",
     "loading": "Đang tải...",
     "error_occurred": "Đã có lỗi xảy ra. Vui lòng thử lại.",
-    "no_data": "Không có dữ liệu."
+    "no_data": "Không có dữ liệu.",
+    "save_changes": "Lưu thay đổi"
   },
   "search": {
     "title": "Tìm kiếm chỗ nghỉ",
@@ -107,6 +108,12 @@
       "account": "An mật tài khoản",
       "policy": "Chính sách & Điều khoản"
     },
+    "category_desc": {
+      "booking": "Booking guide, cancellation & schedule changes",
+      "payment": "Payment methods, refunds & invoicing",
+      "account": "Profile management, security & password recovery",
+      "partner": "Rent registration, property management & revenue"
+    },
     "send_message": "Gửi tin nhắn",
     "subject": "Chủ đề",
     "message": "Tin nhắn",
@@ -115,8 +122,8 @@
     "support_247": "Hỗ trợ 24/7 – sẵn sàng đồng hành cùng chuyến đi của bạn.",
     "dev_team": "Đội ngũ phát triển",
     "project_desc": "Nhóm phát triển dự án — SmartTeam."
-    },
-    "about": {
+  },
+  "about": {
     "title": "Về Tripify",
     "subtitle": "Người bạn đồng hành tin cậy trên mọi hành trình.",
     "description": "Tripify là nền tảng đặt phòng khách sạn hiện đại, mang đến trải nghiệm cao cấp và lựa chọn đa dạng cho du khách.",
@@ -133,7 +140,8 @@
     "secure_payment_desc": "Tích hợp phương thức thanh toán an toàn, nhanh chóng.",
     "support_247_title": "Hỗ trợ 24/7",
     "support_247_desc": "Đội ngũ CSKH sẵn sàng hỗ trợ bạn mọi lúc."
-    },    "partners": {
+  },
+  "partners": {
     "title": "Đối tác của chúng tôi",
     "subtitle": "Hợp tác với những đơn vị hàng đầu để mang lại giá trị tốt nhất cho bạn.",
     "become_partner": "Trở thành đối tác",
@@ -142,8 +150,8 @@
       "airline": "Hãng hàng không",
       "service": "Dịch vụ du lịch"
     }
-    },
-    "commitments": {
+  },
+  "commitments": {
     "title": "Cam kết của chúng tôi",
     "subtitle": "Chất lượng và sự tin tưởng là ưu tiên hàng đầu.",
     "best_price": "Giá tốt nhất",
@@ -163,7 +171,18 @@
     "c4_short": "Đội ngũ hỗ trợ của chúng tôi luôn sẵn sàng mọi lúc.",
     "c4_full": "Bạn có thể liên hệ với đội ngũ hỗ trợ của Tripify bất kỳ lúc nào qua nhiều kênh: hotline, email, hoặc chat trực tuyến. Đội ngũ chuyên viên và chatbot AI sẵn sàng giải đáp mọi thắc mắc.",
     "details": "Xem chi tiết"
-    },    "admin": {
+  },
+  "faq": {
+    "q1": "Làm thế nào để biết đặt phòng thành công?",
+    "a1": "Sau khi hoàn tất thanh toán, bạn sẽ nhận được email xác nhận. Trạng thái trong \"Đơn đặt của tôi\" sẽ chuyển thành \"Đã xác nhận\".",
+    "q2": "Chính sách hủy phòng và hoàn tiền tính như thế nào?",
+    "a2": "Tùy thuộc vào chính sách của từng khách sạn/chủ nhà. Các mức phổ biến: Hủy miễn phí trước 24h/48h, hoặc phí 50-100% đêm đầu tiên.",
+    "q5": "Hệ thống hỗ trợ những phương thức thanh toán nào?",
+    "a5": "Chúng tôi hỗ trợ thẻ Visa, Mastercard, JCB, VNPay, MoMo và Chuyển khoản ngân hàng qua mã QR.",
+    "q8": "Làm thế nào để lấy lại mật khẩu nếu quên?",
+    "a8": "Nhấn vào \"Quên mật khẩu\" tại màn hình Đăng nhập. Nhập email để nhận liên kết đặt lại mật khẩu có hiệu lực trong 15 phút."
+  },
+  "hotel_detail": {
     "overview": "Tổng quan",
     "rooms": "Danh sách phòng",
     "policies": "Chính sách",
@@ -237,5 +256,116 @@
       "lock_success": "Đã khóa tài khoản thành công",
       "unlock_success": "Đã mở khóa tài khoản thành công"
     }
-    }
-    }
+  },
+  "owner": {
+    "dashboard": "Bảng điều khiển",
+    "property_mgmt": "Quản lý chỗ nghỉ",
+    "room_mgmt": "Quản lý phòng",
+    "booking_mgmt": "Quản lý đơn đặt",
+    "availability": "Tình trạng phòng",
+    "promotions": "Khuyến mãi của tôi",
+    "reviews": "Đánh giá & Phản hồi",
+    "reports": "Báo cáo & Thống kê",
+    "messages": "Tin nhắn",
+    "notifications": "Thông báo",
+    "welcome": "Chào mừng trở lại",
+    "total_revenue": "Tổng doanh thu",
+    "new_bookings": "Đơn đặt mới",
+    "occupancy_rate": "Tỷ lệ lấp đầy",
+    "recent_bookings": "Đơn đặt gần đây",
+    "add_property": "Thêm chỗ nghỉ mới",
+    "add_room": "Thêm phòng mới",
+    "property_name": "Tên chỗ nghỉ",
+    "room_type": "Loại phòng",
+    "price_per_night": "Giá / Đêm",
+    "status": "Trạng thái",
+    "actions": "Hành động",
+    "edit": "Sửa",
+    "delete": "Xóa",
+    "view_detail": "Xem chi tiết",
+    "active": "Hoạt động",
+    "inactive": "Ngưng hoạt động",
+    "pending": "Chờ duyệt",
+    "booking_id": "Mã đơn hàng",
+    "customer": "Khách hàng",
+    "check_in": "Nhận phòng",
+    "check_out": "Trả phòng",
+    "payment": "Thanh toán",
+    "total": "Tổng cộng",
+    "no_rooms": "Không tìm thấy phòng nào.",
+    "no_properties": "Không tìm thấy chỗ nghỉ nào.",
+    "create_success": "Tạo thành công!",
+    "update_success": "Cập nhật thành công!",
+    "delete_confirm": "Bạn có chắc chắn muốn xóa mục này không?",
+    "revenue_chart_title": "Biểu đồ Doanh Thu",
+    "revenue_overview_year": "Tổng quan năm nay",
+    "loading_chart": "Đang tải dữ liệu biểu đồ...",
+    "revenue": "Doanh thu",
+    "room_guest_info": "Thông tin Phòng & Khách",
+    "schedule": "Lịch trình",
+    "status_upcoming": "Sắp đến",
+    "status_inhouse": "Đang ở",
+    "status_completed": "Hoàn thành",
+    "status_cancelled": "Đã hủy",
+    "status_pending_pay": "Chờ thanh toán",
+    "paid": "Đã TT",
+    "unpaid": "Chưa TT",
+    "refunded": "Đã hoàn",
+    "nights": "đêm",
+    "no_booking_data": "Chưa có dữ liệu phòng",
+    "no_booking_match": "Không tìm thấy đơn đặt phòng nào phù hợp với bộ lọc hiện tại.",
+    "no_cover_image": "Không có ảnh bìa",
+    "status_active": "Đang hoạt động",
+    "status_closed": "Tạm đóng",
+    "status_rejected": "Từ chối",
+    "new": "Mới",
+    "property_type_label": "Loại hình",
+    "hotel_status": "Trạng thái KS",
+    "no_images": "Chưa có ảnh",
+    "people": "người",
+    "capacity": "Sức chứa"
+  },
+  "add_property_flow": {
+    "title": "Đăng ký Chỗ nghỉ",
+    "subtitle": "Tham gia nền tảng của chúng tôi và bắt đầu đón khách.",
+    "step_type": "Loại hình",
+    "step_location": "Vị trí",
+    "step_amenities": "Tiện nghi",
+    "step_images": "Hình ảnh",
+    "step_details": "Chi tiết",
+    "step_policies": "Chính sách",
+    "step_unit": "Thiết lập căn",
+    "step_review": "Kiểm tra",
+    "next": "Tiếp theo",
+    "back": "Quay lại",
+    "submit": "Gửi đơn đăng ký",
+    "processing": "Đang xử lý dữ liệu...",
+    "type_title": "Bạn muốn đăng ký loại hình nào?",
+    "type_subtitle": "Chọn mô hình phù hợp nhất với cơ sở lưu trú của bạn",
+    "hotel_label": "Khách sạn",
+    "hotel_desc": "Cơ sở lưu trú chuyên nghiệp, dịch vụ dọn phòng hàng ngày.",
+    "homestay_label": "Homestay",
+    "homestay_desc": "Trải nghiệm văn hóa địa phương tại nhà dân ấm cúng.",
+    "villa_label": "Biệt thự",
+    "villa_desc": "Không gian sang trọng, riêng tư với khuôn viên độc lập.",
+    "resort_label": "Resort",
+    "resort_desc": "Quần thể nghỉ dưỡng cao cấp với đầy đủ tiện ích giải trí.",
+    "location_title": "Chỗ nghỉ của bạn ở đâu?",
+    "address_label": "Địa chỉ chi tiết",
+    "province_label": "Tỉnh / Thành phố",
+    "city_label": "Quận / Huyện",
+    "amenities_title": "Chỗ nghỉ có những tiện nghi nào?",
+    "images_title": "Hình ảnh thực tế",
+    "images_subtitle": "Thêm ít nhất 3 ảnh chất lượng cao.",
+    "details_title": "Thông tin chi tiết",
+    "property_name_label": "Tên chỗ nghỉ",
+    "description_label": "Mô tả",
+    "area_label": "Diện tích (m²)",
+    "policies_title": "Chính sách & Quy định",
+    "checkin_time": "Giờ nhận phòng",
+    "checkout_time": "Giờ trả phòng",
+    "terms_agree": "Tôi đồng ý với các điều khoản và điều kiện",
+    "success_title": "Đã gửi đơn đăng ký!",
+    "success_desc": "Chỗ nghỉ của bạn đang được đội ngũ của chúng tôi xem xét. Chúng tôi sẽ thông báo cho bạn sớm nhất."
+  }
+}

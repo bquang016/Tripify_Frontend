@@ -5,32 +5,41 @@ import { systemSettingsService } from "../services/systemSettings.service";
 const LanguageContext = createContext();
 
 export const LanguageProvider = ({ children }) => {
+  // Lấy giá trị từ localStorage ngay lập tức để tránh bị delay
   const [language, setLanguage] = useState(localStorage.getItem("language") || "vi");
   const [currency, setCurrency] = useState(localStorage.getItem("currency") || "VND");
   const [isLoading, setIsLoading] = useState(true);
+
+  // Đảm bảo i18n được set đúng ngay từ đầu
+  useEffect(() => {
+    const savedLang = localStorage.getItem("language");
+    if (savedLang && i18n.language !== savedLang) {
+      i18n.changeLanguage(savedLang);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchSettings = async () => {
       try {
         const settings = await systemSettingsService.getSettings();
-        const defaultLang = settings?.data?.defaultLanguage || settings?.defaultLanguage || "vi";
-        const defaultCurr = settings?.data?.defaultCurrency || settings?.defaultCurrency || "VND";
+        const data = settings?.data || settings?.result || settings;
+        
+        const defaultLang = data?.defaultLanguage || "vi";
+        const defaultCurr = data?.defaultCurrency || "VND";
 
-        // Chỉ set nếu chưa có trong localStorage (ưu tiên preference của user nếu có, nhưng ở đây system default là quan trọng)
-        // Hoặc chúng ta có thể luôn đồng bộ với system default nếu muốn
+        // Chỉ áp dụng cấu hình hệ thống nếu người dùng CHƯA TỪNG chọn ngôn ngữ nào
         if (!localStorage.getItem("language")) {
           setLanguage(defaultLang);
           i18n.changeLanguage(defaultLang);
-        } else {
-          i18n.changeLanguage(language);
+          localStorage.setItem("language", defaultLang);
         }
 
         if (!localStorage.getItem("currency")) {
           setCurrency(defaultCurr);
+          localStorage.setItem("currency", defaultCurr);
         }
       } catch (error) {
         console.error("Failed to fetch system settings:", error);
-        i18n.changeLanguage(language);
       } finally {
         setIsLoading(false);
       }

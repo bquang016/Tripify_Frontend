@@ -3,10 +3,10 @@ import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import * as yup from "yup";
+import { useTranslation } from "react-i18next";
 
 // Import Services & Components
 import propertyService from "@/services/property.service";
-// ✅ Đã xóa roomService vì backend tự xử lý tạo phòng cho Homestay/Villa
 import VerticalStepper from "@/components/common/Stepper/VerticalStepper";
 import Button from "@/components/common/Button/Button";
 import LoadingOverlay from "@/components/common/Loading/LoadingOverlay";
@@ -23,63 +23,63 @@ import Step6_Status from "./AddPropertySteps/Step6_Status";
 import Step_WholeUnitSetup from "./AddPropertySteps/Step_WholeUnitSetup";
 import Step_Policies from "./AddPropertySteps/Step_Policies";
 
-// --- 1. VALIDATION SCHEMAS ---
 const fileListValidation = (min = 3) => yup
     .mixed()
     .test("required", `Cần ít nhất ${min} ảnh`, (val) => val && val.length >= min);
 
-const baseSchemas = {
-  step0: yup.object({ propertyType: yup.string().required("Chọn loại hình") }),
-  step1: yup.object({
-    province: yup.string().required("Chọn tỉnh/thành"),
-    city: yup.string().required("Chọn quận/huyện"),
-    address: yup.string().required("Nhập địa chỉ"),
-  }),
-  step2: yup.object({ amenities: yup.object().nullable() }),
-  step3: yup.object({ propertyImages: fileListValidation(3) }),
-  step4: yup.object({
-    propertyName: yup.string().required("Vui lòng nhập tên chỗ nghỉ"),
-    description: yup.string()
-        .min(50, "Mô tả quá ngắn, tối thiểu 50 ký tự")
-        .required("Vui lòng nhập mô tả chi tiết"),
-    area: yup.number()
-        .transform((value, originalValue) => (String(originalValue).trim() === "" ? null : value))
-        .nullable()
-        .typeError("Diện tích phải là số hợp lệ")
-        .positive("Diện tích phải lớn hơn 0")
-        .required("Vui lòng nhập diện tích"),
-  }),
-  stepPolicies: yup.object({
-    policies: yup.object().shape({
-      checkInFrom: yup.string().required("Chọn giờ nhận phòng"),
-      checkInTo: yup.string().required("Chọn giờ nhận phòng"),
-      checkOutFrom: yup.string().required("Chọn giờ trả phòng"),
-      checkOutTo: yup.string().required("Chọn giờ trả phòng"),
-    })
-  }),
-  // ✅ [UPDATE] Schema cho bước Setup Unit: Thêm weekendPrice
-  stepUnit: yup.object({
-    unitData: yup.object().shape({
-      price: yup.number().min(10000, "Giá tối thiểu 10,000đ").required("Nhập giá ngày thường"),
-      weekendPrice: yup.number()
-          .transform((value, originalValue) => (String(originalValue).trim() === "" ? 0 : value))
-          .min(0, "Giá không hợp lệ"), // Cho phép 0 hoặc trống (sẽ lấy fallback giá thường)
-      capacity: yup.number().min(1, "Sức chứa tối thiểu 1").required("Nhập sức chứa"),
-      description: yup.string().required("Vui lòng nhập mô tả chi tiết về căn"),
-    })
-  }),
-  stepReview: yup.object({
-    terms: yup.boolean().oneOf([true], "Bạn phải đồng ý điều khoản"),
-  }),
-};
-
 export default function AddPropertyPage() {
+  const { t, i18n } = useTranslation();
+  const isVi = i18n.language === 'vi';
+  
+  const baseSchemas = {
+    step0: yup.object({ propertyType: yup.string().required(isVi ? "Chọn loại hình" : "Select type") }),
+    step1: yup.object({
+      province: yup.string().required(isVi ? "Chọn tỉnh/thành" : "Select province"),
+      city: yup.string().required(isVi ? "Chọn quận/huyện" : "Select district"),
+      address: yup.string().required(isVi ? "Nhập địa chỉ" : "Enter address"),
+    }),
+    step2: yup.object({ amenities: yup.object().nullable() }),
+    step3: yup.object({ propertyImages: fileListValidation(3) }),
+    step4: yup.object({
+      propertyName: yup.string().required(isVi ? "Vui lòng nhập tên chỗ nghỉ" : "Enter property name"),
+      description: yup.string()
+          .min(50, isVi ? "Mô tả quá ngắn, tối thiểu 50 ký tự" : "Description too short, min 50 chars")
+          .required(isVi ? "Vui lòng nhập mô tả chi tiết" : "Enter description"),
+      area: yup.number()
+          .transform((value, originalValue) => (String(originalValue).trim() === "" ? null : value))
+          .nullable()
+          .typeError(isVi ? "Diện tích phải là số hợp lệ" : "Area must be a valid number")
+          .positive(isVi ? "Diện tích phải lớn hơn 0" : "Area must be positive")
+          .required(isVi ? "Vui lòng nhập diện tích" : "Enter area"),
+    }),
+    stepPolicies: yup.object({
+      policies: yup.object().shape({
+        checkInFrom: yup.string().required(isVi ? "Chọn giờ nhận phòng" : "Select check-in time"),
+        checkInTo: yup.string().required(isVi ? "Chọn giờ nhận phòng" : "Select check-in time"),
+        checkOutFrom: yup.string().required(isVi ? "Chọn giờ trả phòng" : "Select check-out time"),
+        checkOutTo: yup.string().required(isVi ? "Chọn giờ trả phòng" : "Select check-out time"),
+      })
+    }),
+    stepUnit: yup.object({
+      unitData: yup.object().shape({
+        price: yup.number().min(10000, isVi ? "Giá tối thiểu 10,000đ" : "Min price 10,000đ").required(isVi ? "Nhập giá ngày thường" : "Enter weekday price"),
+        weekendPrice: yup.number()
+            .transform((value, originalValue) => (String(originalValue).trim() === "" ? 0 : value))
+            .min(0, isVi ? "Giá không hợp lệ" : "Invalid price"),
+        capacity: yup.number().min(1, isVi ? "Sức chứa tối thiểu 1" : "Min capacity 1").required(isVi ? "Nhập sức chứa" : "Enter capacity"),
+        description: yup.string().required(isVi ? "Vui lòng nhập mô tả chi tiết về căn" : "Enter unit description"),
+      })
+    }),
+    stepReview: yup.object({
+      terms: yup.boolean().oneOf([true], isVi ? "Bạn phải đồng ý điều khoản" : "You must agree to terms"),
+    }),
+  };
+
   const [currentStep, setCurrentStep] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setErrorState] = useState(null);
   const navigate = useNavigate();
 
-  // --- 2. KHỞI TẠO FORM ---
   const {
     register,
     handleSubmit,
@@ -101,17 +101,14 @@ export default function AddPropertyPage() {
       propertyImages: null,
       propertyName: "", description: "", area: "",
       terms: false,
-
-      // ✅ [UPDATE] Default values cho Unit
       unitData: {
         price: 0,
-        weekendPrice: 0, // Mặc định 0
+        weekendPrice: 0,
         capacity: 2,
         description: "",
         amenities: {},
         images: []
       },
-
       policies: {
         checkInFrom: "14:00",
         checkInTo: "23:00",
@@ -132,21 +129,20 @@ export default function AddPropertyPage() {
   const propertyType = watch("propertyType");
   const isWholeUnit = ["VILLA", "HOMESTAY"].includes(propertyType);
 
-  // --- 3. CẤU HÌNH STEPS ĐỘNG ---
   const stepsConfig = useMemo(() => {
     const steps = [
-      { id: 0, title: "Loại hình", component: Step0_PropertyType, schema: baseSchemas.step0 },
-      { id: 1, title: "Vị trí", component: Step1_Location, schema: baseSchemas.step1 },
-      { id: 2, title: "Tiện nghi", component: Step2_Amenities, schema: baseSchemas.step2 },
-      { id: 3, title: "Hình ảnh", component: Step3_Images, schema: baseSchemas.step3 },
-      { id: 4, title: "Chi tiết", component: Step4_Details, schema: baseSchemas.step4 },
-      { id: 5, title: "Chính sách", component: Step_Policies, schema: baseSchemas.stepPolicies },
+      { id: 0, title: t('add_property_flow.step_type'), component: Step0_PropertyType, schema: baseSchemas.step0 },
+      { id: 1, title: t('add_property_flow.step_location'), component: Step1_Location, schema: baseSchemas.step1 },
+      { id: 2, title: t('add_property_flow.step_amenities'), component: Step2_Amenities, schema: baseSchemas.step2 },
+      { id: 3, title: t('add_property_flow.step_images'), component: Step3_Images, schema: baseSchemas.step3 },
+      { id: 4, title: t('add_property_flow.step_details'), component: Step4_Details, schema: baseSchemas.step4 },
+      { id: 5, title: t('add_property_flow.step_policies'), component: Step_Policies, schema: baseSchemas.stepPolicies },
     ];
 
     if (isWholeUnit) {
       steps.push({
         id: 6,
-        title: "Thiết lập căn",
+        title: t('add_property_flow.step_unit'),
         component: Step_WholeUnitSetup,
         schema: baseSchemas.stepUnit
       });
@@ -154,18 +150,17 @@ export default function AddPropertyPage() {
 
     steps.push({
       id: isWholeUnit ? 7 : 6,
-      title: "Kiểm tra",
+      title: t('add_property_flow.step_review'),
       component: Step5_Review,
       schema: baseSchemas.stepReview
     });
 
     return steps;
-  }, [isWholeUnit]);
+  }, [isWholeUnit, i18n.language]);
 
   const CurrentStepConfig = stepsConfig[currentStep];
   const stepperItems = stepsConfig.slice(1).map(s => ({ name: s.title }));
 
-  // --- 4. XỬ LÝ CHUYỂN BƯỚC ---
   const handleNext = async () => {
     const currentSchema = CurrentStepConfig.schema;
     clearErrors();
@@ -194,29 +189,19 @@ export default function AddPropertyPage() {
     else navigate('/owner/properties');
   };
 
-  // --- 5. XỬ LÝ SUBMIT (GỌI API) ---
   const onFinalSubmit = async (data) => {
     setIsLoading(true);
     setErrorState(null);
 
     try {
-      // =======================================================
-      // BƯỚC 1: CHUẨN BỊ PAYLOAD TẠO PROPERTY
-      // =======================================================
       const propertyPayload = { ...data };
-
-      // ✅ [QUAN TRỌNG] MAP DỮ LIỆU TỪ UNIT DATA RA ROOT ĐỂ BACKEND HỨNG
       if (isWholeUnit && data.unitData) {
         propertyPayload.price = data.unitData.price;
-        propertyPayload.weekendPrice = data.unitData.weekendPrice; // Gửi giá cuối tuần
+        propertyPayload.weekendPrice = data.unitData.weekendPrice;
         propertyPayload.capacity = data.unitData.capacity;
         propertyPayload.unitName = data.unitData.name;
-
-        // Lưu ý: Backend sẽ dùng description của Property gán cho Room luôn
-        // Nếu cần description riêng, cần Backend hỗ trợ thêm trường unitDescription
       }
 
-      // Clean các trường thừa
       delete propertyPayload.propertyImages;
       delete propertyPayload.unitData;
       delete propertyPayload.terms;
@@ -229,43 +214,25 @@ export default function AddPropertyPage() {
         Array.from(data.propertyImages).forEach(file => propertyFormData.append("propertyImages", file));
       }
 
-      console.log("📦 Đang tạo Property (kèm thông tin Room nếu là Villa/Homestay)...");
       const res = await propertyService.submitPropertyApplication(propertyFormData);
-
       const newPropertyId = res.data?.propertyId || res.data?.id;
-      if (!newPropertyId) throw new Error("Không lấy được ID của cơ sở mới tạo.");
+      if (!newPropertyId) throw new Error("Failed to get property ID.");
 
-      console.log("✅ Property ID:", newPropertyId);
-
-      // =======================================================
-      // BƯỚC 2: TẠO CHÍNH SÁCH
-      // =======================================================
       if (data.policies) {
-        console.log("📝 Đang thiết lập chính sách...");
         await propertyService.addPropertyPolicies(newPropertyId, data.policies);
-        console.log("✅ Thiết lập chính sách thành công!");
       }
 
-      // =======================================================
-      // ❌ [ĐÃ XÓA] BƯỚC TẠO ROOM THỦ CÔNG
-      // =======================================================
-      // Backend mới đã tự động tạo Room và copy ảnh từ Property sang Room
-      // khi type là VILLA/HOMESTAY. Không cần gọi API addRoom nữa.
-
-      // Thành công -> Chuyển sang trang Status
       setCurrentStep(stepsConfig.length);
-
     } catch (err) {
-      console.error("Lỗi Submit:", err);
+      console.error(err);
       const serverMessage = err.response?.data?.message || err.message;
-      setErrorState(`Lỗi: ${serverMessage}`);
+      setErrorState(`Error: ${serverMessage}`);
       setCurrentStep(stepsConfig.length);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // --- 6. RENDER ---
   if (currentStep === stepsConfig.length) {
     return <Step6_Status error={error} onRetry={() => { setErrorState(null); setCurrentStep(stepsConfig.length - 2); }} />;
   }
@@ -274,22 +241,21 @@ export default function AddPropertyPage() {
 
   return (
       <>
-        {isLoading && <LoadingOverlay message="Đang xử lý dữ liệu..." />}
+        {isLoading && <LoadingOverlay message={t('add_property_flow.processing')} />}
 
         {currentStep < stepsConfig.length && (
             <Button variant="ghost" onClick={handleBack} leftIcon={<ArrowLeft size={18} />} className="mb-4">
-              Quay lại
+              {t('add_property_flow.back')}
             </Button>
         )}
 
         <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100">
-
           {currentStep === 0 ? (
               <form>
                 <StepComponent watch={watch} setValue={setValue} />
                 <div className="flex justify-end mt-8">
                   <Button type="button" onClick={handleNext} rightIcon={<ArrowRight size={18} />} disabled={!propertyType}>
-                    Tiếp theo
+                    {t('add_property_flow.next')}
                   </Button>
                 </div>
               </form>
@@ -326,11 +292,11 @@ export default function AddPropertyPage() {
                               leftIcon={<Send size={18} />}
                               disabled={!watch("terms")}
                           >
-                            Gửi đơn đăng ký
+                            {t('add_property_flow.submit')}
                           </Button>
                       ) : (
                           <Button type="button" onClick={handleNext} rightIcon={<ArrowRight size={18} />}>
-                            Tiếp theo
+                            {t('add_property_flow.next')}
                           </Button>
                       )}
                     </div>
