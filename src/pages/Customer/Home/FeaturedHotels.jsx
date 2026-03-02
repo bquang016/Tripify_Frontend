@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-    ArrowRight, MapPin, Star, Heart, 
+import {
+    ArrowRight, MapPin, Star, Heart,
     Sparkles // Đã xóa Zap khỏi import
 } from "lucide-react";
 
@@ -11,7 +11,7 @@ import propertyService from "@/services/property.service";
 import placeholderImg from "@/assets/images/placeholder.png";
 
 // Cấu hình đường dẫn ảnh
-const BASE_IMAGE_URL = "http://localhost:8386/images/"; 
+const BASE_IMAGE_URL = "http://localhost:8386/images/";
 
 // ====================================================================
 // 1. SUB-COMPONENT: HEADER
@@ -27,11 +27,11 @@ const SectionHeader = ({ onSeeAll }) => (
             </p>
         </div>
 
-        <button 
+        <button
             onClick={onSeeAll}
             className="hidden md:flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-blue-600 transition-all bg-white px-5 py-2.5 rounded-full border border-gray-200 hover:border-blue-200 shadow-sm hover:shadow-md group"
         >
-            Xem tất cả 
+            Xem tất cả
             <div className="bg-gray-100 group-hover:bg-blue-100 p-1 rounded-full transition-colors">
                 <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
             </div>
@@ -46,7 +46,7 @@ const ModernHotelCard = ({ hotel }) => {
     const navigate = useNavigate();
 
     return (
-        <div 
+        <div
             onClick={() => navigate(`/hotels/${hotel.id}`)}
             className="group relative bg-white rounded-[1.5rem] overflow-hidden border border-gray-100 shadow-lg shadow-gray-200/50 hover:shadow-2xl hover:shadow-blue-900/10 transition-all duration-300 cursor-pointer h-full flex flex-col"
         >
@@ -56,7 +56,7 @@ const ModernHotelCard = ({ hotel }) => {
                     src={hotel.image}
                     alt={hotel.name}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    onError={(e) => { e.target.src = placeholderImg; }} 
+                    onError={(e) => { e.target.src = placeholderImg; }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
 
@@ -108,7 +108,7 @@ const ModernHotelCard = ({ hotel }) => {
                             <span className="text-sm text-gray-400 font-medium">₫/đêm</span>
                         </div>
                     </div>
-                    
+
                     {/* ✅ ĐÃ THAY THẾ ICON TẠI ĐÂY */}
                     <button className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
                         <ArrowRight size={20} />
@@ -129,18 +129,18 @@ const FeaturedHotels = () => {
 
     const getCoverImage = (item) => {
         if (item.coverImage) {
-            return item.coverImage.startsWith("http") 
-                ? item.coverImage 
+            return item.coverImage.startsWith("http")
+                ? item.coverImage
                 : `${BASE_IMAGE_URL}${item.coverImage}`;
         }
 
         if (item.images && item.images.length > 0) {
             const firstImg = item.images[0];
-            return firstImg.startsWith("http") 
-                ? firstImg 
+            return firstImg.startsWith("http")
+                ? firstImg
                 : `${BASE_IMAGE_URL}${firstImg}`;
         }
-        
+
         return placeholderImg;
     };
 
@@ -148,10 +148,10 @@ const FeaturedHotels = () => {
         const fetchHotels = async () => {
             try {
                 setLoading(true);
-                
+
                 // 1. Dùng hàm chuyên biệt (đã thêm ở bước trước) thay vì searchProperties thủ công
                 const res = await propertyService.getFeaturedProperties();
-                
+
                 console.log("Featured Data:", res); // Debug log
 
                 // 2. Bóc tách dữ liệu an toàn (Xử lý mọi trường hợp cấu trúc JSON)
@@ -160,15 +160,15 @@ const FeaturedHotels = () => {
                 if (res && res.result && Array.isArray(res.result.content)) {
                     // TRƯỜNG HỢP CHUẨN (ApiResponse): { result: { content: [...] } }
                     rawData = res.result.content;
-                } 
+                }
                 else if (res && res.data && Array.isArray(res.data.content)) {
                     // Trường hợp dự phòng: { data: { content: [...] } }
                     rawData = res.data.content;
-                } 
+                }
                 else if (res && Array.isArray(res.content)) {
                     // Trường hợp Page trực tiếp: { content: [...] }
                     rawData = res.content;
-                } 
+                }
                 else if (Array.isArray(res)) {
                     // Trường hợp trả về mảng trực tiếp
                     rawData = res;
@@ -182,9 +182,9 @@ const FeaturedHotels = () => {
                     price: item.minPrice || 0, // Giá thấp nhất
                     formattedPrice: new Intl.NumberFormat('vi-VN').format(item.minPrice || 0),
                     image: getCoverImage(item),
-                    rating: item.rating || 5.0,
-                    reviews: item.reviewCount || 0,
-                    isPopular: (item.rating || 0) >= 4.5
+                    rating: item.rating ?? 0,
+                    reviews: item.reviewCount ?? 0,
+                    isPopular: (item.rating ?? 0) >= 4.5
                 }));
 
                 setHotels(mapped.slice(0, 4)); // Chỉ lấy 4 cái
