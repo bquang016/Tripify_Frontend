@@ -2,6 +2,7 @@ import React from "react";
 import { Edit, Trash2, Users, Image as ImageIcon, Crown, Sparkles, CheckCircle2 } from "lucide-react"; // ❌ Đã bỏ DollarSign
 import Button from "@/components/common/Button/Button";
 import { motion } from "framer-motion";
+import { formatPrice } from "@/utils/priceUtils";
 
 // Helper ảnh
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8386/api/v1").replace("/api/v1", "");
@@ -71,9 +72,9 @@ const RoomCard = ({ room, onEdit, onDelete }) => {
                 {room.roomName}
              </h3>
              
-             {/* ✅ SỬA ĐỔI Ở ĐÂY: Định dạng tiền tệ VND */}
+             {/* ✅ ĐÃ CẬP NHẬT: Ưu tiên giá quy đổi và currency từ Backend */}
              <p className="text-blue-600 font-bold text-lg flex items-baseline">
-                 {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(room.pricePerNight)}
+                 {formatPrice(room.pricePerNight, room.convertedPricePerNight, room.currency)}
                  <span className="text-sm text-gray-400 font-normal ml-1">/ đêm</span>
              </p>
          </div>

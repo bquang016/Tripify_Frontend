@@ -1,0 +1,94 @@
+{
+  "common": {
+    "home": "Trang chủ",
+    "promotions": "Khuyến mãi",
+    "support": "Hỗ trợ",
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "logout": "Đăng xuất",
+    "search": "Tìm kiếm",
+    "explore": "Khám phá",
+    "contact": "Liên hệ",
+    "help_center": "Trung tâm trợ giúp",
+    "partner_with_us": "Hợp tác với chúng tôi",
+    "admin_dashboard": "Trang quản trị admin",
+    "management_page": "Trang quản lý",
+    "footer_desc": "Người bạn đồng hành tin cậy cho mỗi chuyến đi. Khám phá thế giới với sự tiện nghi và thoải mái.",
+    "quick_links": "Liên kết nhanh",
+    "contact_info": "Thông tin liên hệ",
+    "all_rights_reserved": "Mọi quyền được bảo lưu.",
+    "back": "Quay lại",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "confirm": "Xác nhận"
+  },
+  "search": {
+    "title": "Tìm kiếm chỗ nghỉ",
+    "destination": "Điểm đến",
+    "destination_placeholder": "Bạn muốn đi đâu?",
+    "check_in": "Ngày nhận",
+    "check_out": "Ngày trả phòng",
+    "guests": "Khách",
+    "guests_placeholder": "Thêm khách",
+    "search_btn": "Tìm kiếm",
+    "adults": "Người lớn",
+    "children": "Trẻ em",
+    "rooms": "Phòng",
+    "apply": "Áp dụng",
+    "recent_searches": "Tìm kiếm gần đây",
+    "popular_destinations": "Điểm đến phổ biến"
+  },
+  "home": {
+    "hero_title": "Đánh thức hành trình",
+    "hero_subtitle": "Đặt phòng và trải nghiệm độc đáo trên khắp thế giới.",
+    "scrolling_texts": [
+      "Điểm Đến Tuyệt Vời",
+      "Ưu Đãi Độc Quyền",
+      "Tiện Nghi Đẳng Cấp",
+      "Hỗ Trợ 24/7",
+      "Đặt Phòng Dễ Dàng"
+    ],
+    "featured_title": "Điểm Đến Nổi Bật Nhất",
+    "featured_subtitle": "Được bình chọn bởi cộng đồng du lịch, mang lại trải nghiệm nghỉ dưỡng đẳng cấp.",
+    "see_all": "Xem tất cả",
+    "price_from": "Giá chỉ từ",
+    "night": "đêm",
+    "popular": "NỔI BẬT",
+    "updating": "Hệ thống đang cập nhật danh sách khách sạn...",
+    "hot_destinations": {
+      "title": "Điểm Đến Yêu Thích",
+      "subtitle": "Khám phá những thành phố được yêu thích nhất.",
+      "explore_now": "Khám phá ngay"
+    },
+    "travel_inspiration": {
+      "blog_title": "Blog Du Lịch",
+      "title": "Cảm Hứng Xê Dịch",
+      "subtitle": "Cập nhật tin tức, mẹo vặt và những hành trình thú vị nhất từ cộng đồng.",
+      "see_all": "Xem tất cả bài viết",
+      "read_more": "Đọc tiếp",
+      "read_time": "5 phút đọc",
+      "categories": {
+        "hot_spot": "Địa điểm hot",
+        "food": "Ẩm thực",
+        "experience": "Kinh nghiệm"
+      },
+      "articles": {
+        "article_1": "Top 25 Quán cafe view đẹp ở Đà Lạt được yêu thích nhất 2025",
+        "article_2": "Food tour Hải Phòng: Cẩm nang ăn sập đất Cảng ngon - bổ - rẻ",
+        "article_3": "Kinh nghiệm du lịch Phú Quốc tự túc cho gia đình có trẻ nhỏ"
+      }
+    }
+  },
+  "hotels": {
+    "filters": "Bộ lọc",
+    "sort_by": "Sắp xếp theo",
+    "price_range": "Khoảng giá",
+    "star_rating": "Xếp hạng sao",
+    "amenities": "Tiện nghi",
+    "property_type": "Loại hình chỗ nghỉ",
+    "map_view": "Xem bản đồ",
+    "list_view": "Xem danh sách",
+    "no_results": "Không tìm thấy kết quả phù hợp với tiêu chí của bạn.",
+    "book_now": "Đặt ngay"
+  }
+}

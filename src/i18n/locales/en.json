@@ -1,0 +1,94 @@
+{
+  "common": {
+    "home": "Home",
+    "promotions": "Promotions",
+    "support": "Support",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "search": "Search",
+    "explore": "Explore",
+    "contact": "Contact",
+    "help_center": "Help Center",
+    "partner_with_us": "Partner with us",
+    "admin_dashboard": "Admin Dashboard",
+    "management_page": "Management Page",
+    "footer_desc": "Your trusted companion for every journey. Discover the world with comfort and ease.",
+    "quick_links": "Quick Links",
+    "contact_info": "Contact Info",
+    "all_rights_reserved": "All rights reserved.",
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm"
+  },
+  "search": {
+    "title": "Search Stays",
+    "destination": "Destination",
+    "destination_placeholder": "Where are you going?",
+    "check_in": "Check-in",
+    "check_out": "Check-out",
+    "guests": "Guests",
+    "guests_placeholder": "Add guests",
+    "search_btn": "Search",
+    "adults": "Adults",
+    "children": "Children",
+    "rooms": "Rooms",
+    "apply": "Apply",
+    "recent_searches": "Recent Searches",
+    "popular_destinations": "Popular Destinations"
+  },
+  "home": {
+    "hero_title": "Find Your Next Adventure",
+    "hero_subtitle": "Book unique stays and experiences all over the world.",
+    "scrolling_texts": [
+      "Amazing Destinations",
+      "Exclusive Offers",
+      "Premium Comfort",
+      "24/7 Support",
+      "Easy Booking"
+    ],
+    "featured_title": "Featured Destinations",
+    "featured_subtitle": "Handpicked by our travel community for premium comfort and experience.",
+    "see_all": "See all",
+    "price_from": "From",
+    "night": "night",
+    "popular": "POPULAR",
+    "updating": "Updating hotels list...",
+    "hot_destinations": {
+      "title": "Favorite Destinations",
+      "subtitle": "Most loved cities by our travelers.",
+      "explore_now": "Explore Now"
+    },
+    "travel_inspiration": {
+      "blog_title": "Travel Blog",
+      "title": "Travel Inspiration",
+      "subtitle": "Get latest news, tips and amazing journeys from the community.",
+      "see_all": "See all articles",
+      "read_more": "Read More",
+      "read_time": "5 min read",
+      "categories": {
+        "hot_spot": "Hot Spot",
+        "food": "Food",
+        "experience": "Tips"
+      },
+      "articles": {
+        "article_1": "Top 25 most beautiful cafes in Da Lat 2025",
+        "article_2": "Hai Phong Food Tour: A guide to local street food",
+        "article_3": "Experience traveling to Phu Quoc with children"
+      }
+    }
+  },
+  "hotels": {
+    "filters": "Filters",
+    "sort_by": "Sort by",
+    "price_range": "Price Range",
+    "star_rating": "Star Rating",
+    "amenities": "Amenities",
+    "property_type": "Property Type",
+    "map_view": "Map View",
+    "list_view": "List View",
+    "no_results": "No results found matching your criteria.",
+    "book_now": "Book Now"
+  }
+}
