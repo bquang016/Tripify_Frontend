@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Controller } from 'react-hook-form';
-import { Building2 } from 'lucide-react';
+import { Building2, Maximize } from 'lucide-react';
 
 import PartnerInput from '../components/PartnerInput';
 import PartnerSelect from '../components/PartnerSelect';
@@ -23,6 +23,20 @@ const Step1_GeneralInfo = ({ register, errors, control }) => {
           error={errors.propertyInfo?.propertyName}
           rules={{ required: "Vui lòng nhập tên chỗ nghỉ" }}
           icon={Building2}
+        />
+        <PartnerInput 
+          label="Diện tích cơ sở lưu trú (m²)" 
+          name="propertyInfo.area"
+          type="number"
+          placeholder="Ví dụ: 150" 
+          register={register}
+          error={errors.propertyInfo?.area}
+          rules={{ 
+            required: "Vui lòng nhập diện tích",
+            valueAsNumber: true,
+            min: { value: 1, message: "Diện tích phải lớn hơn 0" }
+          }}
+          icon={Maximize} 
         />
 
         <div className="grid grid-cols-1 gap-5">
