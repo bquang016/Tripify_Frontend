@@ -20,7 +20,10 @@
     "back": "Quay lại",
     "save": "Lưu",
     "cancel": "Hủy",
-    "confirm": "Xác nhận"
+    "confirm": "Xác nhận",
+    "loading": "Đang tải...",
+    "error_occurred": "Đã có lỗi xảy ra. Vui lòng thử lại.",
+    "no_data": "Không có dữ liệu."
   },
   "search": {
     "title": "Tìm kiếm chỗ nghỉ",
@@ -79,16 +82,160 @@
       }
     }
   },
-  "hotels": {
-    "filters": "Bộ lọc",
-    "sort_by": "Sắp xếp theo",
-    "price_range": "Khoảng giá",
-    "star_rating": "Xếp hạng sao",
+  "promotions": {
+    "title": "Ưu Đãi Độc Quyền",
+    "subtitle": "Khám phá những khuyến mãi tốt nhất cho chuyến đi của bạn.",
+    "expired": "Hết hạn",
+    "active": "Đang chạy",
+    "copy_code": "Sao chép mã",
+    "copied": "Đã sao chép!",
+    "use_now": "Dùng ngay",
+    "min_spend": "Đơn tối thiểu",
+    "max_discount": "Giảm tối đa",
+    "no_promotions": "Không tìm thấy khuyến mãi nào.",
+    "no_exclusive": "Chưa có chương trình khuyến mãi độc quyền nào.",
+    "try_again": "Vui lòng thử lại hoặc thay đổi bộ lọc tìm kiếm."
+  },
+  "support": {
+    "title": "Chúng tôi có thể giúp gì cho bạn?",
+    "subtitle": "Tìm kiếm chủ đề hoặc liên hệ với đội ngũ hỗ trợ.",
+    "faq": "Câu hỏi thường gặp",
+    "contact_us": "Liên hệ với chúng tôi",
+    "categories": {
+      "booking": "Đặt phòng & Hủy phòng",
+      "payment": "Thanh toán & Hoàn tiền",
+      "account": "An mật tài khoản",
+      "policy": "Chính sách & Điều khoản"
+    },
+    "send_message": "Gửi tin nhắn",
+    "subject": "Chủ đề",
+    "message": "Tin nhắn",
+    "info_title": "Thông tin liên hệ",
+    "address": "Địa chỉ",
+    "support_247": "Hỗ trợ 24/7 – sẵn sàng đồng hành cùng chuyến đi của bạn.",
+    "dev_team": "Đội ngũ phát triển",
+    "project_desc": "Nhóm phát triển dự án — SmartTeam."
+    },
+    "about": {
+    "title": "Về Tripify",
+    "subtitle": "Người bạn đồng hành tin cậy trên mọi hành trình.",
+    "description": "Tripify là nền tảng đặt phòng khách sạn hiện đại, mang đến trải nghiệm cao cấp và lựa chọn đa dạng cho du khách.",
+    "mission_title": "Sứ mệnh của chúng tôi",
+    "mission_desc": "Kết nối du khách với những không gian sống lý tưởng, tạo ra những trải nghiệm du lịch đáng nhớ và tiện lợi.",
+    "vision_title": "Tầm nhìn của chúng tôi",
+    "vision_desc": "Trở thành nền tảng du lịch hàng đầu Đông Nam Á, được biết đến với sự tin cậy và đổi mới sáng tạo.",
+    "stats_users": "Người dùng hài lòng",
+    "stats_hotels": "Đối tác khách sạn",
+    "stats_cities": "Thành phố hỗ trợ",
+    "smart_booking": "Đặt phòng thông minh",
+    "smart_booking_desc": "Sử dụng AI để gợi ý khách sạn, tối ưu trải nghiệm người dùng.",
+    "secure_payment": "Thanh toán an toàn",
+    "secure_payment_desc": "Tích hợp phương thức thanh toán an toàn, nhanh chóng.",
+    "support_247_title": "Hỗ trợ 24/7",
+    "support_247_desc": "Đội ngũ CSKH sẵn sàng hỗ trợ bạn mọi lúc."
+    },    "partners": {
+    "title": "Đối tác của chúng tôi",
+    "subtitle": "Hợp tác với những đơn vị hàng đầu để mang lại giá trị tốt nhất cho bạn.",
+    "become_partner": "Trở thành đối tác",
+    "partner_types": {
+      "hotel": "Khách sạn & Khu nghỉ dưỡng",
+      "airline": "Hãng hàng không",
+      "service": "Dịch vụ du lịch"
+    }
+    },
+    "commitments": {
+    "title": "Cam kết của chúng tôi",
+    "subtitle": "Chất lượng và sự tin tưởng là ưu tiên hàng đầu.",
+    "best_price": "Giá tốt nhất",
+    "support": "Hỗ trợ chuyên nghiệp",
+    "security": "Bảo mật tuyệt đối",
+    "quality": "Chất lượng kiểm duyệt",
+    "c1_title": "Đảm bảo an toàn & uy tín",
+    "c1_short": "Tripify chỉ hợp tác với các đối tác đạt chuẩn chất lượng và uy tín hàng đầu.",
+    "c1_full": "Chúng tôi luôn lựa chọn kỹ lưỡng các khách sạn, khu nghỉ dưỡng và nhà cung cấp dịch vụ du lịch có giấy phép hợp pháp, được khách hàng đánh giá cao. Mọi đơn vị hợp tác đều phải vượt qua quá trình kiểm duyệt khắt khe.",
+    "c2_title": "Chính sách hoàn tiền linh hoạt",
+    "c2_short": "Bạn có thể thay đổi hoặc hủy đặt phòng dễ dàng, hoàn tiền nhanh chóng.",
+    "c2_full": "Nếu bạn cần thay đổi lịch trình hoặc hủy đặt phòng, Tripify sẽ hỗ trợ bạn thực hiện theo chính sách của từng khách sạn. Quy trình hoàn tiền được thực hiện tự động và minh bạch.",
+    "c3_title": "Bảo mật thông tin khách hàng",
+    "c3_short": "Dữ liệu cá nhân của bạn được mã hóa theo chuẩn bảo mật cao nhất.",
+    "c3_full": "Tripify cam kết bảo mật tuyệt đối thông tin người dùng. Toàn bộ dữ liệu cá nhân, thông tin thanh toán và lịch sử giao dịch đều được bảo mật nghiêm ngặt.",
+    "c4_title": "Hỗ trợ khách hàng 24/7",
+    "c4_short": "Đội ngũ hỗ trợ của chúng tôi luôn sẵn sàng mọi lúc.",
+    "c4_full": "Bạn có thể liên hệ với đội ngũ hỗ trợ của Tripify bất kỳ lúc nào qua nhiều kênh: hotline, email, hoặc chat trực tuyến. Đội ngũ chuyên viên và chatbot AI sẵn sàng giải đáp mọi thắc mắc.",
+    "details": "Xem chi tiết"
+    },    "admin": {
+    "overview": "Tổng quan",
+    "rooms": "Danh sách phòng",
+    "policies": "Chính sách",
+    "reviews": "Đánh giá",
     "amenities": "Tiện nghi",
-    "property_type": "Loại hình chỗ nghỉ",
-    "map_view": "Xem bản đồ",
-    "list_view": "Xem danh sách",
-    "no_results": "Không tìm thấy kết quả phù hợp với tiêu chí của bạn.",
-    "book_now": "Đặt ngay"
-  }
-}
+    "location": "Vị trí",
+    "check_availability": "Kiểm tra phòng trống",
+    "book_now": "Đặt ngay",
+    "per_night": "/ đêm",
+    "taxes_included": "Đã bao gồm thuế",
+    "description": "Mô tả",
+    "rating": "Xếp hạng"
+  },
+  "booking": {
+    "title": "Hoàn tất đặt phòng",
+    "summary": "Tóm tắt đặt phòng",
+    "guest_info": "Thông tin khách hàng",
+    "payment_method": "Phương thức thanh toán",
+    "total_price": "Tổng tiền",
+    "discount": "Giảm giá",
+    "final_amount": "Số tiền cuối cùng",
+    "complete": "Xác nhận đặt phòng",
+    "success_title": "Đặt phòng thành công!",
+    "success_msg": "Cảm ơn bạn đã lựa chọn Tripify. Chi tiết đơn đặt phòng đã được gửi vào email của bạn."
+  },
+  "profile": {
+    "my_account": "Tài khoản của tôi",
+    "personal_info": "Thông tin cá nhân",
+    "my_bookings": "Đơn đặt của tôi",
+    "transactions": "Lịch sử giao dịch",
+    "settings": "Cài đặt",
+    "edit_profile": "Chỉnh sửa hồ sơ",
+    "full_name": "Họ và tên",
+    "email": "Địa chỉ Email",
+    "phone": "Số điện thoại",
+    "address": "Địa chỉ",
+    "save_changes": "Lưu thay đổi"
+  },
+  "admin": {
+    "dashboard": "Bảng điều khiển",
+    "user_mgmt": "Người dùng",
+    "property_mgmt": "Chỗ nghỉ",
+    "booking_mgmt": "Đơn đặt",
+    "payment_mgmt": "Thanh toán",
+    "promotion_mgmt": "Khuyến mãi",
+    "system_logs": "Nhật ký hệ thống",
+    "settings": "Cấu hình hệ thống",
+    "maintenance": "Bảo trì",
+    "welcome_back": "Chào mừng trở lại, Admin",
+    "search_placeholder": "Tìm kiếm mọi thứ...",
+    "total_users": "Tổng người dùng",
+    "total_revenue": "Tổng doanh thu",
+    "active_bookings": "Đang hoạt động",
+    "users": {
+      "title": "Quản lý người dùng",
+      "total_accounts": "Tổng tài khoản",
+      "active_accounts": "Đang hoạt động",
+      "banned_accounts": "Đã khóa",
+      "search_placeholder": "Tìm kiếm user...",
+      "filter_rank": "Tất cả hạng",
+      "filter_role": "Tất cả vai trò",
+      "role_customer": "Khách hàng",
+      "role_owner": "Chủ khách sạn",
+      "lock_account": "Khóa tài khoản",
+      "unlock_account": "Mở khóa tài khoản",
+      "lock_reason_label": "Lý do khóa",
+      "lock_reason_placeholder": "Ví dụ: Vi phạm chính sách cộng đồng...",
+      "confirm_lock": "Xác nhận khóa",
+      "confirm_unlock": "Xác nhận mở khóa",
+      "unlock_message": "Bạn có chắc chắn muốn mở khóa cho tài khoản {{name}}?",
+      "lock_success": "Đã khóa tài khoản thành công",
+      "unlock_success": "Đã mở khóa tài khoản thành công"
+    }
+    }
+    }
