@@ -28,7 +28,7 @@ const formatDateVN = (dateString) => {
 };
 
 const formatCurrency = (amount) => {
-    if (typeof amount !== 'number') return "0 đ";
+    if (amount === undefined || amount === null) return "0 đ";
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
 };
 
@@ -63,7 +63,7 @@ const getGenderLabel = (gender) => {
 };
 
 const AmenityBadge = ({ amenity }) => (
-    <div className="bg-gray-100 text-gray-700 text-xs font-medium px-2.5 py-1 rounded-full flex items-center gap-1.5">
+    <div className="bg-gray-100 text-gray-700 text-xs font-medium px-2.5 py-1 rounded-full flex items-center gap-1.5 border border-gray-200">
         <Sparkles size={12} className="text-yellow-500" />
         {amenity}
     </div>
@@ -93,8 +93,9 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
 
   const { propertyInfo = {}, paymentInfo = {} } = application;
   const policies = propertyInfo.policies || {};
-  const unitData = propertyInfo.unitData; // Lấy unitData
+  const unitData = propertyInfo.unitData; // Lấy unitData nếu có
 
+  // --- PHÂN LOẠI ẢNH ---
   const personalImages = [
     { url: getImgUrl(application.cardFrontImage), caption: "CCCD Mặt trước" },
     { url: getImgUrl(application.cardBackImage), caption: "CCCD Mặt sau" }
@@ -109,17 +110,44 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
     caption: `Ảnh khuôn viên ${idx + 1}`
   }));
 
-  // Gộp thêm ảnh của nguyên căn (nếu có)
   const unitImages = (propertyInfo.unitImageUrls || []).map((url, idx) => ({
     url: getImgUrl(url),
-    caption: `Ảnh trong căn ${idx + 1}`
+    caption: `Ảnh trong căn/phòng ${idx + 1}`
   }));
 
+  // Gộp tất cả ảnh lại để truyền vào Image Viewer có thể lướt qua lại
   const allImages = [...personalImages, ...businessImages, ...propertyImages, ...unitImages];
+  
   const isReviewed = application.status !== "PENDING";
   const isRejected = application.status === "REJECTED";
 
-  const isWholeUnit = propertyInfo.propertyType === "VILLA" || propertyInfo.propertyType === "HOMESTAY";
+  // Hàm render 1 Grid ảnh
+  const renderImageGrid = (images, title) => {
+      if (!images || images.length === 0) return null;
+      return (
+          <div className="mb-5 last:mb-0">
+              <p className="text-xs font-bold text-gray-400 uppercase mb-3 px-1 border-l-2 border-blue-400 pl-2">{title}</p>
+              <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
+                  {images.map((img, idx) => (
+                      <div 
+                          key={idx} 
+                          className="relative group cursor-pointer aspect-[4/3] rounded-xl overflow-hidden border border-gray-200 hover:border-blue-400 hover:shadow-md transition-all"
+                          onClick={() => { 
+                              const globalIdx = allImages.findIndex(ai => ai.url === img.url);
+                              setViewerIndex(globalIdx !== -1 ? globalIdx : 0); 
+                              setViewerOpen(true); 
+                          }}
+                      >
+                          <img src={img.url} alt={img.caption} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-2">
+                              <p className="text-[10px] text-white font-bold text-center leading-tight">{img.caption}</p>
+                          </div>
+                      </div>
+                  ))}
+              </div>
+          </div>
+      );
+  }
 
   return (
     <ModalPortal>
@@ -152,7 +180,7 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
           </div>
 
           {/* BODY */}
-          <div className="flex-1 overflow-y-auto p-6 bg-gray-50/30 custom-scrollbar">
+          <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50 custom-scrollbar">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               
               {/* CỘT 1: THÔNG TIN CÁ NHÂN & THANH TOÁN */}
@@ -203,7 +231,7 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
                 )}
               </div>
 
-              {/* CỘT 2: THÔNG TIN CHỖ NGHỈ & CHÍNH SÁCH */}
+              {/* CỘT 2: THÔNG TIN CHỖ NGHỈ & NGUYÊN CĂN */}
               <div className="lg:col-span-4 space-y-6">
                 <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
                     <SectionTitle icon={Home} title="Thông tin tổng quan" />
@@ -220,47 +248,47 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
                                     rel="noopener noreferrer" 
                                     className="text-blue-600 text-sm font-medium hover:underline flex items-center gap-1"
                                 >
-                                    Xem trên Google Maps <Maximize size={12}/>
+                                    Xem Google Maps <Maximize size={12}/>
                                 </a>
                             ) : (
                                 <span className="text-gray-400 text-xs italic">Chưa có tọa độ</span>
                             )}
                         </InfoRow>
                         <InfoRow icon={<Info size={14}/>} label="Mô tả">
-                           <p className="text-sm font-medium text-gray-800 whitespace-pre-line line-clamp-4 hover:line-clamp-none transition-all cursor-default">
+                           <p className="text-sm font-medium text-gray-800 whitespace-pre-line line-clamp-3 hover:line-clamp-none transition-all cursor-default">
                                {propertyInfo.description || '---'}
                            </p>
                         </InfoRow>
                         
-                        {/* Chỉ hiện Area ở đây nếu KHÔNG phải Villa/Homestay, hoặc hiển thị Area của property */}
-                        <InfoRow icon={<Maximize size={14}/>} label="Diện tích khuôn viên" value={`${propertyInfo.area || 0} m²`} />
+                        <InfoRow icon={<Maximize size={14}/>} label="Diện tích khuôn viên" value={propertyInfo.area ? `${propertyInfo.area} m²` : '---'} />
                         <InfoRow icon={<ShieldCheck size={14}/>} label="Giấy phép KD" value={propertyInfo.businessLicenseNumber || application.businessLicenseNumber} isHighlight />
                     </div>
                 </div>
 
-                {/* --- THÊM PHẦN CHI TIẾT NGUYÊN CĂN NẾU LÀ VILLA/HOMESTAY --- */}
-                {isWholeUnit && unitData && (
-                     <div className="bg-blue-50/50 p-5 rounded-2xl border border-blue-100 shadow-sm">
+                {/* --- CHỈ HIỆN KHI CÓ DATA NGUYÊN CĂN --- */}
+                {unitData && Object.keys(unitData).length > 0 && (
+                     <div className="bg-blue-50/60 p-5 rounded-2xl border border-blue-200 shadow-sm relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-16 h-16 bg-blue-100 rounded-bl-full -z-10 opacity-50"></div>
                         <SectionTitle icon={BedDouble} title="Chi tiết Nguyên Căn" />
                         <div className="space-y-1">
-                            <InfoRow icon={<Home size={14}/>} label="Tên căn" value={unitData.name} />
-                            <InfoRow icon={<DollarSign size={14}/>} label="Giá cơ bản/đêm" value={formatCurrency(propertyInfo.price)} />
-                            <InfoRow icon={<DollarSign size={14}/>} label="Giá cuối tuần/đêm" value={formatCurrency(propertyInfo.weekendPrice)} />
-                            <InfoRow icon={<UsersIcon size={14}/>} label="Sức chứa tiêu chuẩn" value={`${propertyInfo.capacity || 0} người`} />
+                            <InfoRow icon={<Home size={14}/>} label="Tên căn/phòng" value={unitData.name} />
+                            {/* Trỏ giá trị vào unitData.price */}
+                            <InfoRow icon={<DollarSign size={14}/>} label="Giá cơ bản/đêm" value={formatCurrency(unitData.price)} />
+                            <InfoRow icon={<DollarSign size={14}/>} label="Giá cuối tuần/đêm" value={formatCurrency(unitData.weekendPrice)} />
+                            <InfoRow icon={<UsersIcon size={14}/>} label="Sức chứa tiêu chuẩn" value={`${unitData.capacity || 0} người`} />
                             <InfoRow icon={<Maximize size={14}/>} label="Diện tích sử dụng" value={`${unitData.area || 0} m²`} />
                             
-                            <InfoRow icon={<Info size={14}/>} label="Mô tả căn">
+                            <InfoRow icon={<Info size={14}/>} label="Mô tả chi tiết">
                                <p className="text-sm font-medium text-gray-800 whitespace-pre-line line-clamp-3 hover:line-clamp-none transition-all">
                                    {unitData.description || '---'}
                                </p>
                             </InfoRow>
                             
-                            {/* Tiện ích trong phòng (nếu có) */}
                             {unitData.amenityNames && unitData.amenityNames.length > 0 && (
                                 <InfoRow icon={<Sparkles size={14}/>} label="Tiện nghi trong căn">
                                     <div className="flex flex-wrap gap-1.5 mt-1">
                                         {unitData.amenityNames.map((am, i) => (
-                                            <span key={i} className="text-[11px] font-medium bg-white text-blue-700 px-2 py-0.5 rounded border border-blue-200">
+                                            <span key={i} className="text-[11px] font-medium bg-white text-blue-700 px-2 py-0.5 rounded border border-blue-200 shadow-sm">
                                                 {am}
                                             </span>
                                         ))}
@@ -270,7 +298,7 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
                         </div>
                      </div>
                 )}
-                {/* -------------------------------------------------------- */}
+                {/* -------------------------------------- */}
 
                  {propertyInfo.amenityNames && propertyInfo.amenityNames.length > 0 && (
                     <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
@@ -288,11 +316,11 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
                     <div className="grid grid-cols-2 gap-x-4">
                         <InfoRow icon={<Clock size={14}/>} label="Giờ nhận phòng" value={policies.checkInTime} />
                         <InfoRow icon={<Clock size={14}/>} label="Giờ trả phòng" value={policies.checkOutTime} />
-                        <InfoRow icon={<UsersIcon size={14}/>} label="Tuổi tối thiểu" value={policies.minimumAge ? `${policies.minimumAge} tuổi` : 'N/A'} />
-                        <InfoRow icon={<XCircle size={14}/>} label="Hủy miễn phí" value={policies.allowFreeCancellation ? "Có" : "Không"} />
+                        <InfoRow icon={<UsersIcon size={14}/>} label="Tuổi tối thiểu" value={policies.minimumAge ? `${policies.minimumAge} tuổi` : 'Không quy định'} />
+                        <InfoRow icon={<XCircle size={14}/>} label="Hủy miễn phí" value={policies.allowFreeCancellation ? "Có hỗ trợ" : "Không"} />
                         {policies.allowFreeCancellation && (
                             <div className="col-span-2">
-                                <InfoRow icon={<Calendar size={14}/>} label="Hạn hủy miễn phí" value={policies.freeCancellationDays ? `Trước ${policies.freeCancellationDays} ngày` : 'N/A'} />
+                                <InfoRow icon={<Calendar size={14}/>} label="Hạn hủy miễn phí" value={policies.freeCancellationDays ? `Được hủy trước ${policies.freeCancellationDays} ngày` : 'N/A'} />
                             </div>
                         )}
                     </div>
@@ -304,58 +332,17 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
                 <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm h-full">
                     <SectionTitle icon={ImageIcon} title={`Hình ảnh minh chứng (${allImages.length})`} />
                     
-                    <div className="space-y-6">
-                        {/* CCCD & License Group */}
-                        {([...personalImages, ...businessImages].length > 0) && (
-                            <div>
-                                <p className="text-xs font-bold text-gray-400 uppercase mb-3 px-1">Định danh & Pháp lý</p>
-                                <div className="grid grid-cols-2 xl:grid-cols-3 gap-3">
-                                    {[...personalImages, ...businessImages].map((img, idx) => (
-                                        <div 
-                                            key={idx} 
-                                            className="relative group cursor-pointer aspect-[4/3] rounded-xl overflow-hidden border border-gray-100 hover:border-blue-400 transition"
-                                            onClick={() => { 
-                                                const globalIdx = allImages.findIndex(ai => ai.url === img.url);
-                                                setViewerIndex(globalIdx !== -1 ? globalIdx : 0); 
-                                                setViewerOpen(true); 
-                                            }}
-                                        >
-                                            <img src={img.url} alt={img.caption} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110" />
-                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-2">
-                                                <p className="text-[10px] text-white font-bold text-center leading-tight">{img.caption}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Property & Unit Images Group */}
-                        {([...propertyImages, ...unitImages].length > 0) ? (
-                            <div>
-                                <p className="text-xs font-bold text-gray-400 uppercase mb-3 px-1">Ảnh Cơ sở lưu trú</p>
-                                <div className="grid grid-cols-3 gap-2">
-                                    {[...propertyImages, ...unitImages].map((img, idx) => (
-                                        <div 
-                                            key={idx} 
-                                            className="relative group cursor-pointer aspect-square rounded-lg overflow-hidden border border-gray-100 hover:border-blue-400 transition"
-                                            onClick={() => { 
-                                                const globalIdx = allImages.findIndex(ai => ai.url === img.url);
-                                                setViewerIndex(globalIdx !== -1 ? globalIdx : 0); 
-                                                setViewerOpen(true); 
-                                            }}
-                                        >
-                                            <img src={img.url} alt={img.caption} className="w-full h-full object-cover" />
-                                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center p-1 text-center">
-                                               <p className="text-[10px] text-white font-bold leading-tight">{img.caption}</p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                    <div className="space-y-6 mt-4">
+                        {allImages.length > 0 ? (
+                            <>
+                                {renderImageGrid([...personalImages, ...businessImages], "Định danh & Pháp lý")}
+                                {renderImageGrid(propertyImages, "Khuôn viên Cơ sở lưu trú")}
+                                {renderImageGrid(unitImages, "Chi tiết Phòng / Nguyên căn")}
+                            </>
                         ) : (
-                            <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                                <p className="text-sm text-gray-400">Chưa tải lên ảnh</p>
+                            <div className="flex flex-col items-center justify-center py-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                                <ImageIcon className="text-gray-300 mb-2" size={40} />
+                                <p className="text-sm text-gray-400 font-medium">Chưa có hình ảnh nào được tải lên</p>
                             </div>
                         )}
                     </div>
@@ -369,10 +356,10 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
           <div className="px-6 py-4 border-t border-gray-100 bg-white/50 backdrop-blur-sm rounded-b-2xl flex justify-end gap-3 shrink-0">
             {application.status === "PENDING" ? (
                 <>
-                    <Button variant="danger" leftIcon={<XCircle size={18} />} onClick={() => onReject(application)} className="bg-white text-red-600 border-red-200 hover:bg-red-50 font-semibold">
+                    <Button variant="danger" leftIcon={<XCircle size={18} />} onClick={() => onReject(application)} className="bg-white text-red-600 border border-red-200 hover:bg-red-50 font-semibold shadow-sm">
                         Từ chối
                     </Button>
-                    <Button variant="primary" leftIcon={<CheckCircle size={18} />} className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/50 font-semibold" onClick={() => onApprove(application)}>
+                    <Button variant="primary" leftIcon={<CheckCircle size={18} />} className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/30 font-semibold" onClick={() => onApprove(application)}>
                         Duyệt hồ sơ
                     </Button>
                 </>
