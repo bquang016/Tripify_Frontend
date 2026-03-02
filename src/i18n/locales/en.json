@@ -59,6 +59,16 @@
     "night": "night",
     "popular": "POPULAR",
     "updating": "Updating hotels list...",
+    "why_choose_us": {
+      "best_price": "Best Price",
+      "best_price_desc": "Guaranteed best prices for every booking. Earn points for attractive rewards.",
+      "secure_booking": "Secure Booking",
+      "secure_booking_desc": "Absolute information security. International standard encrypted payment process.",
+      "support_247": "24/7 Support",
+      "support_247_desc": "Customer care team is always ready to support you anytime, anywhere.",
+      "flexible_payment": "Flexible Payment",
+      "flexible_payment_desc": "Supports multiple methods: Card, Momo, VNPay, ZaloPay, and pay later."
+    },
     "hot_destinations": {
       "title": "Favorite Destinations",
       "subtitle": "Most loved cities by our travelers.",

@@ -59,6 +59,16 @@
     "night": "đêm",
     "popular": "NỔI BẬT",
     "updating": "Hệ thống đang cập nhật danh sách khách sạn...",
+    "why_choose_us": {
+      "best_price": "Giá tốt nhất",
+      "best_price_desc": "Đảm bảo giá tốt nhất cho mọi đặt phòng. Tích điểm đổi quà hấp dẫn.",
+      "secure_booking": "Đặt phòng an toàn",
+      "secure_booking_desc": "Bảo mật thông tin tuyệt đối. Quy trình thanh toán được mã hóa chuẩn quốc tế.",
+      "support_247": "Hỗ trợ 24/7",
+      "support_247_desc": "Đội ngũ chăm sóc khách hàng luôn sẵn sàng hỗ trợ bạn mọi lúc, mọi nơi.",
+      "flexible_payment": "Thanh toán linh hoạt",
+      "flexible_payment_desc": "Hỗ trợ nhiều phương thức: Thẻ, Momo, VNPay, ZaloPay và trả sau."
+    },
     "hot_destinations": {
       "title": "Điểm Đến Yêu Thích",
       "subtitle": "Khám phá những thành phố được yêu thích nhất.",
