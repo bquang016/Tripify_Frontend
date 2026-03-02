@@ -5,8 +5,11 @@ import AboutSystem from "./AboutSystem";
 import Commitments from "./Commitments";
 import Partners from "./Partners.jsx";
 import Contact from "./Contact.jsx";
+import { useTranslation } from "react-i18next";
 
 const About = () => {
+    const { t } = useTranslation();
+    
     return (
             <main className="w-full bg-gray-50 text-gray-800">
                 <section
@@ -26,11 +29,10 @@ const About = () => {
                     {/* ndung */}
                     <div className="relative z-10 px-6 max-w-3xl mx-auto">
                         <h1 className="text-5xl font-extrabold mb-4 drop-shadow-lg">
-                            Về Chúng Tôi
+                            {t('about.title')}
                         </h1>
                         <p className="text-lg leading-relaxed drop-shadow-md">
-                            TravelMate – nền tảng đặt lịch du lịch thông minh giúp kết nối bạn
-                            với khách sạn uy tín, chất lượng trên toàn quốc.
+                            {t('about.subtitle')}
                         </p>
                     </div>
                 </section>

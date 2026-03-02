@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ChevronDown } from "lucide-react";
+import { useLanguage } from "../../context/LanguageContext";
 
 // (Yêu cầu 2: Component nội bộ để hiển thị cờ đẹp hơn)
 const FlagIcon = ({ code, className = "w-5 h-auto rounded-sm" }) => (
@@ -13,14 +14,16 @@ const FlagIcon = ({ code, className = "w-5 h-auto rounded-sm" }) => (
 
 // Danh sách các lựa chọn ngôn ngữ/tiền tệ
 const options = [
-  { code: "vn", label: "VI (VND)", icon: <FlagIcon code="vn" /> },
-  { code: "gb", label: "ENG (USD)", icon: <FlagIcon code="gb" /> }, // 'gb' là cờ Vương quốc Anh
+  { code: "vi", label: "VI (VND)", icon: <FlagIcon code="vn" />, currency: "VND" },
+  { code: "en", label: "ENG (USD)", icon: <FlagIcon code="gb" />, currency: "USD" }, 
 ];
 
 // (Yêu cầu 1: Tách component)
 const LanguageSwitcher = ({ navLinkClass }) => {
+  const { language, currency, changeLanguage, changeCurrency } = useLanguage();
   const [langOpen, setLangOpen] = useState(false);
-  const [selected, setSelected] = useState(options[0]); // Mặc định là 'vn'
+  
+  const selected = options.find(opt => opt.code === language) || options[0];
   const langRef = useRef(null);
 
   // Xử lý click outside chỉ cho dropdown này
@@ -35,7 +38,8 @@ const LanguageSwitcher = ({ navLinkClass }) => {
   }, []);
 
   const handleSelect = (option) => {
-    setSelected(option);
+    changeLanguage(option.code);
+    changeCurrency(option.currency);
     setLangOpen(false);
   };
 

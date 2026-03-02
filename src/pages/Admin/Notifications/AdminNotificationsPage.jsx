@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../../context/AuthContext';
 import { 
   CheckCircle2, Bell, Search, 
   MoreHorizontal, Trash2, CalendarCheck, 
@@ -10,58 +11,58 @@ import notificationService from "../../../services/notification.service";
 import Toast from "../../../components/common/Notification/Toast";
 import ToastPortal from "../../../components/common/Notification/ToastPortal";
 import ModalPortal from "../../../components/common/Modal/ModalPortal";
-
-// --- 1. CẤU HÌNH CHO ADMIN ---
-const typeToVietnamese = {
-  'ADMIN_NEW_OWNER_REGISTRATION': 'Đăng ký Đối tác mới',
-  'ADMIN_NEW_PROPERTY_SUBMISSION': 'Khách sạn chờ duyệt',
-  'ADMIN_NEW_REFUND_REQUEST': 'Yêu cầu hoàn tiền',
-  'ADMIN_SYSTEM_ALERT': 'Cảnh báo hệ thống',
-  'GENERAL': 'Thông báo chung'
-};
-
-// Format ngày tháng
-const formatFullDateTime = (dateString) => {
-  if (!dateString) return "N/A";
-  return new Date(dateString).toLocaleString('vi-VN', { 
-    hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' 
-  });
-};
-
-const formatTime = (dateString) => {
-  return new Date(dateString).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-};
-
-const formatDateGroup = (dateString) => {
-  if (!dateString) return "Khác";
-  const date = new Date(dateString);
-  const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
-
-  if (date.toDateString() === today.toDateString()) return "Hôm nay";
-  if (date.toDateString() === yesterday.toDateString()) return "Hôm qua";
-  return date.toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
-};
-
-// --- 2. STYLE ICON CHO ADMIN ---
-const getNotificationStyle = (type) => {
-  switch (type) {
-    case 'ADMIN_NEW_OWNER_REGISTRATION':
-      return { icon: <UserPlus size={20} />, bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-200" };
-    case 'ADMIN_NEW_PROPERTY_SUBMISSION':
-      return { icon: <Home size={20} />, bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-200" };
-    case 'ADMIN_NEW_REFUND_REQUEST':
-      return { icon: <DollarSign size={20} />, bg: "bg-red-100", text: "text-red-700", border: "border-red-200" };
-    case 'ADMIN_SYSTEM_ALERT':
-      return { icon: <ShieldAlert size={20} />, bg: "bg-orange-100", text: "text-orange-700", border: "border-orange-200" };
-    default: 
-      return { icon: <Bell size={20} />, bg: "bg-gray-100", text: "text-gray-700", border: "border-gray-200" };
-  }
-};
+import { useTranslation } from "react-i18next";
 
 const AdminNotificationsPage = () => {
+  const { t, i18n } = useTranslation();
+  const isVi = i18n.language === 'vi';
   const navigate = useNavigate();
+
+  const typeToLocalized = {
+    'ADMIN_NEW_OWNER_REGISTRATION': t('notifications.types.new_owner'),
+    'ADMIN_NEW_PROPERTY_SUBMISSION': t('notifications.types.new_property'),
+    'ADMIN_NEW_REFUND_REQUEST': t('notifications.types.new_refund'),
+    'ADMIN_SYSTEM_ALERT': t('notifications.types.system_alert'),
+    'GENERAL': t('notifications.types.general')
+  };
+
+  const formatFullDateTime = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleString(isVi ? 'vi-VN' : 'en-US', { 
+      hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' 
+    });
+  };
+
+  const formatTime = (dateString) => {
+    return new Date(dateString).toLocaleTimeString(isVi ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const formatDateGroup = (dateString) => {
+    if (!dateString) return isVi ? "Khác" : "Other";
+    const date = new Date(dateString);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) return isVi ? "Hôm nay" : "Today";
+    if (date.toDateString() === yesterday.toDateString()) return isVi ? "Hôm qua" : "Yesterday";
+    return date.toLocaleDateString(isVi ? 'vi-VN' : 'en-US', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  const getNotificationStyle = (type) => {
+    switch (type) {
+      case 'ADMIN_NEW_OWNER_REGISTRATION':
+        return { icon: <UserPlus size={20} />, bg: "bg-purple-100", text: "text-purple-700" };
+      case 'ADMIN_NEW_PROPERTY_SUBMISSION':
+        return { icon: <Home size={20} />, bg: "bg-blue-100", text: "text-blue-700" };
+      case 'ADMIN_NEW_REFUND_REQUEST':
+        return { icon: <DollarSign size={20} />, bg: "bg-red-100", text: "text-red-700" };
+      case 'ADMIN_SYSTEM_ALERT':
+        return { icon: <ShieldAlert size={20} />, bg: "bg-orange-100", text: "text-orange-700" };
+      default: 
+        return { icon: <Bell size={20} />, bg: "bg-gray-100", text: "text-gray-700" };
+    }
+  };
 
   // State
   const [notifications, setNotifications] = useState([]);
@@ -69,56 +70,42 @@ const AdminNotificationsPage = () => {
   const [filterType, setFilterType] = useState('ALL'); 
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
   const [searchTerm, setSearchTerm] = useState(''); 
-  
   const [openMenuId, setOpenMenuId] = useState(null);
   const [selectedNoti, setSelectedNoti] = useState(null);
   const [notificationToDelete, setNotificationToDelete] = useState(null);
-  
-  const [toast, setToast] = useState({ show: false, message: '', type: 'info' });
+  const [toastData, setToastData] = useState({ show: false, message: '', type: 'info' });
 
-  // Style màu chủ đạo của Admin (thường là xanh đậm hoặc tím)
   const brandButtonClass = "bg-blue-600 text-white hover:bg-blue-700 shadow-md transition-colors";
 
   const showToast = (message, type = 'info') => {
-    setToast({ show: true, message, type });
-    setTimeout(() => setToast((prev) => ({ ...prev, show: false })), 3000);
+    setToastData({ show: true, message, type });
+    setTimeout(() => setToastData((prev) => ({ ...prev, show: false })), 3000);
   };
 
-  // --- API ---
   useEffect(() => {
     fetchData();
-  }, []); // Admin không cần phụ thuộc currentUser context nếu token đã tự động trong axios
+  }, []);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      // [QUAN TRỌNG] Gọi API scope ADMIN
       const data = await notificationService.getNotifications(0, 100, 'ADMIN');
-      if (data && data.content) {
-        setNotifications(data.content);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+      if (data && data.content) setNotifications(data.content);
+    } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
-  // --- ACTIONS ---
   const handleNotificationClick = (noti) => {
     setSelectedNoti(noti); 
     const isRead = noti.isRead !== undefined ? noti.isRead : noti.read;
-    if (!isRead) {
-        handleMarkRead(noti);
-    }
+    if (!isRead) handleMarkRead(noti);
   };
 
   const handleMarkAllRead = async () => {
     try {
       await notificationService.markAllAsRead('ADMIN');
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true, read: true })));
-      showToast("Đã đánh dấu tất cả là đã đọc", "success");
-    } catch (e) { showToast("Lỗi hệ thống", "error"); }
+      showToast(t('notifications.mark_all_read_success'), "success");
+    } catch (e) { showToast(isVi ? "Lỗi hệ thống" : "System error", "error"); }
   };
 
   const handleMarkRead = async (noti) => {
@@ -136,26 +123,18 @@ const AdminNotificationsPage = () => {
 
   const handleDeleteConfirm = () => {
     if (!notificationToDelete) return;
-    // Vì chưa có API xóa thật, tạm thời ẩn khỏi UI
     setNotifications(prev => prev.filter(n => n.id !== notificationToDelete));
     setNotificationToDelete(null);
-    showToast("Đã ẩn thông báo", "success");
+    showToast(t('notifications.hide_success'), "success");
   };
 
-  // --- FILTER LOGIC (ADMIN) ---
   const getFilteredNotifications = () => {
     return notifications.filter(n => {
       const isRead = n.isRead !== undefined ? n.isRead : n.read;
-      
-      // Lọc theo Tabs
       if (filterType === 'APPROVAL' && !['ADMIN_NEW_OWNER_REGISTRATION', 'ADMIN_NEW_PROPERTY_SUBMISSION'].includes(n.type)) return false;
       if (filterType === 'FINANCE' && !['ADMIN_NEW_REFUND_REQUEST'].includes(n.type)) return false;
       if (filterType === 'SYSTEM' && !['ADMIN_SYSTEM_ALERT', 'GENERAL'].includes(n.type)) return false;
-
-      // Lọc chưa đọc
       if (showUnreadOnly && isRead) return false;
-
-      // Tìm kiếm
       if (searchTerm) {
         const term = searchTerm.toLowerCase();
         return n.title?.toLowerCase().includes(term) || n.message?.toLowerCase().includes(term);
@@ -177,35 +156,27 @@ const AdminNotificationsPage = () => {
 
   const hasData = Object.keys(groups).length > 0;
 
-  // --- NAVIGATION HELPER ---
-  const handleNavigateFromModal = (type, entityId) => {
-      if (type === 'ADMIN_NEW_OWNER_REGISTRATION') {
-          navigate(`/admin/approvals`); // Hoặc trang chi tiết user
-      } else if (type === 'ADMIN_NEW_PROPERTY_SUBMISSION') {
-          navigate(`/admin/hotels/pending`);
-      } else if (type === 'ADMIN_NEW_REFUND_REQUEST') {
-          navigate(`/admin/transactions/refunds`);
-      }
+  const handleNavigateFromModal = (type) => {
+      if (type === 'ADMIN_NEW_OWNER_REGISTRATION') navigate(`/admin/approvals`);
+      else if (type === 'ADMIN_NEW_PROPERTY_SUBMISSION') navigate(`/admin/hotels/pending`);
+      else if (type === 'ADMIN_NEW_REFUND_REQUEST') navigate(`/admin/transactions/refunds`);
       setSelectedNoti(null);
   };
 
   return (
     <>
       <ToastPortal>
-        {toast.show && <Toast message={toast.message} type={toast.type} />}
+        {toastData.show && <Toast message={toastData.message} type={toastData.type} />}
       </ToastPortal>
 
-      {/* Backdrop cho menu 3 chấm */}
       {openMenuId && <div className="fixed inset-0 z-10" onClick={() => setOpenMenuId(null)} />}
 
       <div className="min-h-screen bg-gray-50/50 p-4 md:p-10">
         <div className="max-w-5xl mx-auto">
-          
-          {/* Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">Thông báo Quản trị</h1>
-              <p className="text-gray-500 text-sm">Cập nhật các yêu cầu phê duyệt và tài chính</p>
+              <h1 className="text-2xl font-bold text-gray-800">{t('notifications.title')}</h1>
+              <p className="text-gray-500 text-sm">{t('notifications.subtitle')}</p>
             </div>
             
             <div className="flex gap-2">
@@ -213,55 +184,52 @@ const AdminNotificationsPage = () => {
                     onClick={() => setShowUnreadOnly(!showUnreadOnly)}
                     className={`px-3 py-2 rounded-lg text-sm border flex items-center gap-2 transition ${showUnreadOnly ? 'bg-blue-50 border-blue-200 text-blue-700' : 'bg-white hover:bg-gray-50'}`}
                 >
-                    <Filter size={16} /> {showUnreadOnly ? 'Đang lọc: Chưa đọc' : 'Lọc: Chưa đọc'}
+                    <Filter size={16} /> {showUnreadOnly ? t('notifications.filtering_unread') : t('notifications.filter_unread')}
                 </button>
                 <button 
                     onClick={handleMarkAllRead}
                     className="px-3 py-2 bg-white border rounded-lg text-sm hover:bg-gray-50 flex items-center gap-2"
                 >
-                    <Check size={16} /> Đọc tất cả
+                    <Check size={16} /> {t('notifications.mark_all_read')}
                 </button>
             </div>
           </div>
 
-          {/* Filter Tabs (Admin Categories) */}
           <div className="bg-white rounded-xl shadow-sm border p-1 mb-6 flex flex-col md:flex-row gap-2">
             <div className="flex p-1 gap-1 overflow-x-auto flex-1">
                 {[
-                    {id:'ALL',l:'Tất cả'}, 
-                    {id:'APPROVAL',l:'Cần duyệt'}, // Owner, Hotel
-                    {id:'FINANCE',l:'Tài chính'}, // Refund
-                    {id:'SYSTEM',l:'Hệ thống'}
-                ].map(t => (
+                    {id:'ALL',l:t('notifications.all')}, 
+                    {id:'APPROVAL',l:t('notifications.needs_approval')}, 
+                    {id:'FINANCE',l:t('notifications.finance')}, 
+                    {id:'SYSTEM',l:t('notifications.system')}
+                ].map(tab => (
                     <button
-                        key={t.id}
-                        onClick={() => setFilterType(t.id)}
+                        key={tab.id}
+                        onClick={() => setFilterType(tab.id)}
                         className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition ${
-                            filterType === t.id ? brandButtonClass : 'text-gray-500 hover:bg-gray-100'
+                            filterType === tab.id ? brandButtonClass : 'text-gray-500 hover:bg-gray-100'
                         }`}
                     >
-                        {t.l}
+                        {tab.l}
                     </button>
                 ))}
-                
             </div>
             <div className="relative p-1 md:w-64">
                 <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input 
-                    type="text" placeholder="Tìm kiếm..." 
+                    type="text" placeholder={t('notifications.search_placeholder')}
                     className="w-full pl-9 pr-3 py-2 bg-gray-50 border-transparent focus:bg-white focus:border-gray-300 rounded-lg text-sm outline-none border transition"
                     value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
                 />
             </div>
           </div>
 
-          {/* List */}
           {loading ? (
-            <div className="text-center py-20 text-gray-500">Đang tải dữ liệu...</div>
+            <div className="text-center py-20 text-gray-500">{t('notifications.loading')}</div>
           ) : !hasData ? (
             <div className="text-center py-16 bg-white rounded-xl border border-dashed">
                 <Bell size={32} className="text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-500">Không có thông báo nào phù hợp</p>
+                <p className="text-gray-500">{t('notifications.no_data')}</p>
             </div>
           ) : (
             <div className="space-y-6">
@@ -272,37 +240,16 @@ const AdminNotificationsPage = () => {
                     {groups[date].map(noti => {
                       const style = getNotificationStyle(noti.type);
                       const isRead = noti.isRead !== undefined ? noti.isRead : noti.read;
-
                       return (
-                        <div 
-                            key={noti.id} 
-                            onClick={() => handleNotificationClick(noti)}
-                            className={`group flex items-start gap-4 p-4 cursor-pointer hover:bg-gray-50 transition relative ${!isRead ? 'bg-blue-50/40' : ''}`}
-                        >
-                            <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${style.bg} ${style.text}`}>
-                                {style.icon}
-                            </div>
+                        <div key={noti.id} onClick={() => handleNotificationClick(noti)} className={`group flex items-start gap-4 p-4 cursor-pointer hover:bg-gray-50 transition relative ${!isRead ? 'bg-blue-50/40' : ''}`}>
+                            <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${style.bg} ${style.text}`}>{style.icon}</div>
                             <div className="flex-1 min-w-0">
-                                <div className="flex justify-between items-start">
-                                    <h4 className={`text-sm ${!isRead ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>{noti.title}</h4>
-                                    <span className="text-xs text-gray-400 whitespace-nowrap ml-2">{formatTime(noti.createdAt)}</span>
-                                </div>
+                                <div className="flex justify-between items-start"><h4 className={`text-sm ${!isRead ? 'font-bold text-gray-900' : 'font-medium text-gray-700'}`}>{noti.title}</h4><span className="text-xs text-gray-400 whitespace-nowrap ml-2">{formatTime(noti.createdAt)}</span></div>
                                 <p className={`text-sm truncate mt-0.5 ${!isRead ? 'text-gray-800' : 'text-gray-500'}`}>{noti.message}</p>
                             </div>
-                            
-                            <button 
-                                onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === noti.id ? null : noti.id); }}
-                                className="p-2 rounded-full text-gray-400 hover:bg-gray-200 opacity-0 group-hover:opacity-100 transition"
-                            >
-                                <MoreHorizontal size={18} />
-                            </button>
-
+                            <button onClick={(e) => { e.stopPropagation(); setOpenMenuId(openMenuId === noti.id ? null : noti.id); }} className="p-2 rounded-full text-gray-400 hover:bg-gray-200 opacity-0 group-hover:opacity-100 transition"><MoreHorizontal size={18} /></button>
                             {openMenuId === noti.id && (
-                                <div className="absolute right-10 top-8 w-32 bg-white border shadow-lg rounded-lg z-20 py-1">
-                                    <button onClick={(e) => promptDelete(e, noti.id)} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                                        <Trash2 size={14} /> Ẩn tin
-                                    </button>
-                                </div>
+                                <div className="absolute right-10 top-8 w-32 bg-white border shadow-lg rounded-lg z-20 py-1"><button onClick={(e) => promptDelete(e, noti.id)} className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"><Trash2 size={14} /> {t('notifications.hide_noti')}</button></div>
                             )}
                         </div>
                       );
@@ -315,70 +262,29 @@ const AdminNotificationsPage = () => {
         </div>
       </div>
 
-      {/* --- MODAL CHI TIẾT (Portal) --- */}
       <ModalPortal>
         {selectedNoti && (
             <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn" onClick={() => setSelectedNoti(null)}>
-                <div 
-                    className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative" 
-                    onClick={(e) => e.stopPropagation()}
-                >
-                    {/* Header Modal */}
-                    <div className={`h-3 w-full ${getNotificationStyle(selectedNoti.type).bg.replace('bg-', 'bg-')}`} /> 
-                    
+                <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative" onClick={e => e.stopPropagation()}>
+                    <div className={`h-3 w-full ${getNotificationStyle(selectedNoti.type).bg}`} /> 
                     <div className="p-6 relative">
-                        <button 
-                            onClick={() => setSelectedNoti(null)} 
-                            className="absolute top-4 right-4 p-1 rounded-full text-gray-400 hover:bg-gray-100 transition"
-                        >
-                            <X size={20} />
-                        </button>
-
+                        <button onClick={() => setSelectedNoti(null)} className="absolute top-4 right-4 p-1 rounded-full text-gray-400 hover:bg-gray-100 transition"><X size={20} /></button>
                         <div className="flex items-center gap-3 mb-4">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getNotificationStyle(selectedNoti.type).bg} ${getNotificationStyle(selectedNoti.type).text}`}>
-                                {getNotificationStyle(selectedNoti.type).icon}
-                            </div>
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getNotificationStyle(selectedNoti.type).bg} ${getNotificationStyle(selectedNoti.type).text}`}>{getNotificationStyle(selectedNoti.type).icon}</div>
                             <div>
-                                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">
-                                    {typeToVietnamese[selectedNoti.type] || 'Thông báo hệ thống'}
-                                </p>
-                                <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-                                    <Clock size={12} /> {formatFullDateTime(selectedNoti.createdAt)}
-                                </p>
+                                <p className="text-xs text-gray-500 font-semibold uppercase tracking-wider">{typeToLocalized[selectedNoti.type] || t('notifications.types.general')}</p>
+                                <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5"><Clock size={12} /> {formatFullDateTime(selectedNoti.createdAt)}</p>
                             </div>
                         </div>
-
                         <h3 className="text-xl font-bold text-gray-900 mb-4 leading-snug">{selectedNoti.title}</h3>
-                        
-                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 text-gray-700 text-sm whitespace-pre-line leading-relaxed mb-6">
-                            {selectedNoti.message}
-                        </div>
-
+                        <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 text-gray-700 text-sm whitespace-pre-line leading-relaxed mb-6">{selectedNoti.message}</div>
                         {selectedNoti.relatedEntityId && (
-                            <div className="flex items-center justify-between text-xs text-gray-500 border-t pt-4 mb-4">
-                                <span>Mã tham chiếu (ID):</span>
-                                <span className="font-mono font-medium bg-gray-100 px-2 py-0.5 rounded">#{selectedNoti.relatedEntityId}</span>
-                            </div>
+                            <div className="flex items-center justify-between text-xs text-gray-500 border-t pt-4 mb-4"><span>{t('notifications.reference_id')}:</span><span className="font-mono font-medium bg-gray-100 px-2 py-0.5 rounded">#{selectedNoti.relatedEntityId}</span></div>
                         )}
-
                         <div className="flex gap-3">
-                            <button 
-                                onClick={() => setSelectedNoti(null)} 
-                                className="flex-1 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition"
-                            >
-                                Đóng
-                            </button>
-
-                            {/* Nút hành động dựa trên loại thông báo */}
-                            {(selectedNoti.type === 'ADMIN_NEW_OWNER_REGISTRATION' || 
-                              selectedNoti.type === 'ADMIN_NEW_PROPERTY_SUBMISSION' || 
-                              selectedNoti.type === 'ADMIN_NEW_REFUND_REQUEST') && (
-                                <button 
-                                    onClick={() => handleNavigateFromModal(selectedNoti.type, selectedNoti.relatedEntityId)}
-                                    className={`flex-1 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow-lg ${brandButtonClass}`}
-                                >
-                                    Xem chi tiết <ExternalLink size={16} />
-                                </button>
+                            <button onClick={() => setSelectedNoti(null)} className="flex-1 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition">{t('notifications.close')}</button>
+                            {(selectedNoti.type === 'ADMIN_NEW_OWNER_REGISTRATION' || selectedNoti.type === 'ADMIN_NEW_PROPERTY_SUBMISSION' || selectedNoti.type === 'ADMIN_NEW_REFUND_REQUEST') && (
+                                <button onClick={() => handleNavigateFromModal(selectedNoti.type)} className={`flex-1 py-2.5 rounded-lg font-medium transition flex items-center justify-center gap-2 shadow-lg ${brandButtonClass}`}>{t('notifications.view_details')} <ExternalLink size={16} /></button>
                             )}
                         </div>
                     </div>
@@ -387,30 +293,17 @@ const AdminNotificationsPage = () => {
         )}
       </ModalPortal>
 
-      {/* --- MODAL XÓA (Portal) --- */}
       <ModalPortal>
         {notificationToDelete && (
             <div className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 animate-fadeIn" onClick={() => setNotificationToDelete(null)}>
-                <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 relative" onClick={(e) => e.stopPropagation()}>
+                <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 relative" onClick={e => e.stopPropagation()}>
                     <div className="flex flex-col items-center text-center">
-                        <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4">
-                            <Trash2 size={24} className="text-red-600" />
-                        </div>
-                        <h2 className="text-lg font-bold mb-2 text-gray-900">Ẩn thông báo này?</h2>
-                        <p className="text-gray-500 mb-6 text-sm">Thông báo sẽ không hiển thị trong danh sách này nữa.</p>
+                        <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mb-4"><Trash2 size={24} className="text-red-600" /></div>
+                        <h2 className="text-lg font-bold mb-2 text-gray-900">{t('notifications.hide_confirm_title')}</h2>
+                        <p className="text-gray-500 mb-6 text-sm">{t('notifications.hide_confirm_desc')}</p>
                         <div className="flex justify-center gap-3 w-full">
-                            <button 
-                                onClick={() => setNotificationToDelete(null)} 
-                                className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition"
-                            >
-                                Huỷ
-                            </button>
-                            <button 
-                                onClick={handleDeleteConfirm} 
-                                className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition"
-                            >
-                                Ẩn ngay
-                            </button>
+                            <button onClick={() => setNotificationToDelete(null)} className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition">{t('common.cancel')}</button>
+                            <button onClick={handleDeleteConfirm} className="flex-1 px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition">{isVi ? "Ẩn ngay" : "Hide now"}</button>
                         </div>
                     </div>
                 </div>

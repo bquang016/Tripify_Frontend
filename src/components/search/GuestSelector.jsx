@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { ChevronDown, PawPrint } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const Row = ({ label, value, min = 0, onChange }) => {
   return (
@@ -27,6 +28,7 @@ const Row = ({ label, value, min = 0, onChange }) => {
 };
 
 const GuestSelector = ({ value, onChange }) => {
+  const { t, i18n } = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -51,13 +53,13 @@ const GuestSelector = ({ value, onChange }) => {
     onChange?.(next);
   };
 
-  const summary = `${data.adults + data.children} người • ${data.rooms} phòng${
-    data.pets ? " • có thú cưng" : ""
+  const summary = `${data.adults + data.children} ${t('search.guests')} • ${data.rooms} ${t('search.rooms')}${
+    data.pets ? (i18n.language === 'vi' ? " • có thú cưng" : " • with pets") : ""
   }`;
 
   return (
     <div className="relative flex flex-col" ref={ref}>
-      <label className="text-sm font-semibold text-gray-600 mb-1">Số lượng</label>
+      <label className="text-sm font-semibold text-gray-600 mb-1">{t('search.guests')}</label>
 
       <button
         type="button"
@@ -71,19 +73,19 @@ const GuestSelector = ({ value, onChange }) => {
       {open && (
         <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 shadow-xl rounded-xl z-50 w-80 p-4 text-sm">
           <Row
-            label="Người lớn"
+            label={t('search.adults')}
             value={data.adults}
             min={1}
             onChange={(v) => update({ adults: v })}
           />
           <Row
-            label="Trẻ em"
+            label={t('search.children')}
             value={data.children}
             min={0}
             onChange={(v) => update({ children: v })}
           />
           <Row
-            label="Phòng"
+            label={t('search.rooms')}
             value={data.rooms}
             min={1}
             onChange={(v) => update({ rooms: v })}
@@ -92,7 +94,7 @@ const GuestSelector = ({ value, onChange }) => {
           <div className="flex justify-between items-center pt-3">
             <span className="flex items-center gap-2 text-gray-800">
               <PawPrint size={16} className="text-gray-500" />
-              Mang theo thú cưng
+              {i18n.language === 'vi' ? "Mang theo thú cưng" : "Bring pets"}
             </span>
             <input
               type="checkbox"
@@ -107,7 +109,7 @@ const GuestSelector = ({ value, onChange }) => {
               className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 hover:bg-white"
               onClick={() => setOpen(false)}
             >
-              Xong
+              {t('search.apply')}
             </button>
           </div>
         </div>

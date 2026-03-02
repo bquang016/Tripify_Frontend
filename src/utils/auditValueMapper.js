@@ -1,8 +1,23 @@
 // src/utils/auditValueMapper.js
 
-export const formatAuditValue = (value) => {
+export const formatAuditValue = (value, t = null) => {
     if (!value) return "-";
+
+    // Nếu có truyền hàm t() từ react-i18next, ưu tiên dùng đa ngôn ngữ
+    if (t) {
+        // Kiểm tra xem value là action hay entity
+        const actions = ["CREATE", "UPDATE", "DELETE", "APPROVE", "REJECT", "SUSPEND", "ACTIVATE", "LOGIN", "LOGOUT"];
+        const entities = ["PROPERTY", "ROOM", "USER", "BOOKING", "PAYMENT", "PROMOTION", "TRANSACTION", "ROLE"];
+
+        if (actions.includes(value)) {
+            return t(`logs.actions.${value}`);
+        }
+        if (entities.includes(value)) {
+            return t(`logs.entities.${value}`);
+        }
+    }
     
+    // Fallback nếu không có t() hoặc value không nằm trong danh sách trên
     const mapping = {
         // LogAction
         "CREATE": "Tạo mới",

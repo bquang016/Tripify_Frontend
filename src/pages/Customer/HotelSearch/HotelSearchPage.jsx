@@ -4,8 +4,10 @@ import FilterSidebar from "./FilterSidebar";
 import SearchResultsList from "./SearchResultsList";
 import propertyService from "@/services/property.service";
 import SearchBox from "@/components/search/SearchBox"; 
+import { useTranslation } from "react-i18next";
 
 const HotelSearchPage = () => {
+  const { t, i18n } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   
   // State dữ liệu
@@ -16,7 +18,6 @@ const HotelSearchPage = () => {
   const [totalElements, setTotalElements] = useState(0);
 
   // --- STATE BỘ LỌC TỔNG HỢP ---
-  // Lưu giữ tất cả giá trị filter hiện tại
   const [activeFilters, setActiveFilters] = useState({
     minPrice: null,
     maxPrice: null,
@@ -37,7 +38,6 @@ const HotelSearchPage = () => {
   const fetchHotels = async (pageIndex) => {
     setLoading(true);
     try {
-      // 1. Gom tham số từ URL
       const urlParams = {
         keyword: searchParams.get("keyword") || "",
         guests: searchParams.get("guests") || 1,
@@ -45,30 +45,22 @@ const HotelSearchPage = () => {
         checkOut: searchParams.get("checkOut"),
       };
 
-      // 2. Gom tham số từ Bộ lọc Sidebar (activeFilters)
       const filterParams = {
         minPrice: activeFilters.minPrice,
         maxPrice: activeFilters.maxPrice,
-        cities: activeFilters.cities,     // Array hoặc null
-        ratings: activeFilters.ratings,   // Array hoặc null
+        cities: activeFilters.cities,
+        ratings: activeFilters.ratings,
         sort: activeFilters.sort,
       };
 
-      // 3. Gom tham số phân trang
       const paginationParams = {
         page: pageIndex,
         size: 10
       };
 
-      // Merge tất cả lại
       const finalParams = { ...urlParams, ...filterParams, ...paginationParams };
-
-      // console.log("Fetching with params:", finalParams); // Debug
-
-      // 4. Gọi Service
       const res = await propertyService.searchProperties(finalParams);
       
-      // Xử lý kết quả trả về (Logic fix ở bước trước)
       let newHotels = [];
       let totalPages = 0;
       let totalItems = 0;
@@ -102,49 +94,33 @@ const HotelSearchPage = () => {
     }
   };
 
-  // --- XỬ LÝ SỰ KIỆN ---
-
   const handleSearch = (newParams) => {
-      setSearchParams(newParams); // Đổi URL -> Trigger useEffect 1
+      setSearchParams(newParams);
   };
 
-  // Callback nhận data từ FilterSidebar
   const handleFilterChange = (newFilterValues) => {
-    // newFilterValues có thể là { minPrice, maxPrice } HOẶC { cities, ratings }
-    // Merge vào state chung
     setActiveFilters(prev => ({ ...prev, ...newFilterValues }));
-    // Reset về trang 0 mỗi khi đổi bộ lọc
     setPage(0); 
   };
 
-  // --- EFFECT ---
-
-  // 1. Khi URL thay đổi (Keyword, Date, Guest) -> Reset Filters & Fetch
   useEffect(() => {
     setPage(0);
     setHasMore(true);
-    // Lưu ý: Có thể bạn muốn giữ lại filters khi đổi keyword, 
-    // hoặc reset filters. Ở đây tôi giữ lại filters hiện tại.
     fetchHotels(0);
   }, [searchParams]); 
 
-  // 2. Khi ActiveFilters thay đổi (Do người dùng click Sidebar) -> Fetch lại trang 0
   useEffect(() => {
     setPage(0);
     setHasMore(true);
     fetchHotels(0);
   }, [activeFilters]);
 
-  // 3. Khi Page tăng (Lazy load) -> Fetch trang tiếp theo
-  // Cần dùng activeFilters hiện tại
   useEffect(() => {
     if (page > 0) {
       fetchHotels(page);
     }
   }, [page]);
 
-
-  // --- INFINITE SCROLL OBSERVER ---
   const observer = useRef();
   const lastHotelElementRef = useCallback(node => {
     if (loading) return;
@@ -176,7 +152,6 @@ const HotelSearchPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <div className="hidden lg:block lg:col-span-1">
               <div className="sticky top-48"> 
-                {/* Truyền callback handleFilterChange */}
                 <FilterSidebar onFilterChange={handleFilterChange} />
               </div>
             </div>
@@ -185,16 +160,16 @@ const HotelSearchPage = () => {
                {/* Header kết quả & Sort */}
                <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold text-gray-800">
-                  {loading && page === 0 ? "Đang tìm kiếm..." : `Tìm thấy ${totalElements} chỗ nghỉ`}
+                  {loading && page === 0 ? t('common.search') + '...' : i18n.language === 'vi' ? `Tìm thấy ${totalElements} chỗ nghỉ` : `Found ${totalElements} stays`}
                 </h2>
                 <select 
                   className="border border-gray-300 rounded-lg p-2 text-sm bg-white outline-none cursor-pointer"
                   value={activeFilters.sort}
                   onChange={(e) => handleFilterChange({ sort: e.target.value })}
                 >
-                  <option value="id,desc">Mới nhất</option>
-                  <option value="price,asc">Giá thấp đến cao</option>
-                  <option value="price,desc">Giá cao đến thấp</option>
+                  <option value="id,desc">{i18n.language === 'vi' ? 'Mới nhất' : 'Newest'}</option>
+                  <option value="price,asc">{i18n.language === 'vi' ? 'Giá thấp đến cao' : 'Price: Low to High'}</option>
+                  <option value="price,desc">{i18n.language === 'vi' ? 'Giá cao đến thấp' : 'Price: High to Low'}</option>
                 </select>
               </div>
 
@@ -208,7 +183,7 @@ const HotelSearchPage = () => {
               {loading && page > 0 && (
                  <div className="py-6 text-center">
                    <div className="inline-block w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                   <p className="text-gray-500 text-xs mt-2 font-medium">Đang tải thêm...</p>
+                   <p className="text-gray-500 text-xs mt-2 font-medium">{i18n.language === 'vi' ? 'Đang tải thêm...' : 'Loading more...'}</p>
                  </div>
               )}
             </div>

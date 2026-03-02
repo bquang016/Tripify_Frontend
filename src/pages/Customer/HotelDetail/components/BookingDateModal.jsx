@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Modal from "@/components/common/Modal/Modal";
 import Button from "@/components/common/Button/Button";
-import { Info, CalendarDays, ArrowRight, Check, TrendingUp, Sparkles, AlertCircle } from "lucide-react"; // ✅ Import thêm AlertCircle
+import { Info, CalendarDays, ArrowRight, Check, TrendingUp, Sparkles, AlertCircle } from "lucide-react"; 
 import { DateRange } from 'react-date-range';
 import { vi } from 'date-fns/locale';
 import { addDays, differenceInCalendarDays, format, getDay } from 'date-fns';
@@ -9,15 +9,22 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Cartes
 
 import roomService from "@/services/room.service";
 import Spinner from "@/components/common/Loading/Spinner";
+import { formatCurrency } from "@/utils/priceUtils";
 
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 
-const BookingDateModal = ({ open, onClose, onConfirm, occupiedDates = [], selectedRoomId, roomPrice: initialRoomPrice, weekendPrice }) => {
+const BookingDateModal = ({ 
+    open, onClose, onConfirm, occupiedDates = [], selectedRoomId, 
+    roomPrice: initialRoomPrice, convertedPrice,
+    weekendPrice, convertedWeekendPrice,
+    currency = 'VND'
+}) => {
 
     // --- 1. Logic Khởi tạo & Fallback ---
-    const standardPrice = Number(initialRoomPrice) || 0;
-    const endPrice = (weekendPrice && Number(weekendPrice) > 0) ? Number(weekendPrice) : standardPrice;
+    // Ưu tiên giá đã quy đổi nếu có
+    const standardPrice = Number(convertedPrice || initialRoomPrice) || 0;
+    const endPrice = Number(convertedWeekendPrice || weekendPrice || standardPrice) || 0;
 
     // State lưu giá (dùng cho tính toán tiền)
     const [prices, setPrices] = useState({ weekday: standardPrice, weekend: endPrice });
@@ -69,8 +76,9 @@ const BookingDateModal = ({ open, onClose, onConfirm, occupiedDates = [], select
                     const weekdayItem = apiData.find(d => (d.weekend !== undefined ? !d.weekend : !d.isWeekend));
                     const weekendItem = apiData.find(d => (d.weekend !== undefined ? d.weekend : d.isWeekend));
 
-                    const pWeekday = weekdayItem ? Number(weekdayItem.price) : standardPrice;
-                    const pWeekend = weekendItem ? Number(weekendItem.price) : endPrice;
+                    // Backend forecast cũng nên trả về convertedPrice
+                    const pWeekday = weekdayItem ? Number(weekdayItem.convertedPrice || weekdayItem.price) : standardPrice;
+                    const pWeekend = weekendItem ? Number(weekendItem.convertedPrice || weekendItem.price) : endPrice;
 
                     setPrices({ weekday: pWeekday, weekend: pWeekend });
 
@@ -88,17 +96,18 @@ const BookingDateModal = ({ open, onClose, onConfirm, occupiedDates = [], select
                     const formattedData = apiData.map(item => {
                         const dateObj = new Date(item.date);
                         const isWeekendDay = item.weekend !== undefined ? item.weekend : item.isWeekend;
+                        const itemPrice = Number(item.convertedPrice || item.price);
 
                         let savings = 0;
-                        if (item.price < maxP && maxP > 0) {
-                            savings = Math.round(((maxP - item.price) / maxP) * 100);
+                        if (itemPrice < maxP && maxP > 0) {
+                            savings = Math.round(((maxP - itemPrice) / maxP) * 100);
                         }
 
                         return {
                             date: dateObj,
                             dayName: format(dateObj, "EEEE", { locale: vi }).replace("Thứ ", "T"),
                             fullDateStr: format(dateObj, "dd/MM"),
-                            price: item.price,
+                            price: itemPrice,
                             level: isWeekendDay ? 'weekend' : 'weekday',
                             savings: savings,
                             isWeekend: isWeekendDay
@@ -119,17 +128,13 @@ const BookingDateModal = ({ open, onClose, onConfirm, occupiedDates = [], select
     const isRangeValid = useMemo(() => {
         if (!selection.startDate || !selection.endDate) return false;
 
-        // Tạo bản sao để không ảnh hưởng state gốc
         let curr = new Date(selection.startDate);
         const end = new Date(selection.endDate);
 
-        // Reset giờ để so sánh chính xác
         curr.setHours(0,0,0,0);
         end.setHours(0,0,0,0);
 
-        // Duyệt qua từng ngày trong khoảng khách chọn
         while (curr < end) {
-            // Kiểm tra xem ngày này có nằm trong bất kỳ khoảng occupied nào không
             const isOccupied = occupiedDates.some(range => {
                 const s = new Date(range.start);
                 const e = new Date(range.end);
@@ -138,14 +143,13 @@ const BookingDateModal = ({ open, onClose, onConfirm, occupiedDates = [], select
                 return curr >= s && curr <= e;
             });
 
-            if (isOccupied) return false; // Phát hiện trùng lịch -> Invalid
+            if (isOccupied) return false;
 
             curr = addDays(curr, 1);
         }
         return true;
     }, [selection, occupiedDates]);
 
-    // ✅ [MỚI] Tự động set lỗi khi chọn ngày sai
     useEffect(() => {
         if (isRangeValid) {
             setDateError(null);
@@ -179,11 +183,10 @@ const BookingDateModal = ({ open, onClose, onConfirm, occupiedDates = [], select
             tempDate = addDays(tempDate, 1);
         }
         const nights = Math.max(1, differenceInCalendarDays(selection.endDate, selection.startDate));
-        return { total, nights, weekdayCount, weekendCount, prices };
-    }, [selection, prices]);
+        return { total, nights, weekdayCount, weekendCount, prices, currency };
+    }, [selection, prices, currency]);
 
     const handleConfirm = () => {
-        // ✅ [FIX] Chặn submit nếu lịch không hợp lệ
         if (!isRangeValid) {
             setDateError("Bạn không thể đặt phòng vì khoảng thời gian này đã có người đặt!");
             return;
@@ -191,7 +194,6 @@ const BookingDateModal = ({ open, onClose, onConfirm, occupiedDates = [], select
         onConfirm([selection.startDate, selection.endDate], bookingCalculation);
     };
 
-    // --- 4. Các hàm xử lý UI mới ---
     const handleChartClick = (data) => {
         if (!data || !data.activePayload) return;
         const clickedDate = data.activePayload[0].payload.date;
@@ -231,7 +233,7 @@ const BookingDateModal = ({ open, onClose, onConfirm, occupiedDates = [], select
                         }
                     </div>
                     <div className="text-base font-extrabold text-blue-600 mb-1">
-                        {new Intl.NumberFormat('vi-VN').format(data.price)}₫
+                        {formatCurrency(data.price, currency)}
                     </div>
                     {data.savings > 0 && (
                         <div className="text-green-600 font-medium flex items-center gap-1">
@@ -315,7 +317,7 @@ const BookingDateModal = ({ open, onClose, onConfirm, occupiedDates = [], select
                                             <p className="text-xs text-gray-500 mt-1 pl-9 h-4">
                                                 {hoverInfo ? (
                                                     <span className="text-blue-600 font-medium transition-all">
-                                                        {hoverInfo.fullDateStr}: {new Intl.NumberFormat('vi-VN').format(hoverInfo.price)}₫
+                                                        {hoverInfo.fullDateStr}: {formatCurrency(hoverInfo.price, currency)}
                                                         {hoverInfo.savings > 0 ? ` (Rẻ hơn ${hoverInfo.savings}%)` : ''}
                                                     </span>
                                                 ) : "Di chuột vào cột để xem chi tiết giá"}
@@ -367,7 +369,7 @@ const BookingDateModal = ({ open, onClose, onConfirm, occupiedDates = [], select
                                                 <YAxis
                                                     axisLine={false} tickLine={false}
                                                     tick={{fontSize: 10, fill: '#94a3b8'}}
-                                                    tickFormatter={(val) => `${val/1000}k`}
+                                                    tickFormatter={(val) => `${val}`}
                                                 />
                                                 <Tooltip content={<CustomTooltip />} cursor={{fill: 'rgba(0,0,0,0.03)', radius: 6}} />
 
@@ -451,13 +453,13 @@ const BookingDateModal = ({ open, onClose, onConfirm, occupiedDates = [], select
                             <div className="space-y-3 text-sm">
                                 {bookingCalculation.weekdayCount > 0 && (
                                     <div className="flex justify-between text-gray-600">
-                                        <span>Ngày thường ({new Intl.NumberFormat('vi-VN').format(prices.weekday)}₫)</span>
+                                        <span>Ngày thường ({formatCurrency(prices.weekday, currency)})</span>
                                         <span className="font-medium">x {bookingCalculation.weekdayCount} đêm</span>
                                     </div>
                                 )}
                                 {bookingCalculation.weekendCount > 0 && (
                                     <div className="flex justify-between text-orange-600 font-medium">
-                                        <span>Cuối tuần ({new Intl.NumberFormat('vi-VN').format(prices.weekend)}₫)</span>
+                                        <span>Cuối tuần ({formatCurrency(prices.weekend, currency)})</span>
                                         <span>x {bookingCalculation.weekendCount} đêm</span>
                                     </div>
                                 )}
@@ -470,7 +472,7 @@ const BookingDateModal = ({ open, onClose, onConfirm, occupiedDates = [], select
                                 <div className="border-t-2 border-dashed border-gray-100 my-2 pt-3 flex justify-between items-end">
                                     <span className="font-bold text-gray-800 text-base">Tổng tạm tính</span>
                                     <span className="text-2xl font-extrabold text-[rgb(40,169,224)]">
-                                        {new Intl.NumberFormat('vi-VN').format(bookingCalculation.total)}₫
+                                        {formatCurrency(bookingCalculation.total, currency)}
                                     </span>
                                 </div>
                                 <p className="text-[10px] text-gray-400 text-right italic">*Giá đã bao gồm thuế & phí</p>
@@ -481,7 +483,6 @@ const BookingDateModal = ({ open, onClose, onConfirm, occupiedDates = [], select
                         <div className="flex flex-col gap-3 mt-auto pt-4 border-t border-gray-100">
                             <Button
                                 onClick={handleConfirm}
-                                // ✅ Disable nút nếu có lỗi
                                 disabled={!!dateError}
                                 className={`w-full shadow-lg py-3.5 text-base font-bold flex items-center justify-center gap-2 transition-transform active:scale-[0.98] ${
                                     dateError
@@ -503,6 +504,3 @@ const BookingDateModal = ({ open, onClose, onConfirm, occupiedDates = [], select
 };
 
 export default BookingDateModal;
-
-
-

@@ -1,13 +1,26 @@
 import React from "react";
 import { Trophy } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/context/LanguageContext";
 
 const TopHotels = ({ hotels }) => {
-  const formatMoney = (val) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val);
+  const { t, i18n } = useTranslation();
+  const { currency } = useLanguage();
+  const isVi = i18n.language === 'vi';
+
+  const formatMoney = (val) => {
+    if (currency === 'USD') {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(val / 25000);
+    }
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(val);
+  };
 
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 h-full flex flex-col">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-bold text-gray-800">Top Doanh Thu</h3>
+        <h3 className="text-lg font-bold text-gray-800">
+          {isVi ? "Top Doanh Thu" : "Top Revenue"}
+        </h3>
         <Trophy className="text-yellow-500" size={20} />
       </div>
 
@@ -26,7 +39,9 @@ const TopHotels = ({ hotels }) => {
 
             <div className="flex-1 min-w-0">
               <h4 className="text-sm font-semibold text-gray-800 truncate">{hotel.name}</h4>
-              <p className="text-xs text-gray-500">{hotel.bookings} đơn đặt phòng</p>
+              <p className="text-xs text-gray-500">
+                {hotel.bookings} {isVi ? "đơn đặt phòng" : "bookings"}
+              </p>
             </div>
 
             <div className="text-right">
@@ -34,7 +49,11 @@ const TopHotels = ({ hotels }) => {
             </div>
           </div>
         ))}
-        {(!hotels || hotels.length === 0) && <p className="text-center text-gray-400 py-10">Chưa có dữ liệu</p>}
+        {(!hotels || hotels.length === 0) && (
+          <p className="text-center text-gray-400 py-10">
+            {t('common.no_data')}
+          </p>
+        )}
       </div>
     </div>
   );

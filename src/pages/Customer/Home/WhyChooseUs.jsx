@@ -1,38 +1,41 @@
 import React from "react";
 import { ShieldCheck, Headphones, CreditCard, Tag } from "lucide-react";
-
-const FEATURES = [
-  {
-    icon: <Tag size={32} />,
-    title: "Giá tốt nhất",
-    desc: "Đảm bảo giá tốt nhất cho mọi đặt phòng. Tích điểm đổi quà hấp dẫn.",
-    color: "text-blue-600",
-    bg: "bg-blue-100"
-  },
-  {
-    icon: <ShieldCheck size={32} />,
-    title: "Đặt phòng an toàn",
-    desc: "Bảo mật thông tin tuyệt đối. Quy trình thanh toán được mã hóa chuẩn quốc tế.",
-    color: "text-green-600",
-    bg: "bg-green-100"
-  },
-  {
-    icon: <Headphones size={32} />,
-    title: "Hỗ trợ 24/7",
-    desc: "Đội ngũ chăm sóc khách hàng luôn sẵn sàng hỗ trợ bạn mọi lúc, mọi nơi.",
-    color: "text-purple-600",
-    bg: "bg-purple-100"
-  },
-  {
-    icon: <CreditCard size={32} />,
-    title: "Thanh toán linh hoạt",
-    desc: "Hỗ trợ nhiều phương thức: Thẻ, Momo, VNPay, ZaloPay và trả sau.",
-    color: "text-orange-600",
-    bg: "bg-orange-100"
-  }
-];
+import { useTranslation } from "react-i18next";
 
 const WhyChooseUs = () => {
+  const { t } = useTranslation();
+
+  const FEATURES = [
+    {
+      icon: <Tag size={32} />,
+      title: t('home.why_choose_us.best_price'),
+      desc: t('home.why_choose_us.best_price_desc'),
+      color: "text-blue-600",
+      bg: "bg-blue-100"
+    },
+    {
+      icon: <ShieldCheck size={32} />,
+      title: t('home.why_choose_us.secure_booking'),
+      desc: t('home.why_choose_us.secure_booking_desc'),
+      color: "text-green-600",
+      bg: "bg-green-100"
+    },
+    {
+      icon: <Headphones size={32} />,
+      title: t('home.why_choose_us.support_247'),
+      desc: t('home.why_choose_us.support_247_desc'),
+      color: "text-purple-600",
+      bg: "bg-purple-100"
+    },
+    {
+      icon: <CreditCard size={32} />,
+      title: t('home.why_choose_us.flexible_payment'),
+      desc: t('home.why_choose_us.flexible_payment_desc'),
+      color: "text-orange-600",
+      bg: "bg-orange-100"
+    }
+  ];
+
   return (
     <section className="container mx-auto px-4 py-16">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">

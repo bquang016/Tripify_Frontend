@@ -1,5 +1,6 @@
 // src/pages/Customer/About/Partners.jsx
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 const partners = [
     { name: "Vinhomes Ocean Park", logo: "/assets/images/partners/vinhomes.jpg" },
@@ -20,10 +21,12 @@ const partners = [
 ];
 
 export default function Partners() {
+    const { t, i18n } = useTranslation();
+    
     return (
         <section className="py-20 bg-white text-center">
             <h2 className="text-3xl font-bold text-gray-800 mb-12">
-                Đối tác khách sạn & chỗ ở
+                {i18n.language === 'vi' ? 'Đối tác khách sạn & chỗ ở' : 'Hotel & Accommodation Partners'}
             </h2>
 
             <div className="max-w-7xl mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-10 gap-y-12 place-items-center">

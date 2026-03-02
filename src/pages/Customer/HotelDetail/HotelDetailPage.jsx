@@ -26,6 +26,7 @@ import { useAuth } from "@/context/AuthContext";
 import propertyService from "@/services/property.service";
 import bookingService from "@/services/booking.service";
 import { getRatingsByProperty, pinRating } from "@/services/rating.service";
+import { formatPrice } from "@/utils/priceUtils";
 
 // --- HELPERS ---
 const BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8386/api/v1").replace("/api/v1", "");
@@ -104,6 +105,9 @@ export default function HotelDetailPage() {
                     location: `${hotelData.address}, ${hotelData.city}`,
                     latitude: hotelData.latitude,
                     longitude: hotelData.longitude,
+                    currency: hotelData.currency,
+                    minPrice: hotelData.minPrice,
+                    convertedMinPrice: hotelData.convertedMinPrice,
                     images: (hotelData.images && hotelData.images.length > 0) ? hotelData.images.map(getFullImageUrl) : [getFullImageUrl(hotelData.coverImage)],
                     amenities: hotelData.amenities ? hotelData.amenities.map(a => ({ name: a.amenityName, icon: getAmenityIcon(a.amenityName) })) : [],
                     rooms: hotelData.rooms ? hotelData.rooms.map(r => ({
@@ -112,7 +116,10 @@ export default function HotelDetailPage() {
                         name: r.roomName,
                         roomName: r.roomName,
                         price: r.pricePerNight,
+                        convertedPrice: r.convertedPricePerNight,
                         weekendPrice: r.weekendPrice, // ✅ Map giá cuối tuần từ API
+                        convertedWeekendPrice: r.convertedWeekendPrice,
+                        currency: r.currency,
                         guests: r.capacity,
                         size: r.area || 30,
                         description: r.description,
@@ -269,7 +276,15 @@ export default function HotelDetailPage() {
                     </div>
 
                     <div className="lg:col-span-4">
-                        <HotelSidebar location={hotel.location} rating={hotel.rating} minPrice={hotel.rooms[0]?.price} lat={hotel.latitude} lng={hotel.longitude} />
+                        <HotelSidebar 
+                            location={hotel.location} 
+                            rating={hotel.rating} 
+                            minPrice={hotel.minPrice} 
+                            convertedMinPrice={hotel.convertedMinPrice}
+                            currency={hotel.currency}
+                            lat={hotel.latitude} 
+                            lng={hotel.longitude} 
+                        />
                     </div>
                 </div>
             </div>
@@ -286,7 +301,10 @@ export default function HotelDetailPage() {
                     occupiedDates={occupiedDates}
                     // ✅ Truyền đúng props để Modal tính toán
                     roomPrice={selectedRoomForBooking.price}
+                    convertedPrice={selectedRoomForBooking.convertedPrice}
                     weekendPrice={selectedRoomForBooking.weekendPrice}
+                    convertedWeekendPrice={selectedRoomForBooking.convertedWeekendPrice}
+                    currency={selectedRoomForBooking.currency}
                     selectedRoomId={selectedRoomForBooking.roomId || selectedRoomForBooking.id}
                 />
             )}
