@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, createSearchParams } from "react-router-dom";
 import { Search } from "lucide-react";
 import { addDays, format, isValid, parseISO } from "date-fns";
+import { useTranslation } from "react-i18next";
 import Button from "@/components/common/Button/Button";
 import DestinationSelector from "@/components/search/DestinationSelector";
 import DateSelector from "@/components/search/DateSelector";
@@ -13,6 +14,7 @@ const SearchBox = ({
   className = "", 
   vertical = false 
 }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   // --- 1. STATE ---
@@ -60,7 +62,6 @@ const SearchBox = ({
 
   // --- 3. RENDER ---
   return (
-    // 👇 SỬA: relative z-[100] để đảm bảo nó cao nhất
     <div className={`relative z-[100] bg-white rounded-2xl shadow-xl border border-gray-100 p-4 grid gap-4 ${vertical ? 'grid-cols-1' : 'grid-cols-1 md:grid-cols-4'} ${className}`}>      
       {/* Destination */}
       <div className="relative z-30">
@@ -85,7 +86,7 @@ const SearchBox = ({
           onClick={handleSearchClick}
           leftIcon={<Search size={20} />}
         >
-          Tìm kiếm
+          {t('search.search_btn')}
         </Button>
       </div>
     </div>

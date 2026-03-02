@@ -1,6 +1,7 @@
 import React from "react";
 import Button from "@/components/common/Button/Button";
 import { BedDouble, Maximize, Wifi, Users, ChevronRight, Sparkles, Check } from "lucide-react";
+import { formatPrice } from "@/utils/priceUtils";
 
 // ✅ Nhận prop onBookNow thay vì dùng navigate trực tiếp
 const RoomRow = ({ room, onInfoClick, onBookNow }) => {
@@ -96,10 +97,10 @@ const RoomRow = ({ room, onInfoClick, onBookNow }) => {
                         </span>
                     </div>
                     <div className="text-xs text-gray-400 line-through mb-0.5">
-                        {(room.price * 1.45).toLocaleString('vi-VN')} ₫
+                        {formatPrice(room.price * 1.45, room.convertedPrice ? room.convertedPrice * 1.45 : null, room.currency)}
                     </div>
                     <div className="text-2xl font-bold text-gray-900 leading-none">
-                        {room.price.toLocaleString('vi-VN')} ₫
+                        {formatPrice(room.price, room.convertedPrice, room.currency)}
                     </div>
                     <p className="text-[10px] text-gray-500 mb-4">đã bao gồm thuế & phí</p>
 
@@ -119,4 +120,4 @@ const RoomRow = ({ room, onInfoClick, onBookNow }) => {
     );
 };
 
-export default RoomRow; 
+export default RoomRow;

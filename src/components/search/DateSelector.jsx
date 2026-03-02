@@ -2,12 +2,16 @@ import React, { useEffect, useRef, useState } from "react";
 import { Calendar } from "lucide-react";
 import { DateRange } from "react-date-range";
 import { addDays, format } from "date-fns";
-import { vi } from "date-fns/locale";
+import { vi, enUS } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
 
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 
 const DateSelector = ({ value, onChange }) => {
+  const { t, i18n } = useTranslation();
+  const currentLocale = i18n.language === 'vi' ? vi : enUS;
+  
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -28,10 +32,10 @@ const DateSelector = ({ value, onChange }) => {
     return () => document.removeEventListener("mousedown", onClickOutside);
   }, []);
 
-  const displayText = `${format(range[0].startDate, "dd/MM/yyyy", { locale: vi })} - ${format(
+  const displayText = `${format(range[0].startDate, "dd/MM/yyyy", { locale: currentLocale })} - ${format(
     range[0].endDate,
     "dd/MM/yyyy",
-    { locale: vi }
+    { locale: currentLocale }
   )}`;
 
   const handleSelect = (item) => {
@@ -42,7 +46,7 @@ const DateSelector = ({ value, onChange }) => {
   return (
     <div className="relative flex flex-col" ref={ref}>
       <label className="text-sm font-semibold text-gray-600 mb-1">
-        Khoảng thời gian lưu trú
+        {t('search.check_in')} - {t('search.check_out')}
       </label>
 
       <button
@@ -68,7 +72,7 @@ const DateSelector = ({ value, onChange }) => {
               onChange={handleSelect}
               moveRangeOnFirstSelection={false}
               ranges={range}
-              locale={vi}
+              locale={currentLocale}
               rangeColors={["rgb(40,169,224)"]}
               showDateDisplay={false}
               months={1}
@@ -83,13 +87,13 @@ const DateSelector = ({ value, onChange }) => {
               onClick={() => setOpen(false)}
               className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 hover:bg-white"
             >
-              Hủy
+              {t('common.cancel')}
             </button>
             <button
               onClick={() => setOpen(false)}
               className="px-3 py-1.5 text-sm rounded-lg bg-[rgb(40,169,224)] text-white hover:opacity-90"
             >
-              Áp dụng
+              {t('search.apply')}
             </button>
           </div>
         </div>

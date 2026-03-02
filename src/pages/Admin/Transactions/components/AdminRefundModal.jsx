@@ -2,21 +2,20 @@ import React, { useEffect, useState } from "react";
 import { X, CheckCircle, XCircle, AlertTriangle, Send } from "lucide-react";
 import Button from "@/components/common/Button/Button";
 import ModalPortal from "@/components/common/Modal/ModalPortal";
+import { useTranslation } from "react-i18next";
 
 const AdminRefundModal = ({ isOpen, onClose, onConfirm, type }) => {
+  const { t } = useTranslation();
   const [note, setNote] = useState("");
   const isApprove = type === "APPROVE";
 
-  // ✅ Lock scroll nền khi mở modal
   useEffect(() => {
     if (!isOpen) return;
-
     const scrollY = window.scrollY;
     document.body.style.position = "fixed";
     document.body.style.top = `-${scrollY}px`;
     document.body.style.width = "100%";
     document.body.style.overflow = "hidden";
-
     return () => {
       document.body.style.position = "";
       document.body.style.top = "";
@@ -26,7 +25,6 @@ const AdminRefundModal = ({ isOpen, onClose, onConfirm, type }) => {
     };
   }, [isOpen]);
 
-  // ✅ Reset note mỗi lần mở (tuỳ bạn thích, không ảnh hưởng logic confirm)
   useEffect(() => {
     if (isOpen) setNote("");
   }, [isOpen]);
@@ -65,7 +63,7 @@ const AdminRefundModal = ({ isOpen, onClose, onConfirm, type }) => {
                 ].join(" ")}
               >
                 {isApprove ? <CheckCircle size={20} /> : <XCircle size={20} />}
-                {isApprove ? "Xác nhận Duyệt" : "Xác nhận Từ chối"}
+                {isApprove ? t('finance.confirm_approve_title') : t('finance.confirm_reject_title')}
               </h3>
 
               <button
@@ -78,36 +76,21 @@ const AdminRefundModal = ({ isOpen, onClose, onConfirm, type }) => {
 
             {/* Body */}
             <div className="p-6 space-y-4">
-              {isApprove ? (
-                <div className="bg-emerald-50 p-3 rounded-xl text-emerald-800 text-sm flex gap-2 border border-emerald-100">
-                  <AlertTriangle size={16} className="shrink-0 mt-0.5" />
-                  <p>
-                    Trạng thái sẽ chuyển thành <strong>ĐÃ HOÀN TIỀN</strong>.
-                    Hãy đảm bảo bạn đã chuyển khoản thành công tới STK khách hàng cung cấp.
-                  </p>
-                </div>
-              ) : (
-                <div className="bg-rose-50 p-3 rounded-xl text-rose-800 text-sm flex gap-2 border border-rose-100">
-                  <AlertTriangle size={16} className="shrink-0 mt-0.5" />
-                  <p>
-                    Yêu cầu sẽ bị hủy bỏ và trạng thái đơn hàng quay về{" "}
-                    <strong>ĐÃ THANH TOÁN</strong>.
-                  </p>
-                </div>
-              )}
+              <div className={`p-3 rounded-xl text-sm flex gap-2 border ${isApprove ? 'bg-emerald-50 text-emerald-800 border-emerald-100' : 'bg-rose-50 text-rose-800 border-rose-100'}`}>
+                <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                <p>
+                  {isApprove ? t('finance.approve_info_msg') : t('finance.reject_info_msg')}
+                </p>
+              </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Ghi chú giao dịch <span className="text-red-500">*</span>
+                  {t('finance.tx_note_label')} <span className="text-red-500">*</span>
                 </label>
                 <textarea
                   className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-none text-sm"
                   rows={3}
-                  placeholder={
-                    isApprove
-                      ? "Nhập mã giao dịch ngân hàng (Ref No)..."
-                      : "Nhập lý do từ chối..."
-                  }
+                  placeholder={isApprove ? t('finance.approve_note_placeholder') : t('finance.reject_note_placeholder')}
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                 />
@@ -127,7 +110,7 @@ const AdminRefundModal = ({ isOpen, onClose, onConfirm, type }) => {
                 disabled={!note.trim()}
               >
                 {isApprove ? <Send size={18} /> : <XCircle size={18} />}
-                {isApprove ? "Đã chuyển tiền" : "Từ chối hoàn"}
+                {isApprove ? t('finance.btn_transferred') : t('finance.btn_reject_confirm')}
               </Button>
             </div>
           </div>

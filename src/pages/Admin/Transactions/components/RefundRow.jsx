@@ -1,21 +1,24 @@
 // src/pages/Admin/Transactions/components/RefundRow.jsx
 import React from 'react';
 import { Eye, CheckCircle2, AlertTriangle, Ban } from "lucide-react";
-import Badge from "@/components/common/Badge/Badge"; // Đảm bảo đường dẫn đúng tới Badge
+import Badge from "@/components/common/Badge/Badge";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/context/LanguageContext";
 
 // --- SUB-COMPONENT: Badge Trạng Thái (Nội bộ) ---
 const RefundStatusBadge = ({ status }) => {
+  const { t } = useTranslation();
+  
   switch (status) {
     case 'APPROVED':
       return (
-        // ✅ Thêm color="custom" và icon={false}
         <Badge 
             color="custom" 
             icon={false} 
             className="bg-emerald-100 text-emerald-700 border border-emerald-200 flex items-center justify-center gap-1.5 w-fit mx-auto"
         >
           <CheckCircle2 size={14} strokeWidth={2.5} />
-          <span className="font-bold text-xs">Đã hoàn tiền</span>
+          <span className="font-bold text-xs">{t('finance.filter_approved', 'Refunded')}</span>
         </Badge>
       );
     case 'PENDING':
@@ -26,7 +29,7 @@ const RefundStatusBadge = ({ status }) => {
             className="bg-orange-100 text-orange-700 border border-orange-200 flex items-center justify-center gap-1.5 w-fit mx-auto animate-pulse"
         >
           <AlertTriangle size={14} strokeWidth={2.5} />
-          <span className="font-bold text-xs">Chờ xử lý</span>
+          <span className="font-bold text-xs">{t('finance.filter_pending', 'Pending')}</span>
         </Badge>
       );
     case 'REJECTED':
@@ -37,7 +40,7 @@ const RefundStatusBadge = ({ status }) => {
             className="bg-slate-100 text-slate-600 border border-slate-200 flex items-center justify-center gap-1.5 w-fit mx-auto"
         >
           <Ban size={14} strokeWidth={2.5} />
-          <span className="font-bold text-xs">Đã từ chối</span>
+          <span className="font-bold text-xs">{t('finance.filter_rejected', 'Rejected')}</span>
         </Badge>
       );
     default:
@@ -51,9 +54,19 @@ const RefundStatusBadge = ({ status }) => {
 
 // --- MAIN COMPONENT: RefundRow ---
 const RefundRow = ({ item, onViewDetail }) => {
+  const { t, i18n } = useTranslation();
+  const { currency } = useLanguage();
+  const isVi = i18n.language === 'vi';
+
   // Helpers Format
-  const formatMoney = (amount) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
-  const formatDate = (date) => date ? new Date(date).toLocaleDateString('vi-VN') : 'N/A';
+  const formatMoney = (amount) => {
+    if (currency === 'USD') {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount / 25000);
+    }
+    return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+  };
+
+  const formatDate = (date) => date ? new Date(date).toLocaleDateString(isVi ? 'vi-VN' : 'en-US') : 'N/A';
 
   return (
     <tr className="hover:bg-slate-50 transition-colors group border-b border-slate-100 last:border-none">
@@ -80,7 +93,7 @@ const RefundRow = ({ item, onViewDetail }) => {
         <button 
           onClick={() => onViewDetail(item)}
           className="p-2 bg-white border border-slate-200 text-slate-500 rounded-lg hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-all shadow-sm" 
-          title="Xem chi tiết"
+          title={t('hotels.details', 'Details')}
         >
           <Eye size={18} />
         </button>

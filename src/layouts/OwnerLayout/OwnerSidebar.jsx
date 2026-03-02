@@ -4,45 +4,41 @@ import {
   LayoutDashboard,
   BedDouble,
   CalendarCheck,
-  Star,
-  Settings,
   LogOut,
   ChevronLeft,
   ChevronRight,
-  ClipboardList,
   Building2,
   List,
   Plus,
   ChevronDown,
   Tag,
-  Bell // ✅ Import icon Chuông
+  Bell 
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useTranslation } from "react-i18next";
 
 const OwnerSidebar = () => {
+  const { t, i18n } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
   const [openSubMenu, setOpenSubMenu] = useState("");
   const location = useLocation();
   const { logout } = useAuth();
 
   const menuItems = [
-    { name: "Dashboard", icon: <LayoutDashboard size={20} />, path: "/owner" },
-    
-    // ✅ Đã thêm mục THÔNG BÁO
-    { name: "Thông báo", icon: <Bell size={20} />, path: "/owner/notifications" },
-    
-    { name: "Khuyến mãi", icon: <Tag size={20} />, path: "/owner/promotions" },
-    { name: "Bookings", icon: <CalendarCheck size={20} />, path: "/owner/bookings" },
+    { name: t('owner.dashboard'), icon: <LayoutDashboard size={20} />, path: "/owner" },
+    { name: t('owner.notifications'), icon: <Bell size={20} />, path: "/owner/notifications" },
+    { name: t('owner.promotions'), icon: <Tag size={20} />, path: "/owner/promotions" },
+    { name: t('owner.booking_mgmt'), icon: <CalendarCheck size={20} />, path: "/owner/bookings" },
     {
-      name: "Quản lý cơ sở lưu trú",
+      name: t('owner.property_mgmt'),
       icon: <Building2 size={20} />,
       key: "properties",
       children: [
-        { name: "Danh sách cơ sở", path: "/owner/properties", icon: <List size={16} /> },
-        { name: "Thêm cơ sở mới", path: "/owner/properties/new", icon: <Plus size={16} /> },
+        { name: i18n.language === 'vi' ? "Danh sách cơ sở" : "Property List", path: "/owner/properties", icon: <List size={16} /> },
+        { name: t('owner.add_property'), path: "/owner/properties/new", icon: <Plus size={16} /> },
       ]
     },
-    { name: "Cơ sở lưu trú", icon: <BedDouble size={20} />, path: "/owner/rooms" },
+    { name: t('owner.room_mgmt'), icon: <BedDouble size={20} />, path: "/owner/rooms" },
   ];
 
   const handleSubMenuToggle = (key) => {
@@ -59,7 +55,7 @@ const OwnerSidebar = () => {
               <Link to="/" className="flex items-center gap-2">
                 <img
                     src="/assets/logo/logo_travelmate_xoafont.png"
-                    alt="TravelMate"
+                    alt="Tripify"
                     style={{ width: "135px", height: "43px" }}
                     className="object-contain"
                 />
@@ -143,15 +139,15 @@ const OwnerSidebar = () => {
         <div className="p-3 border-t border-gray-200 dark:border-gray-700">
           <button
               onClick={() => {
-                if (confirm("Bạn có chắc muốn đăng xuất?")) {
+                if (confirm(i18n.language === 'vi' ? "Bạn có chắc muốn đăng xuất?" : "Are you sure you want to logout?")) {
                   logout();
                 }
               }}
-              title="Đăng xuất"
+              title={t('common.logout')}
               className={`flex items-center gap-3 py-2.5 px-4 rounded-lg transition-all w-full text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 ${collapsed ? "justify-center" : ""}`}
           >
             <LogOut size={20} />
-            {!collapsed && <span className="font-medium text-sm">Đăng xuất</span>}
+            {!collapsed && <span className="font-medium text-sm">{t('common.logout')}</span>}
           </button>
         </div>
       </aside>

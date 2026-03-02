@@ -6,6 +6,7 @@ import {
     Cake, Home, DollarSign, Users as UsersIcon, Maximize, Clock, Info, Banknote, Map,
     Sparkles, Compass, BedDouble
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import Button from "@/components/common/Button/Button";
 import ImageViewerModal from "./ImageViewerModal";
 
@@ -17,11 +18,11 @@ const getImgUrl = (url) => {
   return `${API_BASE_URL}${url}`;
 };
 
-const formatDateVN = (dateString) => {
+const formatDateVN = (dateString, locale = 'vi-VN') => {
     if (!dateString) return "N/A";
     try {
         const date = new Date(dateString);
-        return new Intl.DateTimeFormat('vi-VN', {
+        return new Intl.DateTimeFormat(locale, {
             day: '2-digit', month: '2-digit', year: 'numeric'
         }).format(date);
     } catch (e) { return "N/A"; }
@@ -60,6 +61,9 @@ const getGenderLabel = (gender) => {
         case "OTHER": return "Khác";
         default: return gender;
     }
+const formatCurrency = (amount, locale = 'vi-VN') => {
+    if (typeof amount !== 'number') return "0 đ";
+    return new Intl.NumberFormat(locale, { style: 'currency', currency: 'VND' }).format(amount);
 };
 
 const AmenityBadge = ({ amenity }) => (
@@ -86,10 +90,43 @@ const InfoRow = ({ icon, label, value, isHighlight = false, children }) => (
 );
 
 export default function ViewApplicationModal({ isOpen, onClose, application, onApprove, onReject }) {
+  const { t, i18n } = useTranslation();
   const [viewerOpen, setViewerOpen] = useState(false);
   const [viewerIndex, setViewerIndex] = useState(0);
 
   if (!isOpen || !application) return null;
+
+  const currentLocale = i18n.language === 'vi' ? 'vi-VN' : 'en-US';
+
+  const getStatusLabel = (status) => {
+      switch (status) {
+          case "PENDING": return t('hotels.pending');
+          case "APPROVED": return t('hotels.approved');
+          case "REJECTED": return t('hotels.rejected');
+          default: return status;
+      }
+  };
+
+  const getPropertyTypeLabel = (type) => {
+      switch (type) {
+          case "HOTEL": return t('add_property_flow.hotel_label');
+          case "RESORT": return t('add_property_flow.resort_label');
+          case "VILLA": return t('add_property_flow.villa_label');
+          case "HOMESTAY": return t('add_property_flow.homestay_label');
+          case "APARTMENT": return t('add_property_flow.apartment_label') || "Apartment";
+          default: return type;
+      }
+  };
+
+  const getGenderLabel = (gender) => {
+      if (!gender) return t('owner_approvals.modal.gender.not_updated');
+      switch (gender.toUpperCase()) {
+          case "MALE": return t('owner_approvals.modal.gender.male');
+          case "FEMALE": return t('owner_approvals.modal.gender.female');
+          case "OTHER": return t('owner_approvals.modal.gender.other');
+          default: return gender;
+      }
+  };
 
   const { propertyInfo = {}, paymentInfo = {} } = application;
   const policies = propertyInfo.policies || {};
@@ -97,12 +134,12 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
 
   // --- PHÂN LOẠI ẢNH ---
   const personalImages = [
-    { url: getImgUrl(application.cardFrontImage), caption: "CCCD Mặt trước" },
-    { url: getImgUrl(application.cardBackImage), caption: "CCCD Mặt sau" }
+    { url: getImgUrl(application.cardFrontImage), caption: t('owner_approvals.modal.card_front') },
+    { url: getImgUrl(application.cardBackImage), caption: t('owner_approvals.modal.card_back') }
   ].filter(img => application.cardFrontImage && application.cardBackImage);
 
   const businessImages = [
-    { url: getImgUrl(application.businessLicenseImage), caption: "Giấy phép Kinh doanh" }
+    { url: getImgUrl(application.businessLicenseImage), caption: t('owner_approvals.modal.business_license_img') }
   ].filter(img => application.businessLicenseImage);
 
   const propertyImages = (propertyInfo.propertyImageUrls || []).map((url, idx) => ({
@@ -161,11 +198,11 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
             <div>
               <h2 className="text-lg font-bold text-gray-800 flex items-center gap-3">
                 <span className="text-blue-600 bg-blue-50 p-1.5 rounded-lg"><Briefcase size={20}/></span>
-                Chi tiết Hồ sơ Đối tác #{application.id}
+                {t('owner_approvals.modal.detail_title', { id: application.id })}
               </h2>
               <div className="flex items-center gap-4 mt-0.5 ml-10">
                   <p className="text-xs text-gray-500 flex items-center gap-1">
-                    <Calendar size={12}/> Nộp ngày: {formatDateVN(application.createdAt)}
+                    <Calendar size={12}/> {t('owner_approvals.submitted_date')}: {formatDateVN(application.createdAt, currentLocale)}
                   </p>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded border flex items-center gap-1 ${
                       application.status === 'PENDING' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' :
@@ -186,7 +223,7 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
               {/* CỘT 1: THÔNG TIN CÁ NHÂN & THANH TOÁN */}
               <div className="lg:col-span-3 space-y-6">
                 <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                    <SectionTitle icon={User} title="Thông tin cá nhân" />
+                    <SectionTitle icon={User} title={t('owner_approvals.modal.personal_info')} />
                     <div className="space-y-1">
                         <InfoRow icon={<User size={14}/>} label="Họ và tên" value={application.applicantFullName} />
                         <InfoRow icon={<Phone size={14}/>} label="Số điện thoại" value={application.applicantPhoneNumber} />
@@ -199,31 +236,31 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
                 </div>
 
                 <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                    <SectionTitle icon={Banknote} title="Thanh toán" />
+                    <SectionTitle icon={Banknote} title={t('owner_approvals.modal.payment_info')} />
                     <div className="space-y-1">
-                        <InfoRow icon={<DollarSign size={14}/>} label="Phương thức" value={paymentInfo?.paymentMethod === 'BANK_TRANSFER' ? 'Chuyển khoản' : paymentInfo?.paymentMethod} />
-                        <InfoRow icon={<Briefcase size={14}/>} label="Ngân hàng" value={paymentInfo?.bankName} />
-                        <InfoRow icon={<User size={14}/>} label="Chủ tài khoản" value={paymentInfo?.accountHolderName} />
-                        <InfoRow icon={<CreditCard size={14}/>} label="Số tài khoản" value={paymentInfo?.accountNumber} />
+                        <InfoRow icon={<DollarSign size={14}/>} label={t('owner_approvals.modal.payment_method')} value={paymentInfo?.paymentMethod === 'BANK_TRANSFER' ? t('owner_approvals.modal.bank_transfer') : paymentInfo?.paymentMethod} />
+                        <InfoRow icon={<Briefcase size={14}/>} label={t('owner_approvals.modal.bank_name')} value={paymentInfo?.bankName} />
+                        <InfoRow icon={<User size={14}/>} label={t('owner_approvals.modal.account_holder')} value={paymentInfo?.accountHolderName} />
+                        <InfoRow icon={<CreditCard size={14}/>} label={t('owner_approvals.modal.account_number')} value={paymentInfo?.accountNumber} />
                     </div>
                 </div>
 
                 {isReviewed && (
                     <div className={`p-5 rounded-2xl border shadow-sm ${isRejected ? 'bg-red-50 border-red-100' : 'bg-green-50 border-green-100'}`}>
-                        <SectionTitle icon={isRejected ? AlertOctagon : ShieldCheck} title="Kết quả xét duyệt" />
+                        <SectionTitle icon={isRejected ? AlertOctagon : ShieldCheck} title={t('owner_approvals.modal.review_result')} />
                         <div className="space-y-2 mt-2">
                             <div className="flex justify-between text-xs">
-                                <span className="text-gray-500">Người duyệt:</span>
-                                <span className="font-bold">{application.reviewedByAdminName || "Quản trị viên"}</span>
+                                <span className="text-gray-500">{t('owner_approvals.modal.reviewer')}:</span>
+                                <span className="font-bold">{application.reviewedByAdminName || t('owner_approvals.modal.admin')}</span>
                             </div>
                             <div className="flex justify-between text-xs">
-                                <span className="text-gray-500">Ngày duyệt:</span>
-                                <span className="font-bold">{formatDateVN(application.reviewedAt)}</span>
+                                <span className="text-gray-500">{t('owner_approvals.modal.review_date')}:</span>
+                                <span className="font-bold">{formatDateVN(application.reviewedAt, currentLocale)}</span>
                             </div>
                             {isRejected && (
                                 <div className="mt-3 p-3 bg-white/60 rounded-lg border border-red-100">
-                                    <p className="text-[10px] font-bold text-red-500 uppercase mb-1">Lý do từ chối:</p>
-                                    <p className="text-xs text-red-700 italic">"{application.adminReason || "Không cung cấp lý do"}"</p>
+                                    <p className="text-[10px] font-bold text-red-500 uppercase mb-1">{t('owner_approvals.modal.reject_reason')}:</p>
+                                    <p className="text-xs text-red-700 italic">"{application.adminReason || t('owner_approvals.modal.no_reason')}"</p>
                                 </div>
                             )}
                         </div>
@@ -251,7 +288,7 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
                                     Xem Google Maps <Maximize size={12}/>
                                 </a>
                             ) : (
-                                <span className="text-gray-400 text-xs italic">Chưa có tọa độ</span>
+                                <span className="text-gray-400 text-xs italic">{t('owner_approvals.modal.no_coords')}</span>
                             )}
                         </InfoRow>
                         <InfoRow icon={<Info size={14}/>} label="Mô tả">
@@ -312,7 +349,7 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
                  )}
 
                 <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                    <SectionTitle icon={Clock} title="Chính sách vận hành" />
+                    <SectionTitle icon={Clock} title={t('owner_approvals.modal.operation_policy')} />
                     <div className="grid grid-cols-2 gap-x-4">
                         <InfoRow icon={<Clock size={14}/>} label="Giờ nhận phòng" value={policies.checkInTime} />
                         <InfoRow icon={<Clock size={14}/>} label="Giờ trả phòng" value={policies.checkOutTime} />
@@ -330,7 +367,7 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
               {/* CỘT 3: HÌNH ẢNH MINH CHỨNG */}
               <div className="lg:col-span-5 space-y-6">
                 <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm h-full">
-                    <SectionTitle icon={ImageIcon} title={`Hình ảnh minh chứng (${allImages.length})`} />
+                    <SectionTitle icon={ImageIcon} title={t('owner_approvals.modal.proof_images', { count: allImages.length })} />
                     
                     <div className="space-y-6 mt-4">
                         {allImages.length > 0 ? (
@@ -370,7 +407,7 @@ export default function ViewApplicationModal({ isOpen, onClose, application, onA
                     : 'bg-red-100 text-red-800 border border-red-200'
                 }`}>
                      {application.status === 'APPROVED' ? <CheckCircle size={14}/> : <XCircle size={14}/>}
-                     Hồ sơ đã được {getStatusLabel(application.status).toLowerCase()}
+                     {t('owner_approvals.modal.reviewed_status', { status: getStatusLabel(application.status).toLowerCase() })}
                  </div>
             )}
           </div>
