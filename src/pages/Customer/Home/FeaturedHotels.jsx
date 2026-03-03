@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     ArrowRight, MapPin, Star, Heart,
-    Sparkles // Đã xóa Zap khỏi import
+    Sparkles
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -19,31 +19,27 @@ const BASE_IMAGE_URL = "http://localhost:8386/images/";
 // ====================================================================
 // 1. SUB-COMPONENT: HEADER
 // ====================================================================
-const SectionHeader = ({ onSeeAll }) => (
-    <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-10 px-2">
-        <div className="max-w-2xl">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
-                Điểm Đến <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Nổi Bật Nhất</span>
-            </h2>
-            <p className="text-gray-500 mt-3 font-medium text-base leading-relaxed">
-                Được bình chọn bởi cộng đồng du lịch, mang lại trải nghiệm nghỉ dưỡng đẳng cấp và tiện nghi vượt trội.
-            </p>
-        </div>
-
-        <button
-            onClick={onSeeAll}
-            className="hidden md:flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-blue-600 transition-all bg-white px-5 py-2.5 rounded-full border border-gray-200 hover:border-blue-200 shadow-sm hover:shadow-md group"
-        >
-            Xem tất cả
-            <div className="bg-gray-100 group-hover:bg-blue-100 p-1 rounded-full transition-colors">
-                <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+const SectionHeader = ({ onSeeAll }) => {
+    // Đã thêm hook useTranslation vào đây
+    const { t } = useTranslation(); 
+    
+    return (
+        <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-10 px-2">
+            <div className="max-w-2xl">
+                <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
+                    Điểm Đến <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Nổi Bật Nhất</span>
+                </h2>
+                <p className="text-gray-500 mt-3 font-medium text-base leading-relaxed">
+                    Được bình chọn bởi cộng đồng du lịch, mang lại trải nghiệm nghỉ dưỡng đẳng cấp và tiện nghi vượt trội.
+                </p>
             </div>
 
+            {/* Đã sửa lại lỗi HTML: Chỉ giữ 1 button và đóng thẻ đúng cách */}
             <button 
                 onClick={onSeeAll}
                 className="hidden md:flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-blue-600 transition-all bg-white px-5 py-2.5 rounded-full border border-gray-200 hover:border-blue-200 shadow-sm hover:shadow-md group"
             >
-                {t('home.see_all')}
+                {t('home.see_all', 'Xem tất cả')}
                 <div className="bg-gray-100 group-hover:bg-blue-100 p-1 rounded-full transition-colors">
                     <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
                 </div>
@@ -123,7 +119,6 @@ const ModernHotelCard = ({ hotel, currentCurrency }) => {
                         </div>
                     </div>
 
-                    {/* ✅ ĐÃ THAY THẾ ICON TẠI ĐÂY */}
                     <button className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
                         <ArrowRight size={20} />
                     </button>
@@ -165,9 +160,7 @@ const FeaturedHotels = () => {
             try {
                 setLoading(true);
 
-                // 1. Dùng hàm chuyên biệt (đã thêm ở bước trước) thay vì searchProperties thủ công
                 const res = await propertyService.getFeaturedProperties();
-
                 console.log("Featured Data:", res); // Debug log
 
                 let rawData = [];
