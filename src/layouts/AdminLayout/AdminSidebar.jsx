@@ -92,7 +92,7 @@ const AdminSidebar = () => {
       name: t('admin.owner_approvals'), 
       icon: <CheckSquare size={20} />, 
       path: "/admin/approvals",
-      permission: "OWNER_APPROVE"
+      permission: "APPLICATION_MANAGE"
     },
 
     {
