@@ -112,7 +112,7 @@ const Login = () => {
             } else {
                 // Nếu không có 2FA và cũng không có Token
                 setError(response.message || "Hệ thống không nhận diện được thông tin đăng nhập.");
-            }đổi
+            }
         } catch (err) {
             console.error("Login Error:", err);
 
@@ -143,8 +143,12 @@ const Login = () => {
                 else {
                     setError(backendMessage);
                 }
+            } else if (err.request) {
+                // Lỗi do không nhận được phản hồi từ server (Network Error)
+                setError("Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại đường truyền.");
             } else {
-                setError("Không thể kết nối đến máy chủ.");
+                // Lỗi do logic code hoặc lỗi khác
+                setError("Đã xảy ra lỗi trong quá trình xử lý: " + err.message);
             }
 
             // ✅ Nếu rơi vào các trường hợp nghiêm trọng -> Hiện Modal của bạn
