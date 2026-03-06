@@ -13,19 +13,19 @@ const RecentActivity = () => {
   const activities = [
     {
       id: 1,
-      user: "customer@travelmate.vn",
+      user: "customer@Tripify.vn",
       action: isVi ? "đã đặt phòng #12345." : "booked room #12345.",
       time: isVi ? "2 phút trước" : "2 mins ago",
     },
     {
       id: 2,
-      user: "owner@travelmate.vn",
+      user: "owner@Tripify.vn",
       action: isVi ? "đã cập nhật giá phòng tại Sunrise Resort." : "updated room prices at Sunrise Resort.",
       time: isVi ? "15 phút trước" : "15 mins ago",
     },
     {
       id: 3,
-      user: "admin@travelmate.vn",
+      user: "admin@Tripify.vn",
       action: isVi ? "đã khóa tài khoản user 'test@gmail.com'." : "locked user account 'test@gmail.com'.",
       time: isVi ? "1 giờ trước" : "1 hour ago",
     },

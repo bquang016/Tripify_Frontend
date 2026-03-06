@@ -5,7 +5,7 @@ import { CheckCircle2, AlertTriangle, Send, RotateCw, Loader2 } from 'lucide-rea
 
 import { useOnboarding } from '@/context/OnboardingContext';
 import OnboardingStepper from './components/OnboardingStepper';
-import logo from "../../assets/logo/logo_travelmate_xoafont.png";
+import logo from "@/assets/logo/logo_tripify_xoafont.png";
 import Button from '@/components/common/Button/Button';
 import { ownerService } from '@/services/owner.service';
 import Step6_Review from './OnboardingSteps/Step6_Review';
@@ -193,7 +193,7 @@ const OwnerOnboardingStep4 = () => {
                     <CheckCircle2 className="w-12 h-12 text-green-500" />
                 </div>
                 <h2 className="text-2xl font-bold text-slate-800">Đăng ký hoàn tất!</h2>
-                <p className="mt-3 text-slate-500 max-w-md mx-auto">Chúng tôi đã tiếp nhận hồ sơ của bạn. TravelMate sẽ xem xét và phản hồi qua email trong vòng 24-48 giờ làm việc.</p>
+                <p className="mt-3 text-slate-500 max-w-md mx-auto">Chúng tôi đã tiếp nhận hồ sơ của bạn. Tripify sẽ xem xét và phản hồi qua email trong vòng 24-48 giờ làm việc.</p>
                 <div className="mt-8">
                      <Button onClick={() => navigate('/')}>Về trang chủ</Button>
                 </div>

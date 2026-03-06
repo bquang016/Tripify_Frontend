@@ -19,7 +19,7 @@ const About = () => {
                     <div
                         className="absolute inset-0 bg-cover bg-center"
                         style={{
-                            backgroundImage: "url('/assets/images/about_travelmate.gif')",
+                            backgroundImage: "url('/assets/images/about_Tripify.gif')",
                         }}
                     ></div>
 

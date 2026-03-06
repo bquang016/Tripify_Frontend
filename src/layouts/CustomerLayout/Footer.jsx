@@ -85,7 +85,7 @@ const Footer = () => {
               <li className="flex items-center gap-3">
                 <Mail size={18} className="text-[rgb(40,169,224)] shrink-0" />
                 <span className="cursor-pointer transition-colors hover:text-[rgb(40,169,224)] hover:underline decoration-[rgb(40,169,224)]">
-                    support@travelmate.vn
+                    support@Tripify.vn
                 </span>
               </li>
             </ul>
@@ -147,7 +147,7 @@ const Footer = () => {
       {/* === BOTTOM BAR === */}
       <div className="bg-[#003b5c] py-4">
          <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-blue-200">
-            <p>© {new Date().getFullYear()} TravelMate. {t('common.all_rights_reserved')}</p>
+            <p>© {new Date().getFullYear()} Tripify. {t('common.all_rights_reserved')}</p>
          </div>
       </div>
     </footer>

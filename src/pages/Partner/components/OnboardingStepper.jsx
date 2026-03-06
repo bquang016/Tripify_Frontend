@@ -21,15 +21,9 @@ const OnboardingStepper = ({ currentStep, onStepClick }) => {
   }
 
   return (
-    <div className="w-full py-2">
-      <div className="flex items-center justify-between relative">
-        <div className="absolute left-0 top-5 w-full h-1 bg-slate-100 -z-10 rounded-full"></div>
-        <div 
-            className="absolute left-0 top-5 h-1 bg-[#28A9E0] -z-10 rounded-full transition-all duration-500"
-            style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
-        ></div>
-
-        {steps.map((step) => {
+    <div className="w-full max-w-4xl mx-auto px-2 sm:px-6">
+      <div className="flex items-center justify-between w-full">
+        {steps.map((step, index) => {
           const isCompleted = step.id < currentStep;
           const isCurrent = step.id === currentStep;
           
@@ -37,33 +31,54 @@ const OnboardingStepper = ({ currentStep, onStepClick }) => {
           const isClickable = onStepClick && (step.id <= highestStep);
 
           return (
-            <div 
-              key={step.id} 
-              className={`flex flex-col items-center group ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
-              onClick={() => isClickable && onStepClick(step.id)}
-            >
-              <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-500 border-[3px] z-10
-                  ${isCompleted 
-                    ? 'bg-[#28A9E0] border-[#28A9E0] text-white shadow-md shadow-blue-200 group-hover:scale-110 group-hover:bg-[#2090C0]' 
-                    : isCurrent 
-                      ? 'bg-white border-[#28A9E0] text-[#28A9E0] shadow-lg shadow-blue-100 scale-110' 
-                      : isClickable
-                        ? 'bg-white border-blue-200 text-blue-400 group-hover:border-[#28A9E0] group-hover:text-[#28A9E0] group-hover:scale-110 shadow-sm'
-                        : 'bg-white border-slate-200 text-slate-300'
-                  }
-                `}
+            <React.Fragment key={step.id}>
+              {/* Vòng tròn Bước (Node) */}
+              <div 
+                className={`relative flex flex-col items-center group ${isClickable ? 'cursor-pointer' : 'cursor-default'}`}
+                onClick={() => isClickable && onStepClick(step.id)}
               >
-                {isCompleted ? <Check size={20} strokeWidth={3} /> : step.id}
+                <div
+                  className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-base transition-all duration-300 z-10 border-[3px]
+                    ${isCompleted 
+                      ? 'bg-[#28A9E0] border-[#28A9E0] text-white shadow-md shadow-blue-200 group-hover:scale-110 group-hover:bg-[#2090C0]' 
+                      : isCurrent 
+                        ? 'bg-white border-[#28A9E0] text-[#28A9E0] shadow-lg shadow-blue-100 scale-110 ring-4 ring-[#28A9E0]/15' 
+                        : isClickable
+                          ? 'bg-white border-blue-200 text-blue-400 group-hover:border-[#28A9E0] group-hover:text-[#28A9E0] group-hover:scale-110 shadow-sm'
+                          : 'bg-slate-50 border-slate-200 text-slate-300'
+                    }
+                  `}
+                >
+                  {isCompleted ? <Check size={22} strokeWidth={3} /> : step.id}
+                </div>
+                
+                {/* Tên bước - dùng absolute để text không chèn ép layout đường nối */}
+                <div className="absolute top-14 mt-2 flex flex-col items-center w-36">
+                  <span 
+                    className={`text-[13px] font-bold text-center transition-colors duration-300 whitespace-normal leading-tight
+                      ${isCurrent ? 'text-[#28A9E0]' : isCompleted ? 'text-slate-700 group-hover:text-[#28A9E0]' : isClickable ? 'text-slate-500 group-hover:text-[#28A9E0]' : 'text-slate-400'}
+                    `}
+                  >
+                    {step.name}
+                  </span>
+                </div>
               </div>
-              <span 
-                className={`mt-2 text-xs font-semibold transition-colors duration-300
-                  ${isCurrent ? 'text-[#28A9E0]' : isCompleted ? 'text-slate-600 group-hover:text-[#28A9E0]' : isClickable ? 'text-slate-500 group-hover:text-[#28A9E0]' : 'text-slate-400'}
-                `}
-              >
-                {step.name}
-              </span>
-            </div>
+
+              {/* Đường nối ngang (Connector) */}
+              {index < steps.length - 1 && (
+                <div className="flex-auto mx-2 sm:mx-4 mb-8 relative">
+                  {/* Đường nền màu xám nhạt */}
+                  <div className="absolute w-full border-t-[3px] border-slate-200 top-1/2 -translate-y-1/2 rounded-full"></div>
+                  {/* Đường màu xanh thể hiện tiến độ */}
+                  <div 
+                    className={`absolute border-t-[3px] border-[#28A9E0] top-1/2 -translate-y-1/2 transition-all duration-700 ease-in-out rounded-full`}
+                    style={{ 
+                        width: isCompleted ? '100%' : '0%',
+                    }}
+                  ></div>
+                </div>
+              )}
+            </React.Fragment>
           );
         })}
       </div>

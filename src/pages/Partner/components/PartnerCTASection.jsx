@@ -40,7 +40,7 @@ export default function PartnerCTASection() {
               Quyền lợi đối tác
             </h3>
             <ul className="space-y-4">
-              <BenefitItem text="Tiếp cận hàng triệu khách hàng tiềm năng trên TravelMate." />
+              <BenefitItem text="Tiếp cận hàng triệu khách hàng tiềm năng trên Tripify." />
               <BenefitItem text="Công cụ quản lý đặt phòng và giá cả trực quan, dễ sử dụng." />
               <BenefitItem text="Hệ thống báo cáo, phân tích doanh thu chi tiết." />
               <BenefitItem text="Đội ngũ hỗ trợ đối tác chuyên nghiệp 24/7." />

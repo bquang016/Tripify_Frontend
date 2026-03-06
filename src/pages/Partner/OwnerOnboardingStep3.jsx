@@ -7,7 +7,7 @@ import { Banknote, CreditCard, ArrowRight } from 'lucide-react';
 
 import { useOnboarding } from '@/context/OnboardingContext';
 import OnboardingStepper from './components/OnboardingStepper';
-import logo from "../../assets/logo/logo_travelmate_xoafont.png";
+import logo from "@/assets/logo/logo_tripify_xoafont.png";
 import Button from '@/components/common/Button/Button';
 import PartnerInput from './components/PartnerInput';
 
