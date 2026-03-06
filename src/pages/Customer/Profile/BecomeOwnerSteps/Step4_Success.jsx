@@ -36,7 +36,7 @@ export default function Step4_Success({ error, onRetry }) {
             Đã gửi đơn thành công!
           </h2>
           <p className="text-gray-600 max-w-md mb-8">
-            Cảm ơn bạn đã đăng ký. Đội ngũ TravelMate sẽ xem xét
+            Cảm ơn bạn đã đăng ký. Đội ngũ Tripify sẽ xem xét
             đơn của bạn và phản hồi qua email trong vòng 24-48 giờ tới.
           </p>
           <Link to="/">

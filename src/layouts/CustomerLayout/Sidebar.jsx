@@ -31,13 +31,13 @@ const menuItems = [
         <div className="p-4 flex justify-between items-center border-b border-gray-100">
           <Link to="/" className="flex items-center gap-2">
             <img
-                src="/assets/logo/logo_travelmate_xoafont.png"
-                alt="TravelMate"
+                src="src/assets/logo/logo_tripify_xoafont.png"
+                alt="Tripify"
                 className="h-8 object-contain"
             />
             {!collapsed && (
                 <span className="font-semibold text-[rgb(40,169,224)] text-lg">
-              TravelMate
+              Tripify
             </span>
             )}
           </Link>

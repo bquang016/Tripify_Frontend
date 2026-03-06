@@ -135,7 +135,7 @@ const AdminSidebar = () => {
         {!collapsed && (
           <Link to="/" className="flex items-center gap-2">
             <img
-              src="/assets/logo/logo_travelmate_xoafont.png"
+              src="src/assets/logo/logo_tripify_xoafont.png"
               alt="Tripify"
               style={{ width: "135px", height: "43px" }} 
               className="object-contain"

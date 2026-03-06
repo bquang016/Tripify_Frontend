@@ -12,7 +12,7 @@ const TESTIMONIALS = [
     role: "Travel Blogger",
     avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&q=80&w=150&h=150",
     rating: 5,
-    comment: "TravelMate thực sự là cứu cánh cho những chuyến đi ngẫu hứng của mình. Giao diện đặt phòng quá mượt, giá cả lại minh bạch. Chắc chắn sẽ ủng hộ dài dài!"
+    comment: "Tripify thực sự là cứu cánh cho những chuyến đi ngẫu hứng của mình. Giao diện đặt phòng quá mượt, giá cả lại minh bạch. Chắc chắn sẽ ủng hộ dài dài!"
   },
   {
     id: 2,
@@ -28,7 +28,7 @@ const TESTIMONIALS = [
     role: "Nhiếp ảnh gia",
     avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&q=80&w=150&h=150",
     rating: 4,
-    comment: "Rất thích tính năng gợi ý khách sạn theo địa điểm chụp ảnh. Mình đã tìm được homestay view đồi thông Đà Lạt cực chill nhờ TravelMate."
+    comment: "Rất thích tính năng gợi ý khách sạn theo địa điểm chụp ảnh. Mình đã tìm được homestay view đồi thông Đà Lạt cực chill nhờ Tripify."
   }
 ];
 
@@ -40,7 +40,7 @@ const SectionHeader = () => (
         </div>
         
         <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight mb-4">
-            Khách hàng nói gì về <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-rose-600">TravelMate?</span>
+            Khách hàng nói gì về <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-rose-600">Tripify?</span>
         </h2>
         
         <p className="text-gray-500 font-medium text-base md:text-lg">
