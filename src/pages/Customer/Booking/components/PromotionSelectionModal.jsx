@@ -153,7 +153,7 @@ const PromotionSelectionDropdown = ({
 
     const isOwnerContext = filterType === 'OWNER';
     const accentColor = isOwnerContext ? 'text-purple-600' : 'text-blue-600';
-    const headerTitle = isOwnerContext ? "Ưu đãi từ Khách sạn" : "Ưu đãi từ TravelMate";
+    const headerTitle = isOwnerContext ? "Ưu đãi từ Khách sạn" : "Ưu đãi từ Tripify";
 
     useEffect(() => {
         if (isOpen) {

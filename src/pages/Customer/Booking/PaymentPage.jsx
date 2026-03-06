@@ -98,7 +98,7 @@ const TotalPriceSection = ({ originalPrice, finalPrice, adminDiscount, ownerDisc
 
                 {adminDiscount > 0 && (
                     <div className="flex justify-between items-center text-sm text-blue-600 font-medium">
-                        <span>TravelMate Voucher</span>
+                        <span>Tripify Voucher</span>
                         <span>- {new Intl.NumberFormat('vi-VN').format(adminDiscount)}₫</span>
                     </div>
                 )}

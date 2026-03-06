@@ -12,7 +12,7 @@ export default function PartnerHeroSection() {
         {/* 1. Phần Text (Bên trái) */}
         <div className="text-center md:text-left animate-fadeIn">
           <h1 className="text-4xl md:text-5xl font-extrabold text-[#006494] mb-6 tracking-tight">
-            Trở thành đối tác của TravelMate
+            Trở thành đối tác của Tripify
           </h1>
           <p className="text-lg text-gray-600 mb-10 leading-relaxed">
             Phát triển kinh doanh cùng chúng tôi. Tiếp cận hàng triệu

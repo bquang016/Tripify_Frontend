@@ -66,7 +66,7 @@ const LoginSlider = () => {
                     <Star key={i} size={16} className="text-yellow-400 fill-yellow-400" />
                 ))}
             </div>
-            <span className="text-sm font-medium opacity-90">TravelMate's Choice 2024</span>
+            <span className="text-sm font-medium opacity-90">Tripify's Choice 2024</span>
         </div>
 
         <h2 className="text-4xl font-black leading-tight mb-4 drop-shadow-xl animate-fade-in-up" key={`title-${current}`}>
@@ -91,7 +91,7 @@ const LoginSlider = () => {
       
       {/* Branding Logo Top Left */}
       <div className="absolute top-8 left-8 z-20">
-         <img src="/assets/logo/logo_travelmate_xoafont.png" alt="TravelMate" className="h-12 w-auto object-contain brightness-0 invert drop-shadow-lg" />
+         <img src="src/assets/logo/logo_tripify_xoafont.png" alt="Tripify" className="h-12 w-auto object-contain brightness-0 invert drop-shadow-lg" />
       </div>
     </div>
   );

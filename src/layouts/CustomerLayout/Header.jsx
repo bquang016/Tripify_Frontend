@@ -149,8 +149,8 @@ const Header = () => {
           {/* 1. LOGO */}
           <Link to="/" className="flex items-center gap-2 group relative z-10">
             <img
-              src="/assets/logo/logo_travelmate_xoafont.png"
-              alt="TravelMate"
+              src="src/assets/logo/logo_tripify_xoafont.png"
+              alt="Tripify"
               style={{ width: "135px", height: "auto" }}
               className={`object-contain transition-all duration-300 ${headerStyles.logo}`}
             />

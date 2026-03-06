@@ -5,7 +5,7 @@ import ChatPanel from "./ChatBot/ChatPanel";
 import aiService from "@/services/ai.service";
 import { useAuth } from "@/context/AuthContext";
 
-const STORAGE_KEY = "travelmate_chat_history";
+const STORAGE_KEY = "Tripify_chat_history";
 
 const FloatingChatBot = () => {
     const { currentUser } = useAuth();
@@ -23,7 +23,7 @@ const FloatingChatBot = () => {
             {
                 id: 1,
                 sender: "ai",
-                text: "Xin chào! Tôi là trợ lý ảo TravelMate. Tôi có thể giúp gì cho bạn hôm nay?",
+                text: "Xin chào! Tôi là trợ lý ảo Tripify. Tôi có thể giúp gì cho bạn hôm nay?",
                 timestamp: new Date(),
             },
         ];
@@ -46,7 +46,7 @@ const FloatingChatBot = () => {
                 {
                     id: 1,
                     sender: "ai",
-                    text: "Xin chào! Tôi là trợ lý ảo TravelMate. Tôi có thể giúp gì cho bạn hôm nay?",
+                    text: "Xin chào! Tôi là trợ lý ảo Tripify. Tôi có thể giúp gì cho bạn hôm nay?",
                     timestamp: new Date(),
                 },
             ]);

@@ -11,7 +11,7 @@ import OTPModal from "./components/OTPModal";
 import EmailConflictModal from "./components/EmailConflictModal";
 import { authService } from "../../services/auth.service"; 
 import { useOnboarding } from "../../context/OnboardingContext"; // Import useOnboarding
-import logo from "../../assets/logo/logo_travelmate_xoafont.png"; 
+import logo from "@/assets/logo/logo_tripify_xoafont.png"; 
 
 const Spinner = () => (
   <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
