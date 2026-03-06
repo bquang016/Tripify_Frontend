@@ -147,7 +147,7 @@ const DiscountSection = ({
 
             if (type === 'ADMIN' && adminDiscount > 0) {
                 discountAmount = adminDiscount;
-                label = `Mã TravelMate (${selectedAdminCode})`;
+                label = `Mã Tripify (${selectedAdminCode})`;
                 color = "text-blue-600";
             } else if (type === 'OWNER' && ownerDiscount > 0) {
                 discountAmount = ownerDiscount;
@@ -209,7 +209,7 @@ const DiscountSection = ({
             </div>
 
             <PromoSlotContainer
-                title="TravelMate Voucher" icon={ShieldCheck} colorClass="text-blue-600 bg-blue-600" emptyText="Chọn mã ưu đãi từ hệ thống"
+                title="Tripify Voucher" icon={ShieldCheck} colorClass="text-blue-600 bg-blue-600" emptyText="Chọn mã ưu đãi từ hệ thống"
                 promo={adminPromoDisplay} onSelect={onApplyAdmin} onRemove={() => onApplyAdmin(null)}
                 filterType={'ADMIN'} logoUrl={TRAVEL_MATE_LOGO_PUBLIC_PATH} totalAmount={totalAmount}
             />

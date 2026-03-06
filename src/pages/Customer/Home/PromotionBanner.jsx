@@ -216,7 +216,7 @@ const PromotionBanner = () => {
                     .map(p => ({
                         id: p.promotionId,
                         title: p.description, // Hoặc title
-                        description: `Trải nghiệm chuyến đi tuyệt vời với ưu đãi ${p.discountValue}${p.discountType === 'PERCENTAGE' ? '%' : 'đ'} dành riêng cho thành viên TravelMate.`, // Placeholder nếu thiếu desc
+                        description: `Trải nghiệm chuyến đi tuyệt vời với ưu đãi ${p.discountValue}${p.discountType === 'PERCENTAGE' ? '%' : 'đ'} dành riêng cho thành viên Tripify.`, // Placeholder nếu thiếu desc
                         discountValue: p.discountValue,
                         discountType: p.discountType,
                         endDate: p.endDate,
@@ -268,7 +268,7 @@ const PromotionBanner = () => {
             {/* Header Area */}
             <div className="flex items-end justify-between mb-8 px-2">
                 <div>
-                    {/* ĐÃ BỎ TAG TRAVELMATE SPECIAL Ở ĐÂY */}
+                    {/* ĐÃ BỎ TAG Tripify SPECIAL Ở ĐÂY */}
                     <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight">
                         Săn Deal <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Giờ Vàng</span>
                     </h2>

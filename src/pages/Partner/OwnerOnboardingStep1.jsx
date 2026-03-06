@@ -11,7 +11,7 @@ import PartnerInput from "./components/PartnerInput";
 import OnboardingStepper from "./components/OnboardingStepper";
 import ImageUploadField from "./components/ImageUploadField";
 import DatePickerInput from "../../components/common/Input/DatePickerInput";
-import logo from "../../assets/logo/logo_travelmate_xoafont.png"; 
+import logo from "@/assets/logo/logo_tripify_xoafont.png"; 
 import AvatarUpload from "./components/AvatarUpload";
 
 import AdminSelectorsWithApi from "./OnboardingSteps/components/AdminSelectorsWithApi";

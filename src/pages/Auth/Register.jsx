@@ -32,7 +32,7 @@ const TERMS_CONTENT = (
         <p>
             <strong>1. Giới thiệu</strong>
             <br />
-            Chào mừng bạn đến với TravelMate. Bằng việc đăng ký tài khoản, bạn xác nhận
+            Chào mừng bạn đến với Tripify. Bằng việc đăng ký tài khoản, bạn xác nhận
             đã đọc, hiểu và đồng ý tuân thủ các Điều khoản dịch vụ này.
         </p>
         <p>
@@ -83,7 +83,7 @@ const RegistrationSuccessModal = ({ isOpen, email, countdown, onLoginNow }) => {
 
                     <p className="text-slate-600 text-sm mb-6 leading-relaxed">
                         Chúc mừng bạn đã tạo tài khoản thành công tại{" "}
-                        <strong>TravelMate</strong>.
+                        <strong>Tripify</strong>.
                         <br />
                         Vui lòng kiểm tra hộp thư đến của email:
                         <br />

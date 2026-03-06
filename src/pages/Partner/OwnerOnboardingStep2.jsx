@@ -8,7 +8,7 @@ import { useOnboarding } from '@/context/OnboardingContext';
 import VerticalStepper from "@/components/common/Stepper/VerticalStepper";
 import Button from "@/components/common/Button/Button";
 import OnboardingStepper from './components/OnboardingStepper';
-import logo from "../../assets/logo/logo_travelmate_xoafont.png"; 
+import logo from "@/assets/logo/logo_tripify_xoafont.png"; 
 
 // (Import all step components as before)
 import Step0_PropertyType from './OnboardingSteps/Step0_PropertyType';
