@@ -4,9 +4,17 @@ import { authService } from '../services/auth.service';
 export const AuthContext = createContext();
 
 export const AuthContextProvider = ({ children }) => {
-  const [currentUser, setCurrentUser] = useState(
-    JSON.parse(localStorage.getItem('user')) || null
-  );
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const savedUser = localStorage.getItem('user');
+      if (savedUser && savedUser !== "undefined" && savedUser !== "null") {
+        return JSON.parse(savedUser);
+      }
+    } catch (e) {
+      console.error("Failed to parse user from localStorage:", e);
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -44,7 +52,8 @@ export const AuthContextProvider = ({ children }) => {
   useEffect(() => {
     const syncUser = async () => {
       const token = authService.getAccessToken();
-      if (token) {
+      // Chỉ sync nếu có token và token hợp lệ (không phải string "null" hoặc "undefined")
+      if (token && token !== "null" && token !== "undefined") {
         try {
           const latestUser = await authService.fetchUserProfile();
           if (latestUser) {
@@ -54,8 +63,16 @@ export const AuthContextProvider = ({ children }) => {
           }
         } catch (err) {
           console.error("Failed to sync user profile:", err);
-          if (err.response?.status === 401) logout();
+          // ⚠️ CHỈ logout nếu thực sự là lỗi 401 từ server và không phải ở trang login
+          if (err.response?.status === 401 && window.location.pathname !== "/login") {
+            console.warn("Session expired or invalid token. Logging out...");
+            logout();
+          }
         }
+      } else if (currentUser) {
+        // Nếu có user state nhưng không có token trong localStorage -> logout để đồng bộ
+        console.warn("No token found but user exists in state. Logging out...");
+        logout();
       }
     };
     syncUser();
