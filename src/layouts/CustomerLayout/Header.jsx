@@ -1,5 +1,7 @@
 // src/layouts/CustomerLayout/Header.jsx
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import logoTripify from "@/assets/logo/logo_Tripify_xoafont.png";
+
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ChevronDown, HelpCircle, Phone, Menu } from "lucide-react";
 
@@ -149,7 +151,7 @@ const Header = () => {
           {/* 1. LOGO */}
           <Link to="/" className="flex items-center gap-2 group relative z-10">
             <img
-              src="src/assets/logo/logo_tripify_xoafont.png"
+              src={logoTripify}
               alt="Tripify"
               style={{ width: "135px", height: "auto" }}
               className={`object-contain transition-all duration-300 ${headerStyles.logo}`}
