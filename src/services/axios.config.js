@@ -61,14 +61,21 @@ api.interceptors.response.use(
                 return Promise.reject(error);
             }
 
-            // ✅ GUEST → KHÔNG redirect
-            if (!hasToken) {
+            // ✅ Nếu không có token (Guest) hoặc đang ở trang login thì không làm gì
+            if (!hasToken || window.location.pathname === "/login") {
                 return Promise.reject(error);
             }
 
             // 🔒 USER ĐÃ LOGIN → token hết hạn
-            localStorage.clear();
-            window.location.href = "/login";
+            // Thay vì clear hết localStorage và redirect cứng (gây loop khi reload),
+            // ta có thể phát event hoặc chỉ xóa các key liên quan đến auth
+            // Ở đây ta sẽ để AuthContext hoặc component tự xử lý sau khi bắt lỗi 401
+            console.warn("Unauthorized! Token might be expired.");
+            
+            // Tùy chọn: Có thể xóa token để tránh gửi tiếp các request lỗi
+            // localStorage.removeItem("accessToken");
+            // localStorage.removeItem("user");
+
             return Promise.reject(error);
         }
 
