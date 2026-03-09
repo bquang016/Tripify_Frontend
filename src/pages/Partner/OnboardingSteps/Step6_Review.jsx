@@ -57,8 +57,14 @@ const Step6_Review = ({ data }) => {
                 <InfoSection title="Chi tiết căn (Villa/Homestay)">
                     <InfoItem label="Tên căn" value={unitData.name} />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-                        <InfoItem label="Giá ngày thường" value={unitData.price ? `${Number(unitData.price).toLocaleString()} VNĐ` : '0 VNĐ'} />
-                        <InfoItem label="Giá cuối tuần" value={unitData.weekendPrice ? `${Number(unitData.weekendPrice).toLocaleString()} VNĐ` : '0 VNĐ'} />
+                        <InfoItem 
+                            label="Giá ngày thường" 
+                            value={unitData.price ? `${Number(String(unitData.price).replace(/[^0-9]/g, '')).toLocaleString('vi-VN')} VNĐ` : '0 VNĐ'} 
+                        />
+                        <InfoItem 
+                            label="Giá cuối tuần" 
+                            value={unitData.weekendPrice ? `${Number(String(unitData.weekendPrice).replace(/[^0-9]/g, '')).toLocaleString('vi-VN')} VNĐ` : '0 VNĐ'} 
+                        />
                         <InfoItem label="Sức chứa" value={`${unitData.capacity || 0} người`} />
                         <InfoItem label="Diện tích" value={`${unitData.area || 0} m²`} />
                     </div>
