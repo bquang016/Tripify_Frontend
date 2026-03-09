@@ -8,10 +8,9 @@ import {
 
 import { useOnboarding } from "@/context/OnboardingContext";
 import PartnerInput from "./components/PartnerInput";
-import OnboardingStepper from "./components/OnboardingStepper";
+import OnboardingHeader from "./components/OnboardingHeader";
 import ImageUploadField from "./components/ImageUploadField";
 import DatePickerInput from "../../components/common/Input/DatePickerInput";
-import logo from "@/assets/logo/logo_tripify_xoafont.png"; 
 import AvatarUpload from "./components/AvatarUpload";
 
 import AdminSelectorsWithApi from "./OnboardingSteps/components/AdminSelectorsWithApi";
@@ -83,35 +82,16 @@ const OwnerOnboardingStep1 = () => {
 
 
   return (
-    <div className="min-h-screen w-full bg-[#F8FAFC] font-sans pb-20">
+    <div className="min-h-screen w-full bg-gradient-to-b from-slate-50 to-white font-sans pb-20">
       
       {/* --- HEADER --- */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-                <img src={logo} alt="Tripify" className="h-9 w-auto" />
-                <div className="h-6 w-px bg-slate-300 mx-1"></div>
-                <span className="font-bold text-slate-700 tracking-tight">Partner Center</span>
-            </div>
-            
-            {/* Desktop Stepper */}
-            <div className="hidden md:block w-[500px]">
-                <OnboardingStepper currentStep={1} onStepClick={handleMajorStepClick} />
-            </div>
+      <OnboardingHeader 
+        currentStep={1} 
+        onStepClick={handleMajorStepClick}
+        title="Đăng ký đối tác"
+      />
 
-            {/* Mobile: Simple Step Text */}
-            <div className="md:hidden text-sm font-semibold text-[#28A9E0]">
-                Bước 1/3
-            </div>
-        </div>
-      </header>
-
-      {/* Mobile Stepper */}
-      <div className="md:hidden px-4 mt-4">
-          <OnboardingStepper currentStep={1} onStepClick={handleMajorStepClick} />
-      </div>
-
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8 items-start">
             
             {/* --- LEFT: FORM NHẬP LIỆU --- */}

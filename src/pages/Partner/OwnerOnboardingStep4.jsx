@@ -4,8 +4,7 @@ import { toast } from 'react-hot-toast';
 import { CheckCircle2, AlertTriangle, Send, RotateCw, Loader2 } from 'lucide-react';
 
 import { useOnboarding } from '@/context/OnboardingContext';
-import OnboardingStepper from './components/OnboardingStepper';
-import logo from "@/assets/logo/logo_tripify_xoafont.png";
+import OnboardingHeader from './components/OnboardingHeader';
 import Button from '@/components/common/Button/Button';
 import { ownerService } from '@/services/owner.service';
 import Step6_Review from './OnboardingSteps/Step6_Review';
@@ -227,23 +226,14 @@ const OwnerOnboardingStep4 = () => {
     }
 
     return (
-        <div className="min-h-screen w-full bg-[#F8FAFC] font-sans pb-20">
-            <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
-                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <img src={logo} alt="Tripify" className="h-9 w-auto" />
-                        <div className="h-6 w-px bg-slate-300 mx-1"></div>
-                        <span className="font-bold text-slate-700 tracking-tight">Xác nhận</span>
-                    </div>
-                    <div className="hidden md:block w-[500px]">
-                        {/* Đã truyền hàm handleMajorStepClick thành công */}
-                        <OnboardingStepper currentStep={4} onStepClick={handleMajorStepClick} />
-                    </div>
-                     <Button variant="ghost" onClick={() => navigate('/')}>Thoát</Button>
-                </div>
-            </header>
+        <div className="min-h-screen w-full bg-gradient-to-b from-slate-50 to-white font-sans pb-20">
+            <OnboardingHeader 
+                currentStep={4} 
+                onStepClick={handleMajorStepClick}
+                title="Xác nhận hồ sơ"
+            />
 
-            <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="text-center mb-10">
                     <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Tổng quan hồ sơ đăng ký</h1>
                     <p className="text-slate-500 mt-2 text-lg">Vui lòng kiểm tra kỹ các thông tin dưới đây trước khi gửi cho chúng tôi.</p>

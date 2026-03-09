@@ -7,8 +7,7 @@ import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { useOnboarding } from '@/context/OnboardingContext';
 import VerticalStepper from "@/components/common/Stepper/VerticalStepper";
 import Button from "@/components/common/Button/Button";
-import OnboardingStepper from './components/OnboardingStepper';
-import logo from "@/assets/logo/logo_tripify_xoafont.png"; 
+import OnboardingHeader from './components/OnboardingHeader'; 
 
 // (Import all step components as before)
 import Step0_PropertyType from './OnboardingSteps/Step0_PropertyType';
@@ -251,23 +250,13 @@ const handleMajorStepClick = (stepId) => {
     }
 
     return (
-        <div className="min-h-screen w-full bg-[#F8FAFC] font-sans pb-20">
-            <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <img src={logo} alt="Tripify" className="h-9 w-auto" />
-                        <div className="h-6 w-px bg-slate-300 mx-1"></div>
-                        <span className="font-bold text-slate-700 tracking-tight">Partner Center</span>
-                    </div>
-                    <div className="hidden md:block w-[500px]">
-                        <OnboardingStepper currentStep={2} onStepClick={handleMajorStepClick} />
-                    </div>
-                    <div className="md:hidden text-sm font-semibold text-[#28A9E0]">
-                        Bước 2/4
-                    </div>
-                </div>
-            </header>
-            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+        <div className="min-h-screen w-full bg-gradient-to-b from-slate-50 to-white font-sans pb-20">
+            <OnboardingHeader 
+                currentStep={2} 
+                onStepClick={handleMajorStepClick}
+                title="Đăng ký chỗ nghỉ"
+            />
+            <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
                 <div className="mb-8 text-center">
                     <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Đăng ký chỗ nghỉ của bạn</h1>
                     <p className="text-slate-500 mt-2 text-lg">Cung cấp thông tin chi tiết để chúng tôi có thể giới thiệu bạn với khách hàng.</p>
