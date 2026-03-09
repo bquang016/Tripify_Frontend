@@ -228,20 +228,34 @@ const OwnerOnboardingStep4 = () => {
 
     return (
         <div className="min-h-screen w-full bg-[#F8FAFC] font-sans pb-20">
-            <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
-                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <img src={logo} alt="Tripify" className="h-9 w-auto" />
-                        <div className="h-6 w-px bg-slate-300 mx-1"></div>
-                        <span className="font-bold text-slate-700 tracking-tight">Xác nhận</span>
-                    </div>
-                    <div className="hidden md:block w-[500px]">
-                        {/* Đã truyền hàm handleMajorStepClick thành công */}
-                        <OnboardingStepper currentStep={4} onStepClick={handleMajorStepClick} />
-                    </div>
-                     <Button variant="ghost" onClick={() => navigate('/')}>Thoát</Button>
-                </div>
-            </header>
+            {/* --- HEADER MỚI (CHỈ CHỨA LOGO VÀ ACTION) --- */}
+      <header className="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+                <img src={logo} alt="Tripify" className="h-8 sm:h-9 w-auto" />
+                <div className="h-5 sm:h-6 w-px bg-slate-300 mx-1 sm:mx-2"></div>
+                <span className="font-bold text-slate-700 tracking-tight text-sm sm:text-base">Đăng ký Đối tác</span>
+            </div>
+            
+            {/* Nút Hỗ trợ UX: Lưu tiến độ */}
+            <button 
+                type="button"
+                onClick={() => {
+                  /* Gọi hàm lưu tiến độ API nếu có, sau đó redirect */
+                  navigate('/partner'); 
+                }}
+                className="text-sm font-semibold text-slate-500 hover:text-[#28A9E0] transition-colors flex items-center gap-2"
+            >
+                <span className="hidden sm:inline">Lưu & Thoát</span>
+                <span className="sm:hidden">Thoát</span>
+            </button>
+        </div>
+      </header>
+
+      {/* --- SECTION STEPPER (TÁCH BIỆT KHỎI HEADER ĐỂ UI THOÁNG HƠN) --- */}
+      <div className="w-full bg-white border-b border-slate-100 pt-6 pb-12 sm:pt-8 sm:pb-14">
+        <OnboardingStepper currentStep={4} onStepClick={handleMajorStepClick} />
+      </div>
 
             <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
                 <div className="text-center mb-10">
