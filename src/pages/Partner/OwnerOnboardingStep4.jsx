@@ -81,6 +81,15 @@ const OwnerOnboardingStep4 = () => {
                 .filter(part => part && part.trim() !== "") // Chỉ giữ lại phần có dữ liệu
                 .join(", ");
             // --------------------------------------------------
+            // Thêm hàm helper làm sạch chuỗi tiền tệ thành số nguyên
+            const parseNumber = (value) => {
+                if (!value) return 0;
+                if (typeof value === 'number') return value;
+                const cleanValue = String(value).replace(/[^0-9]/g, ''); // Xóa mọi ký tự không phải số
+                return Number(cleanValue) || 0;
+            };
+            const unitAmenitiesObj = unitData?.amenities || {};
+            const mappedUnitAmenityIds = Object.keys(unitAmenitiesObj).filter(key => unitAmenitiesObj[key] === true);
 
             // 2. Chuẩn bị JSON Payload (Clean Data)
             const submitPayload = {
@@ -93,10 +102,9 @@ const OwnerOnboardingStep4 = () => {
                 gender: personalInfo.gender ? personalInfo.gender.toUpperCase() : 'OTHER',
                 
                 // --- Mapping Address & City đã xử lý ---
-                address: fullAddress, // Chuỗi địa chỉ sạch đã gộp
-                city: province,       // Tên tỉnh/thành phố
+                address: fullAddress, 
+                city: province,       
 
-                // Vẫn gửi object structured nếu backend cần chi tiết (dùng biến đã fallback an toàn)
                 permanentAddress: {
                     streetAddress: street,
                     wardCode: personalInfo.wardCode || "",
@@ -110,20 +118,26 @@ const OwnerOnboardingStep4 = () => {
                 // Giữ nguyên các phần khác
                 propertyInfo: {
                     ...restPropertyInfo,
-                    price: Number(restPropertyInfo.price) || 0,
-                    weekendPrice: Number(restPropertyInfo.weekendPrice) || 0,
-                    capacity: Number(restPropertyInfo.capacity) || 0,
-                    area: Number(restPropertyInfo.area) || 0,
+                    // DÙNG HÀM parseNumber ĐỂ ÉP KIỂU GIÁ TRỊ TỪ STRING SANG SỐ
+                    price: parseNumber(restPropertyInfo.price),
+                    weekendPrice: parseNumber(restPropertyInfo.weekendPrice),
+                    capacity: parseNumber(restPropertyInfo.capacity),
+                    area: parseNumber(restPropertyInfo.area),
                     amenityIds: restPropertyInfo.amenityIds || [],
                     
                     ...(isWholeUnit && unitData ? {
                         unitData: {
                             name: unitData.name,
                             description: unitData.description,
-                            amenityIds: unitData.amenityIds || [],
-                            price: Number(unitData.price) || Number(restPropertyInfo.price),
-                            capacity: Number(unitData.capacity) || Number(restPropertyInfo.capacity),
-                            area: Number(unitData.area) || Number(restPropertyInfo.area),
+                            
+                            // FIX: Map object tiện nghi thành mảng
+                            amenityIds: mappedUnitAmenityIds.length > 0 ? mappedUnitAmenityIds : (unitData.amenityIds || []),
+                            
+                            // FIX: Ép kiểu số & BỔ SUNG weekendPrice BỊ THIẾU
+                            price: parseNumber(unitData.price) || parseNumber(restPropertyInfo.price),
+                            weekendPrice: parseNumber(unitData.weekendPrice) || parseNumber(restPropertyInfo.weekendPrice), // Đã thêm dòng này
+                            capacity: parseNumber(unitData.capacity) || parseNumber(restPropertyInfo.capacity),
+                            area: parseNumber(unitData.area) || parseNumber(restPropertyInfo.area),
                         }
                     } : {})
                 },
