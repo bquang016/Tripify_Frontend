@@ -328,11 +328,8 @@ const OwnerPromotionManager = () => {
 
     const handleConfirmToggleStatus = async () => {
         if (statusConfirm.promo) {
-            const dataToSend = { ...statusConfirm.promo, isActive: !statusConfirm.promo.isActive };
-            if (!dataToSend.startDate) dataToSend.startDate = dataToSend.endDate;
             try {
-                const propId = statusConfirm.promo.property ? statusConfirm.promo.property.propertyId : null;
-                await promotionService.updatePromotion(dataToSend.id, { ...dataToSend, propertyId: propId });
+                await promotionService.togglePromotion(statusConfirm.promo.id);
                 await fetchPromotions();
                 showMessage("success", isVi ? "Cập nhật trạng thái thành công!" : "Status updated!");
             } catch (error) {
@@ -341,6 +338,8 @@ const OwnerPromotionManager = () => {
             setStatusConfirm({ isOpen: false, promo: null });
         }
     };
+
+    const handleRequestDelete = (promo) => setDeleteConfirm({ isOpen: true, promo });
 
     const handleConfirmDelete = async () => {
         if (deleteConfirm.promo) {

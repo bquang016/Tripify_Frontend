@@ -30,6 +30,8 @@ const getRoleWithPermissions = async (roleId) => {
   }
 };
 
+// Cập nhật Role Permissions theo đặc tả: PUT /api/v1/roles/{roleId}/permissions
+// Payload: ["CODE1", "CODE2", ...]
 const updateRolePermissions = async (roleId, permissionCodes) => {
   try {
     const response = await api.put(`/roles/${roleId}/permissions`, permissionCodes);

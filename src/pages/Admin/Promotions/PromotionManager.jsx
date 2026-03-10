@@ -7,11 +7,12 @@ import promotionService from "@/services/promotion.service";
 import toast, { Toaster } from "react-hot-toast";
 import Toast from "@/components/common/Notification/Toast";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/context/AuthContext";
 import {
     Plus, Edit, Trash2, Tag, Search,
     Copy, CheckCircle2, AlertCircle, Ticket,
     ChevronLeft, ChevronRight, MoreVertical, PauseCircle, PlayCircle, XCircle,
-    AlertTriangle, Clock, RotateCw, Image as ImageIcon
+    AlertTriangle, Clock, RotateCw, Image as ImageIcon, ShieldAlert
 } from "lucide-react";
 
 // ✅ R2 public base URL
@@ -103,7 +104,7 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, promoCode }) => {
     );
 };
 
-const ActionMenu = ({ promo, onEdit, onDelete, onRequestToggle }) => {
+const ActionMenu = ({ promo, onEdit, onDelete, onRequestToggle, canManage }) => {
     const { t, i18n } = useTranslation();
     const isVi = i18n.language === 'vi';
     const [isOpen, setIsOpen] = useState(false);
@@ -156,16 +157,25 @@ const ActionMenu = ({ promo, onEdit, onDelete, onRequestToggle }) => {
     const menuContent = (
         <div ref={menuRef} style={menuStyle} className="bg-white rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] border border-gray-100 overflow-hidden animate-fadeIn">
             <div className="py-1">
-                <button onClick={() => { onEdit(promo); setIsOpen(false); }} className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-2">
-                    <Edit size={16} className="text-blue-500"/> {t('owner.edit')}
-                </button>
-                {!isExpired && (
-                    <button onClick={() => { onRequestToggle(promo); setIsOpen(false); }} className={`w-full px-4 py-2.5 text-left text-sm text-gray-700 transition-colors flex items-center gap-2 ${isPaused ? 'hover:bg-green-50 hover:text-green-600' : 'hover:bg-orange-50 hover:text-orange-600'}`}>
-                        {isPaused ? <><PlayCircle size={16} className="text-green-500"/> {isVi ? "Kích hoạt" : "Activate"}</> : <><PauseCircle size={16} className="text-orange-500"/> {isVi ? "Tạm dừng" : "Pause"}</>}
-                    </button>
+                {canManage && (
+                    <>
+                        <button onClick={() => { onEdit(promo); setIsOpen(false); }} className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-2">
+                            <Edit size={16} className="text-blue-500"/> {t('owner.edit')}
+                        </button>
+                        {!isExpired && (
+                            <button onClick={() => { onRequestToggle(promo); setIsOpen(false); }} className={`w-full px-4 py-2.5 text-left text-sm text-gray-700 transition-colors flex items-center gap-2 ${isPaused ? 'hover:bg-green-50 hover:text-green-600' : 'hover:bg-orange-50 hover:text-orange-600'}`}>
+                                {isPaused ? <><PlayCircle size={16} className="text-green-500"/> {isVi ? "Kích hoạt" : "Activate"}</> : <><PauseCircle size={16} className="text-orange-500"/> {isVi ? "Tạm dừng" : "Pause"}</>}
+                            </button>
+                        )}
+                        <div className="border-t border-gray-100 my-1"></div>
+                        <button onClick={() => { onDelete(promo); setIsOpen(false); }} className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"><Trash2 size={16} /> {t('owner.delete')}</button>
+                    </>
                 )}
-                <div className="border-t border-gray-100 my-1"></div>
-                <button onClick={() => { onDelete(promo); setIsOpen(false); }} className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"><Trash2 size={16} /> {t('owner.delete')}</button>
+                {!canManage && (
+                   <div className="px-4 py-2.5 text-sm text-gray-400 italic">
+                       {isVi ? "Không có quyền thao tác" : "No permission to edit"}
+                   </div>
+                )}
             </div>
         </div>
     );
@@ -190,6 +200,11 @@ const StatCard = ({ title, value, icon: Icon, colorClass, bgClass }) => (
 const PromotionManager = () => {
     const { t, i18n } = useTranslation();
     const isVi = i18n.language === 'vi';
+    const { hasRole } = useAuth();
+
+    // Phân quyền
+    const canView = hasRole('PROMOTION_VIEW');
+    const canManage = hasRole('PROMOTION_MANAGE');
 
     const [promotions, setPromotions] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -211,6 +226,7 @@ const PromotionManager = () => {
     };
 
     const fetchPromotions = async () => {
+        if (!canView) return;
         setIsLoading(true);
         try {
             const response = await promotionService.getAllPromotions();
@@ -239,7 +255,7 @@ const PromotionManager = () => {
         finally { setIsLoading(false); }
     };
 
-    useEffect(() => { fetchPromotions(); }, []);
+    useEffect(() => { fetchPromotions(); }, [canView]);
 
     const handleReload = async () => {
         await fetchPromotions();
@@ -308,14 +324,15 @@ const PromotionManager = () => {
     ];
 
     const handleCopy = (text) => showMessage("success", `${t('admin_promotions.copy_success')}: ${text}`);
-    const handleRequestToggleStatus = (promo) => setStatusConfirm({ isOpen: true, promo });
+    const handleRequestToggleStatus = (promo) => {
+        if (!canManage) return;
+        setStatusConfirm({ isOpen: true, promo });
+    };
 
     const handleConfirmToggleStatus = async () => {
-        if (statusConfirm.promo) {
-            const dataToSend = { ...statusConfirm.promo, isActive: !statusConfirm.promo.isActive };
-            if (!dataToSend.startDate) dataToSend.startDate = dataToSend.endDate;
+        if (statusConfirm.promo && canManage) {
             try {
-                await promotionService.updatePromotion(dataToSend.id, dataToSend);
+                await promotionService.togglePromotion(statusConfirm.promo.id);
                 await fetchPromotions();
                 showMessage("success", t('admin_promotions.status_success'));
             } catch (error) {
@@ -325,10 +342,13 @@ const PromotionManager = () => {
         }
     };
 
-    const handleRequestDelete = (promo) => setDeleteConfirm({ isOpen: true, promo });
+    const handleRequestDelete = (promo) => {
+        if (!canManage) return;
+        setDeleteConfirm({ isOpen: true, promo });
+    };
 
     const handleConfirmDelete = async () => {
-        if (deleteConfirm.promo) {
+        if (deleteConfirm.promo && canManage) {
             try {
                 await promotionService.deletePromotion(deleteConfirm.promo.id);
                 await fetchPromotions();
@@ -395,12 +415,26 @@ const PromotionManager = () => {
                         {status === 'EXPIRED' && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200 whitespace-nowrap"><XCircle size={12} /> {t('admin_promotions.expired')}</span>}
                     </>
                 ),
-                actions: <div className="flex justify-center"><ActionMenu promo={item} onEdit={(p) => { setEditingPromo(p); setIsModalOpen(true); }} onDelete={handleRequestDelete} onRequestToggle={handleRequestToggleStatus} /></div>
+                actions: <div className="flex justify-center"><ActionMenu promo={item} onEdit={(p) => { setEditingPromo(p); setIsModalOpen(true); }} onDelete={handleRequestDelete} onRequestToggle={handleRequestToggleStatus} canManage={canManage} /></div>
             };
         });
     };
 
     const selectClassName = "px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl text-sm font-medium text-gray-700 cursor-pointer outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all";
+
+    if (!canView) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+                <div className="p-6 bg-red-50 rounded-full text-red-500">
+                    <ShieldAlert size={64} />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-800">{isVi ? "Truy cập bị từ chối" : "Access Denied"}</h2>
+                <p className="text-gray-500 max-w-md text-center">
+                    {isVi ? "Bạn không có quyền xem danh sách khuyến mãi. Vui lòng liên hệ quản trị viên để được cấp quyền PROMOTION_VIEW." : "You do not have permission to view the promotions list. Please contact the administrator for PROMOTION_VIEW permission."}
+                </p>
+            </div>
+        );
+    }
 
     return (
         <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
@@ -409,7 +443,9 @@ const PromotionManager = () => {
                 <div><h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><Tag className="text-[rgb(40,169,224)]" /> {t('admin_promotions.title')}</h1><p className="text-gray-500 mt-1 text-sm">{t('admin_promotions.subtitle')}</p></div>
                 <div className="flex gap-3">
                     <button onClick={handleReload} disabled={isLoading} className="p-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl hover:text-[rgb(40,169,224)] transition-all group" title={isVi ? "Làm mới" : "Refresh"}><RotateCw size={20} className={isLoading ? 'animate-spin' : 'group-hover:rotate-180'} /></button>
-                    <Button onClick={() => { setEditingPromo(null); setIsModalOpen(true); }} leftIcon={<Plus size={18} />}>{t('admin_promotions.add_new')}</Button>
+                    {canManage && (
+                        <Button onClick={() => { setEditingPromo(null); setIsModalOpen(true); }} leftIcon={<Plus size={18} />}>{t('admin_promotions.add_new')}</Button>
+                    )}
                 </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
