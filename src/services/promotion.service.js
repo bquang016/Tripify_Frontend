@@ -118,6 +118,11 @@ const promotionService = {
         const formData = new FormData();
         formData.append('file', file);
         return await axios.post(`${API_URL}/${id}/banner`, formData, { headers: { 'Content-Type': 'multipart/form-data' } });
+    },
+
+    // 10. Toggle status
+    togglePromotion: async (id) => {
+        return await axios.put(`${API_URL}/toggle/${id}`);
     }
 };
 

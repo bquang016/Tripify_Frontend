@@ -38,7 +38,7 @@ const RoleManagementPage = () => {
   const [roles, setRoles] = useState([]);
   const [groupedPermissions, setGroupedPermissions] = useState({});
   const [selectedRole, setSelectedRole] = useState(null);
-  const [activePermissionCodes, setActivePermissionCodes] = useState([]);
+  const [activePermissionCodes, setActivePermissionCodes] = useState([]); // [REVERTED] use codes
   
   const [isLoadingRoles, setIsLoadingRoles] = useState(true);
   const [isLoadingPermissions, setIsLoadingPermissions] = useState(false);
@@ -80,6 +80,7 @@ const RoleManagementPage = () => {
     setError(null);
     try {
       const data = await roleService.getRoleWithPermissions(role.id);
+      // Backend trả về mảng permission, lấy code
       const codes = data.permissions.map(p => p.code);
       setActivePermissionCodes(codes);
     } catch (err) {
@@ -106,7 +107,10 @@ const RoleManagementPage = () => {
     setIsSaving(true);
     setError(null);
     try {
+      // [REVERTED] Theo đặc tả mới: PUT /api/v1/roles/{roleId}/permissions
+      // Payload: ["PROMOTION_VIEW", "PROMOTION_MANAGE", ...]
       await roleService.updateRolePermissions(selectedRole.id, activePermissionCodes);
+      
       setRoles(prev => prev.map(r => 
         r.id === selectedRole.id ? { ...r, permissionCount: activePermissionCodes.length } : r
       ));
