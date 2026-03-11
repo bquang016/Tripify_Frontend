@@ -207,7 +207,7 @@ const AdminSelectorsWithApi = ({ control, setValue, errors, watch, mapboxData, p
                     name={getFieldName("propertyWard")}
                     control={control}
                     rules={{ required: 'Vui lòng chọn Phường/Xã' }}
-                    render={({ field }) => renderSelect(field, '', wards, 'Chọn Phường/Xã')}
+                    render={({ field }) => renderSelect(field, 'wardName', wards, 'Chọn Phường/Xã')}
                 />
                  {errors?.propertyWard && <p className="mt-1.5 ml-1 text-xs text-red-500 font-medium">{errors.propertyWard.message}</p>}
             </div>
