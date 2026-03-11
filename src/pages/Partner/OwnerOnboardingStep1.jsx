@@ -49,13 +49,12 @@ const OwnerOnboardingStep1 = () => {
     const data = getValues();
     
     // Tự động gộp địa chỉ ngay cả khi bấm nhảy bước trên thanh Stepper
-    const fullAddress = [data.streetAddress, data.wardName, data.districtName, data.provinceName].filter(Boolean).join(', ');
-    
+    const fullAddress = [data.streetAddress, data.wardName, data.propertyDistrict, data.propertyCity].filter(Boolean).join(', ');    
     updateFormData({
         ...data, // Giữ lại toàn bộ data lẻ nếu cần dùng lại ở màn hình này
         dateOfBirth: data.dateOfBirth ? format(data.dateOfBirth, 'yyyy-MM-dd') : null,
         address: fullAddress,       // Payload chuẩn cho API
-        city: data.provinceName,    // Payload chuẩn cho API
+        city: data.propertyCity,    // Payload chuẩn cho API
     });
     
     if (stepId === 1) navigate("/partner/onboarding/step-1");
@@ -66,13 +65,13 @@ const OwnerOnboardingStep1 = () => {
 
   const onSubmit = (data) => {
     // Tự động gộp địa chỉ khi bấm nút Lưu & Tiếp tục
-    const fullAddress = [data.streetAddress, data.wardName, data.districtName, data.provinceName].filter(Boolean).join(', ');
+    const fullAddress = [data.streetAddress, data.wardName, data.propertyDistrict, data.propertyCity].filter(Boolean).join(', ');
 
     const profileData = {
         ...data,
         dateOfBirth: data.dateOfBirth ? format(data.dateOfBirth, 'yyyy-MM-dd') : null,
         address: fullAddress,       // Payload chuẩn cho API
-        city: data.provinceName,    // Payload chuẩn cho API
+        city: data.propertyCity,    // Payload chuẩn cho API
     };
     
     updateFormData(profileData);
