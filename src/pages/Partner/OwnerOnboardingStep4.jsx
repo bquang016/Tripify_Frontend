@@ -5,17 +5,28 @@ import { CheckCircle2, AlertTriangle, Send, RotateCw, Loader2 } from 'lucide-rea
 
 import { useOnboarding } from '@/context/OnboardingContext';
 import OnboardingStepper from './components/OnboardingStepper';
-import logo from "../../assets/logo/logo_travelmate_xoafont.png";
+import logo from "@/assets/logo/logo_tripify_xoafont.png";
 import Button from '@/components/common/Button/Button';
 import { ownerService } from '@/services/owner.service';
 import Step6_Review from './OnboardingSteps/Step6_Review';
 
 const OwnerOnboardingStep4 = () => {
     const navigate = useNavigate();
-    const { formData } = useOnboarding(); 
+    const { formData, clearFormData } = useOnboarding(); 
     
-    // Safety check for context data
-    if (!formData || !formData.temporaryToken) {
+    const [isLoading, setIsLoading] = useState(false);
+    const [submissionStatus, setSubmissionStatus] = useState(null);
+    const [errorMessage, setErrorMessage] = useState('');
+
+    const handleMajorStepClick = (stepId) => {
+        if (stepId === 1) navigate("/partner/onboarding/step-1");
+        if (stepId === 2) navigate("/partner/onboarding/step-2");
+        if (stepId === 3) navigate("/partner/onboarding/step-3");
+        if (stepId === 4) navigate("/partner/onboarding/step-4");
+    };
+    
+    // Safety check: Chỉ chặn nếu không có Token VÀ chưa submit thành công
+    if ((!formData || !formData.temporaryToken) && submissionStatus !== 'success') {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="text-center p-8 bg-white rounded-2xl shadow-xl border border-gray-100">
@@ -27,12 +38,7 @@ const OwnerOnboardingStep4 = () => {
         );
     }
 
-    const [isLoading, setIsLoading] = useState(false);
-    const [submissionStatus, setSubmissionStatus] = useState(null);
-    const [errorMessage, setErrorMessage] = useState('');
-
     const onFinalSubmit = async () => {
-        // 1. Validation cơ bản
         if (!formData.cccdFront || !formData.cccdBack) {
             toast.error("Thiếu ảnh CCCD/CMND. Vui lòng quay lại Bước 1 để tải lên.");
             return;
@@ -50,7 +56,6 @@ const OwnerOnboardingStep4 = () => {
             const { propertyInfo, paymentInfo, temporaryToken, ...personalInfo } = formData;
             const isWholeUnit = ["VILLA", "HOMESTAY", "APARTMENT"].includes(propertyInfo.propertyType);
             
-            // Tách các file ảnh ra khỏi object propertyInfo để không gửi nhầm vào JSON
             const { 
                 propertyImages, 
                 businessLicenseImage, 
@@ -58,22 +63,17 @@ const OwnerOnboardingStep4 = () => {
                 ...restPropertyInfo 
             } = propertyInfo;
             
-            // --- XỬ LÝ ĐỊA CHỈ AN TOÀN (FIX LỖI UNDEFINED) ---
-            // Kiểm tra và lấy giá trị từ nhiều nguồn biến khác nhau để tránh null/undefined
-            const street = personalInfo.streetAddress || "";
-            const ward = personalInfo.wardName || personalInfo.ward || "";
-            const district = personalInfo.districtName || personalInfo.district || "";
-            const province = personalInfo.provinceName || personalInfo.city || personalInfo.province || "";
+            const parseNumber = (value) => {
+                if (!value) return 0;
+                if (typeof value === 'number') return value;
+                const cleanValue = String(value).replace(/[^0-9]/g, ''); 
+                return Number(cleanValue) || 0;
+            };
 
-            // Tạo chuỗi địa chỉ sạch: Lọc bỏ các giá trị rỗng/undefined
-            const fullAddress = [street, ward, district, province]
-                .filter(part => part && part.trim() !== "") // Chỉ giữ lại phần có dữ liệu
-                .join(", ");
-            // --------------------------------------------------
+            const unitAmenitiesObj = unitData?.amenities || {};
+            const mappedUnitAmenityIds = Object.keys(unitAmenitiesObj).filter(key => unitAmenitiesObj[key] === true);
 
-            // 2. Chuẩn bị JSON Payload (Clean Data)
             const submitPayload = {
-                // --- Đưa các trường personalInfo ra ngoài root ---
                 fullName: personalInfo.fullName,
                 email: personalInfo.email,
                 phoneNumber: personalInfo.phoneNumber,
@@ -81,38 +81,26 @@ const OwnerOnboardingStep4 = () => {
                 identityCardNumber: personalInfo.identityCardNumber,
                 gender: personalInfo.gender ? personalInfo.gender.toUpperCase() : 'OTHER',
                 
-                // --- Mapping Address & City đã xử lý ---
-                address: fullAddress, // Chuỗi địa chỉ sạch đã gộp
-                city: province,       // Tên tỉnh/thành phố
-
-                // Vẫn gửi object structured nếu backend cần chi tiết (dùng biến đã fallback an toàn)
-                permanentAddress: {
-                    streetAddress: street,
-                    wardCode: personalInfo.wardCode || "",
-                    wardName: ward,
-                    districtCode: personalInfo.districtCode || "",
-                    districtName: district,
-                    provinceCode: personalInfo.provinceCode || "",
-                    provinceName: province,
-                },
+                address: personalInfo.address, 
+                city: personalInfo.city,      
                 
-                // Giữ nguyên các phần khác
                 propertyInfo: {
                     ...restPropertyInfo,
-                    price: Number(restPropertyInfo.price) || 0,
-                    weekendPrice: Number(restPropertyInfo.weekendPrice) || 0,
-                    capacity: Number(restPropertyInfo.capacity) || 0,
-                    area: Number(restPropertyInfo.area) || 0,
+                    price: parseNumber(restPropertyInfo.price),
+                    weekendPrice: parseNumber(restPropertyInfo.weekendPrice),
+                    capacity: parseNumber(restPropertyInfo.capacity),
+                    area: parseNumber(restPropertyInfo.area),
                     amenityIds: restPropertyInfo.amenityIds || [],
                     
                     ...(isWholeUnit && unitData ? {
                         unitData: {
                             name: unitData.name,
                             description: unitData.description,
-                            amenityIds: unitData.amenityIds || [],
-                            price: Number(unitData.price) || Number(restPropertyInfo.price),
-                            capacity: Number(unitData.capacity) || Number(restPropertyInfo.capacity),
-                            area: Number(unitData.area) || Number(restPropertyInfo.area),
+                            amenityIds: mappedUnitAmenityIds.length > 0 ? mappedUnitAmenityIds : (unitData.amenityIds || []),
+                            price: parseNumber(unitData.price) || parseNumber(restPropertyInfo.price),
+                            weekendPrice: parseNumber(unitData.weekendPrice) || parseNumber(restPropertyInfo.weekendPrice), 
+                            capacity: parseNumber(unitData.capacity) || parseNumber(restPropertyInfo.capacity),
+                            area: parseNumber(unitData.area) || parseNumber(restPropertyInfo.area),
                         }
                     } : {})
                 },
@@ -124,44 +112,44 @@ const OwnerOnboardingStep4 = () => {
                 }
             };
 
-            // 3. Đóng gói FormData
             const finalFormData = new FormData();
             
-            // Append JSON với Content-Type application/json (Quan trọng cho Spring Boot @RequestPart)
             finalFormData.append("request", new Blob([JSON.stringify(submitPayload)], { type: 'application/json' }));
 
-            // Append Single Files
             if (formData.avatar) finalFormData.append("avatar", formData.avatar);
             if (formData.cccdFront) finalFormData.append("cccdFront", formData.cccdFront);
             if (formData.cccdBack) finalFormData.append("cccdBack", formData.cccdBack);
             
-            // Append Property Images (List)
             if (propertyImages && propertyImages.length > 0) {
                 Array.from(propertyImages).forEach(file => {
                     if (file instanceof File) finalFormData.append("propertyImages", file);
                 });
             }
             
-            // Append Business License (Single)
             if (businessLicenseImage) {
                 const file = businessLicenseImage instanceof FileList ? businessLicenseImage[0] : businessLicenseImage;
                 if (file instanceof File) finalFormData.append("businessLicenseImage", file);
             }
             
-            // Append Unit Images (List - Optional)
             if (isWholeUnit && unitData?.images && unitData.images.length > 0) {
                 Array.from(unitData.images).forEach(file => {
                      if (file instanceof File) finalFormData.append("unitImages", file);
                 });
             }
 
-            console.log("Submitting payload:", submitPayload); // Debug
+            console.log("Submitting payload:", submitPayload);
 
-            // 4. Gọi Service
+            // Gửi API
             await ownerService.submitRegistration(finalFormData, temporaryToken);
             
             toast.success('Đơn đăng ký của bạn đã được gửi thành công!');
+            
+            // --- FIX LỖI RACE CONDITION ---
+            // 1. Chuyển UI sang trạng thái thành công trước
             setSubmissionStatus('success');
+            
+            // 2. Dọn rác LocalStorage sau
+            clearFormData();
             
         } catch (error) {
             console.error("Submission Error:", error);
@@ -175,21 +163,26 @@ const OwnerOnboardingStep4 = () => {
     };
     
     const renderSubmissionState = () => {
-        if (isLoading) return <div className="text-center p-12"><Loader2 className="w-12 h-12 text-[rgb(40,169,224)] animate-spin mx-auto mb-4" /><p className="text-slate-500 font-medium">Đang gửi hồ sơ đăng ký...</p></div>;
+        if (isLoading) return (
+            <div className="text-center p-12">
+                <Loader2 className="w-12 h-12 text-[#28A9E0] animate-spin mx-auto mb-4" />
+                <p className="text-slate-500 font-medium">Đang gửi hồ sơ đăng ký...</p>
+            </div>
+        );
         if (submissionStatus === 'success') return (
-            <div className="text-center p-8 bg-white rounded-3xl border border-gray-100 shadow-xl">
+            <div className="text-center p-8 bg-white rounded-3xl border border-slate-100 shadow-xl">
                 <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
                     <CheckCircle2 className="w-12 h-12 text-green-500" />
                 </div>
                 <h2 className="text-2xl font-bold text-slate-800">Đăng ký hoàn tất!</h2>
-                <p className="mt-3 text-slate-500 max-w-md mx-auto">Chúng tôi đã tiếp nhận hồ sơ của bạn. TravelMate sẽ xem xét và phản hồi qua email trong vòng 24-48 giờ làm việc.</p>
+                <p className="mt-3 text-slate-500 max-w-md mx-auto">Chúng tôi đã tiếp nhận hồ sơ của bạn. Tripify sẽ xem xét và phản hồi qua email trong vòng 24-48 giờ làm việc.</p>
                 <div className="mt-8">
                      <Button onClick={() => navigate('/')}>Về trang chủ</Button>
                 </div>
             </div>
         );
         if (submissionStatus === 'error') return (
-            <div className="text-center p-8 bg-white rounded-3xl border border-gray-100 shadow-xl">
+            <div className="text-center p-8 bg-white rounded-3xl border border-slate-100 shadow-xl">
                 <div className="w-20 h-20 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
                     <AlertTriangle className="w-12 h-12 text-red-500" />
                 </div>
@@ -203,19 +196,30 @@ const OwnerOnboardingStep4 = () => {
 
     return (
         <div className="min-h-screen w-full bg-[#F8FAFC] font-sans pb-20">
-            <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
-                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <header className="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <img src={logo} alt="Tripify" className="h-9 w-auto" />
-                        <div className="h-6 w-px bg-slate-300 mx-1"></div>
-                        <span className="font-bold text-slate-700 tracking-tight">Xác nhận</span>
+                        <img src={logo} alt="Tripify" className="h-8 sm:h-9 w-auto" />
+                        <div className="h-5 sm:h-6 w-px bg-slate-300 mx-1 sm:mx-2"></div>
+                        <span className="font-bold text-slate-700 tracking-tight text-sm sm:text-base">Đăng ký Đối tác</span>
                     </div>
-                    <div className="hidden md:block w-[500px]">
-                        <OnboardingStepper currentStep={4} />
-                    </div>
-                     <Button variant="ghost" onClick={() => navigate('/')}>Thoát</Button>
+                    
+                    <button 
+                        type="button"
+                        onClick={() => {
+                            navigate('/partner'); 
+                        }}
+                        className="text-sm font-semibold text-slate-500 hover:text-[#28A9E0] transition-colors flex items-center gap-2"
+                    >
+                        <span className="hidden sm:inline">Lưu & Thoát</span>
+                        <span className="sm:hidden">Thoát</span>
+                    </button>
                 </div>
             </header>
+
+            <div className="w-full bg-white border-b border-slate-100 pt-6 pb-12 sm:pt-8 sm:pb-14">
+                <OnboardingStepper currentStep={4} onStepClick={handleMajorStepClick} />
+            </div>
 
             <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
                 <div className="text-center mb-10">

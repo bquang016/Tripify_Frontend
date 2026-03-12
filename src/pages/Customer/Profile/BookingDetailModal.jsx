@@ -6,6 +6,7 @@ import {
   RefreshCcw // Thêm icon hoàn tiền
 } from "lucide-react";
 import Button from "@/components/common/Button/Button"; // Đảm bảo đường dẫn import đúng
+import { formatPrice } from "@/utils/priceUtils";
 
 // --- HELPER XỬ LÝ ẢNH ---
 const R2_PUBLIC_URL = "https://pub-fed047aa2ebd4dcaad827464c190ea28.r2.dev";
@@ -29,12 +30,6 @@ const BookingDetailModal = ({
   if (!isOpen || !booking) return null;
 
   // --- LOGIC TÍNH TOÁN MỚI ---
-  const formatCurrency = (val) =>
-    new Intl.NumberFormat("vi-VN", {
-      style: "currency",
-      currency: "VND",
-    }).format(val);
-
   const formatDate = (dateStr) => {
     if (!dateStr) return "N/A";
     return new Date(dateStr).toLocaleDateString("vi-VN", {
@@ -286,19 +281,27 @@ const BookingDetailModal = ({
               <div className="flex justify-between text-sm">
                 <span className="text-slate-500">Giá trị đơn hàng</span>
                 <span className="font-medium text-slate-700">
-                  {formatCurrency(booking.totalPrice)}
+                  {formatPrice(booking.totalPrice, booking.convertedTotalPrice, booking.currency)}
                 </span>
               </div>
 
-              {/* Dòng 2: Phí phạt (Chỉ hiện khi đã hủy) */}
-              {isCancelled && penaltyAmount > 0 && (
-                <div className="flex justify-between rounded bg-rose-50 p-2 text-sm text-rose-600">
-                  <span>Phí phạt hủy</span>
-                  <span>- {formatCurrency(penaltyAmount)}</span>
+              {/* Dòng 2: Giảm giá (Nếu có) */}
+              {(booking.discountAmount > 0 || booking.convertedDiscountAmount) && (
+                <div className="flex justify-between text-sm text-emerald-600">
+                  <span>Giảm giá</span>
+                  <span>- {formatPrice(booking.discountAmount, booking.convertedDiscountAmount, booking.currency)}</span>
                 </div>
               )}
 
-              {/* Dòng 3: Tổng kết */}
+              {/* Dòng 3: Phí phạt (Chỉ hiện khi đã hủy) */}
+              {isCancelled && penaltyAmount > 0 && (
+                <div className="flex justify-between rounded bg-rose-50 p-2 text-sm text-rose-600">
+                  <span>Phí phạt hủy</span>
+                  <span>- {formatPrice(penaltyAmount, null, booking.currency)}</span>
+                </div>
+              )}
+
+              {/* Dòng 4: Tổng kết */}
               <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-2">
                 <span className="font-bold text-slate-800">
                   {isCancelled ? "Tổng nhận được" : "Tổng thanh toán"}
@@ -308,9 +311,9 @@ const BookingDetailModal = ({
                     isCancelled ? "text-emerald-600" : "text-[rgb(40,169,224)]"
                   }`}
                 >
-                  {formatCurrency(
-                    isCancelled ? totalReceived : booking.totalPrice
-                  )}
+                  {isCancelled 
+                    ? formatPrice(totalReceived, booking.convertedRefundAmount, booking.currency)
+                    : formatPrice(booking.totalPrice, booking.convertedTotalPrice, booking.currency)}
                 </span>
               </div>
             </div>

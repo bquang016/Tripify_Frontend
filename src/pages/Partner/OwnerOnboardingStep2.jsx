@@ -8,7 +8,7 @@ import { useOnboarding } from '@/context/OnboardingContext';
 import VerticalStepper from "@/components/common/Stepper/VerticalStepper";
 import Button from "@/components/common/Button/Button";
 import OnboardingStepper from './components/OnboardingStepper';
-import logo from "../../assets/logo/logo_travelmate_xoafont.png"; 
+import logo from "@/assets/logo/logo_tripify_xoafont.png"; 
 
 // (Import all step components as before)
 import Step0_PropertyType from './OnboardingSteps/Step0_PropertyType';
@@ -113,6 +113,59 @@ const OwnerOnboardingStep2 = () => {
     const propertyType = watch("propertyInfo.propertyType");
     const isWholeUnit = ["VILLA", "HOMESTAY"].includes(propertyType);
 
+    const highestMinorStep = useMemo(() => {
+        const p = formData?.propertyInfo || {};
+        let step = 0;
+
+        // Check Step 0: Loại hình
+        const isStep0Done = !!p.propertyType;
+        if (!isStep0Done) return Math.max(0, currentStep);
+        step = 1;
+
+        // Check Step 1: Thông tin chung
+        const isStep1Done = !!(p.propertyName && p.description && p.description.length >= 50);
+        if (!isStep1Done) return Math.max(step, currentStep);
+        step = 2;
+
+        // Check Step 2: Vị trí
+        const isStep2Done = !!(
+            p.provinceCode && p.districtCode && p.propertyWard && 
+            p.propertyAddress && p.latitude && p.longitude
+        );
+        if (!isStep2Done) return Math.max(step, currentStep);
+        step = 3;
+
+        // Check Step 3: Hình ảnh
+        const isStep3Done = !!(p.propertyImages && p.propertyImages.length >= 3);
+        if (!isStep3Done) return Math.max(step, currentStep);
+        step = 4;
+
+        // Check Step 4: Tiện ích
+        const isStep4Done = !!(p.amenityIds && p.amenityIds.length >= 3);
+        if (!isStep4Done) return Math.max(step, currentStep);
+        step = 5;
+
+        // Check Step 5: Giấy phép kinh doanh
+        const isStep5Done = !!(
+            p.businessLicenseNumber && 
+            p.businessLicenseImage && p.businessLicenseImage.length >= 1
+        );
+        if (!isStep5Done) return Math.max(step, currentStep);
+        step = 6;
+
+        // Check Step 6: Chính sách (Các trường cơ bản bắt buộc)
+        const isStep6Done = !!(
+            p.policies?.checkInTime && 
+            p.policies?.checkOutTime && 
+            p.policies?.minimumAge !== undefined && 
+            p.policies?.minimumAge !== ''
+        );
+        if (!isStep6Done) return Math.max(step, currentStep);
+        step = 7;
+
+        return Math.max(step, currentStep); // Mở khóa toàn bộ nếu đã đến đây
+    }, [formData, currentStep]);
+
     const stepsConfig = useMemo(() => {
         const baseSteps = [
             { id: 0, title: "Loại hình", component: Step0_PropertyType, schema: validationSchemas.step0 },
@@ -165,6 +218,26 @@ const OwnerOnboardingStep2 = () => {
             navigate('/partner/onboarding/step-1');
         }
     };
+    
+const handleMajorStepClick = (stepId) => {
+        updateFormData(getValues());
+        
+        // Bắt buộc phải có đủ 4 dòng này thì click từ Step 2 mới nhảy qua bước khác được
+        if (stepId === 1) navigate('/partner/onboarding/step-1');
+        if (stepId === 2) navigate('/partner/onboarding/step-2');
+        if (stepId === 3) navigate('/partner/onboarding/step-3');
+        if (stepId === 4) navigate('/partner/onboarding/step-4');
+    };
+    const handleSubStepClick = (targetIndex) => {
+        const targetStateStep = targetIndex + 1;
+
+        // Cho phép click (kể cả lùi về hay tiến lên) miễn là <= highestMinorStep
+        if (targetStateStep <= highestMinorStep) {
+            updateFormData(getValues());
+            setCurrentStep(targetStateStep);
+            clearErrors();
+        }
+    };
   
     const renderContent = () => {
         const StepComponent = CurrentStepConfig.component;
@@ -188,7 +261,13 @@ const OwnerOnboardingStep2 = () => {
                 </Button>
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
                     <div className="md:col-span-1">
-                        <VerticalStepper steps={stepperItems} currentStep={currentStep - 1} />
+                        {/* ĐÃ THÊM onStepClick VÀO ĐÂY */}
+                        <VerticalStepper 
+                            steps={stepperItems} 
+                            currentStep={currentStep - 1} 
+                            highestStep={highestMinorStep - 1}
+                            onStepClick={handleSubStepClick} 
+                        />
                     </div>
                     <div className="md:col-span-3">
                          <StepComponent
@@ -211,26 +290,35 @@ const OwnerOnboardingStep2 = () => {
 
     return (
         <div className="min-h-screen w-full bg-[#F8FAFC] font-sans pb-20">
-            <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <img src={logo} alt="Tripify" className="h-9 w-auto" />
-                        <div className="h-6 w-px bg-slate-300 mx-1"></div>
-                        <span className="font-bold text-slate-700 tracking-tight">Partner Center</span>
-                    </div>
-                    <div className="hidden md:block w-[500px]">
-                        <OnboardingStepper currentStep={2} />
-                    </div>
-                    <div className="md:hidden text-sm font-semibold text-[#28A9E0]">
-                        Bước 2/4
-                    </div>
-                </div>
-            </header>
+            {/* --- HEADER MỚI (CHỈ CHỨA LOGO VÀ ACTION) --- */}
+      <header className="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+                <img src={logo} alt="Tripify" className="h-8 sm:h-9 w-auto" />
+                <div className="h-5 sm:h-6 w-px bg-slate-300 mx-1 sm:mx-2"></div>
+                <span className="font-bold text-slate-700 tracking-tight text-sm sm:text-base">Đăng ký Đối tác</span>
+            </div>
+            
+            {/* Nút Hỗ trợ UX: Lưu tiến độ */}
+            <button 
+                type="button"
+                onClick={() => {
+                  /* Gọi hàm lưu tiến độ API nếu có, sau đó redirect */
+                  navigate('/partner'); 
+                }}
+                className="text-sm font-semibold text-slate-500 hover:text-[#28A9E0] transition-colors flex items-center gap-2"
+            >
+                <span className="hidden sm:inline">Lưu & Thoát</span>
+                <span className="sm:hidden">Thoát</span>
+            </button>
+        </div>
+      </header>
+
+      {/* --- SECTION STEPPER (TÁCH BIỆT KHỎI HEADER ĐỂ UI THOÁNG HƠN) --- */}
+      <div className="w-full bg-white border-b border-slate-100 pt-6 pb-12 sm:pt-8 sm:pb-14">
+        <OnboardingStepper currentStep={2} onStepClick={handleMajorStepClick} />
+      </div>
             <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-                <div className="mb-8 text-center">
-                    <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Đăng ký chỗ nghỉ của bạn</h1>
-                    <p className="text-slate-500 mt-2 text-lg">Cung cấp thông tin chi tiết để chúng tôi có thể giới thiệu bạn với khách hàng.</p>
-                </div>
                 {renderContent()}
             </main>
         </div>

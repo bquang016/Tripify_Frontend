@@ -3,15 +3,15 @@ import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { format } from "date-fns";
 import { 
-  User, Phone, MapPin, CreditCard, Flag, ArrowRight, Building2, Phone as PhoneIcon, Check 
-} from "lucide-react";
+  User, Phone, MapPin, CreditCard, Flag, ArrowRight, Building2, Phone as PhoneIcon, Check, Users 
+} from "lucide-react"; // Đã thêm icon Users
 
 import { useOnboarding } from "@/context/OnboardingContext";
 import PartnerInput from "./components/PartnerInput";
 import OnboardingStepper from "./components/OnboardingStepper";
 import ImageUploadField from "./components/ImageUploadField";
-import DatePickerInput from "../../components/common/Input/DatePickerInput";
-import logo from "../../assets/logo/logo_travelmate_xoafont.png"; 
+import PartnerDatePicker from "./components/PartnerDatePicker";
+import logo from "@/assets/logo/logo_tripify_xoafont.png"; 
 import AvatarUpload from "./components/AvatarUpload";
 
 import AdminSelectorsWithApi from "./OnboardingSteps/components/AdminSelectorsWithApi";
@@ -34,6 +34,7 @@ const OwnerOnboardingStep1 = () => {
     reset,
     setValue,
     watch,
+    getValues,
     formState: { errors }
   } = useForm({ 
       mode: "onChange",
@@ -44,11 +45,35 @@ const OwnerOnboardingStep1 = () => {
     reset(formData);
   }, [formData, reset]);
 
+  const handleMajorStepClick = (stepId) => {
+    const data = getValues();
+    
+    // Tự động gộp địa chỉ ngay cả khi bấm nhảy bước trên thanh Stepper
+    const fullAddress = [data.streetAddress, data.wardName, data.propertyDistrict, data.propertyCity].filter(Boolean).join(', ');    
+    updateFormData({
+        ...data, // Giữ lại toàn bộ data lẻ nếu cần dùng lại ở màn hình này
+        dateOfBirth: data.dateOfBirth ? format(data.dateOfBirth, 'yyyy-MM-dd') : null,
+        address: fullAddress,       // Payload chuẩn cho API
+        city: data.propertyCity,    // Payload chuẩn cho API
+    });
+    
+    if (stepId === 1) navigate("/partner/onboarding/step-1");
+    if (stepId === 2) navigate("/partner/onboarding/step-2");
+    if (stepId === 3) navigate("/partner/onboarding/step-3");
+    if (stepId === 4) navigate("/partner/onboarding/step-4");
+  };
+
   const onSubmit = (data) => {
+    // Tự động gộp địa chỉ khi bấm nút Lưu & Tiếp tục
+    const fullAddress = [data.streetAddress, data.wardName, data.propertyDistrict, data.propertyCity].filter(Boolean).join(', ');
+
     const profileData = {
         ...data,
         dateOfBirth: data.dateOfBirth ? format(data.dateOfBirth, 'yyyy-MM-dd') : null,
+        address: fullAddress,       // Payload chuẩn cho API
+        city: data.propertyCity,    // Payload chuẩn cho API
     };
+    
     updateFormData(profileData);
     navigate("/partner/onboarding/step-2"); 
   };
@@ -58,29 +83,30 @@ const OwnerOnboardingStep1 = () => {
     <div className="min-h-screen w-full bg-[#F8FAFC] font-sans pb-20">
       
       {/* --- HEADER --- */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <header className="bg-white/90 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between">
             <div className="flex items-center gap-3">
-                <img src={logo} alt="Tripify" className="h-9 w-auto" />
-                <div className="h-6 w-px bg-slate-300 mx-1"></div>
-                <span className="font-bold text-slate-700 tracking-tight">Partner Center</span>
+                <img src={logo} alt="Tripify" className="h-8 sm:h-9 w-auto" />
+                <div className="h-5 sm:h-6 w-px bg-slate-300 mx-1 sm:mx-2"></div>
+                <span className="font-bold text-slate-700 tracking-tight text-sm sm:text-base">Đăng ký Đối tác</span>
             </div>
             
-            {/* Desktop Stepper */}
-            <div className="hidden md:block w-[400px]">
-               <OnboardingStepper currentStep={1} />
-            </div>
-
-            {/* Mobile: Simple Step Text */}
-            <div className="md:hidden text-sm font-semibold text-[#28A9E0]">
-                Bước 1/3
-            </div>
+            <button 
+                type="button"
+                onClick={() => {
+                  navigate('/partner'); 
+                }}
+                className="text-sm font-semibold text-slate-500 hover:text-[#28A9E0] transition-colors flex items-center gap-2"
+            >
+                <span className="hidden sm:inline">Lưu & Thoát</span>
+                <span className="sm:hidden">Thoát</span>
+            </button>
         </div>
       </header>
 
-      {/* Mobile Stepper */}
-      <div className="md:hidden px-4 mt-4">
-          <OnboardingStepper currentStep={1} />
+      {/* --- SECTION STEPPER --- */}
+      <div className="w-full bg-white border-b border-slate-100 pt-6 pb-12 sm:pt-8 sm:pb-14">
+        <OnboardingStepper currentStep={1} onStepClick={handleMajorStepClick} />
       </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
@@ -96,9 +122,8 @@ const OwnerOnboardingStep1 = () => {
 
                 <form className="space-y-8">
                     
-                    {/* --- GROUP 1: ẢNH ĐẠI DIỆN (ĐÃ CUSTOM UI) --- */}
+                    {/* --- GROUP 1: ẢNH ĐẠI DIỆN --- */}
                     <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
-                         {/* Header nhỏ gọn hơn */}
                          <div className="flex justify-between items-start mb-6">
                              <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
                                 <div className="p-2 bg-blue-50 rounded-lg text-[#28A9E0]">
@@ -111,7 +136,6 @@ const OwnerOnboardingStep1 = () => {
                             </span>
                          </div>
                         
-                        {/* Avatar Upload Chính Giữa */}
                         <div className="flex justify-center py-4">
                              <Controller
                                 control={control}
@@ -127,7 +151,7 @@ const OwnerOnboardingStep1 = () => {
                         </div>
                     </div>
 
-                    {/* --- GROUP 2: THÔNG TIN ĐỊNH DANH (Có DatePickerInput) --- */}
+                    {/* --- GROUP 2: THÔNG TIN ĐỊNH DANH --- */}
                     <div className="bg-white p-8 rounded-[32px] shadow-sm border border-slate-100">
                         <h2 className="text-xl font-bold text-slate-800 mb-6 flex items-center gap-2">
                              <div className="p-2 bg-blue-50 rounded-lg text-[#28A9E0]">
@@ -189,19 +213,18 @@ const OwnerOnboardingStep1 = () => {
                                 rules={{ required: "Vui lòng nhập họ tên" }}
                             />
                             
-                            {/* --- DATE PICKER INPUT (TÍCH HỢP VALIDATE 18+) --- */}
+                            {/* --- DATE PICKER INPUT --- */}
                             <Controller
                                 control={control}
                                 name="dateOfBirth"
                                 rules={{ 
                                     required: "Vui lòng chọn ngày sinh",
                                     validate: (value) => {
-                                        if (!value) return true; // Bỏ qua nếu chưa chọn (đã có required lo)
+                                        if (!value) return true; 
                                         
                                         const selectedDate = new Date(value);
                                         const today = new Date();
                                         
-                                        // Tính tuổi chính xác từng ngày
                                         let age = today.getFullYear() - selectedDate.getFullYear();
                                         const m = today.getMonth() - selectedDate.getMonth();
                                         if (m < 0 || (m === 0 && today.getDate() < selectedDate.getDate())) {
@@ -212,23 +235,29 @@ const OwnerOnboardingStep1 = () => {
                                     }
                                 }}
                                 render={({ field: { onChange, value } }) => (
-                                    <DatePickerInput
+                                    <PartnerDatePicker
                                         label="Ngày sinh"
                                         value={value}
                                         onChange={onChange}
-                                        // Lấy lỗi trực tiếp từ errors object
                                         error={errors.dateOfBirth?.message}
-                                        maxDate={new Date()} // Không cho chọn tương lai
+                                        maxDate={new Date()} 
+                                        required
                                     />
                                 )}
                             />
 
+                            {/* --- SELECT GIỚI TÍNH CẬP NHẬT UI --- */}
                             <div className="w-full">
-                                <label className="mb-2 block text-sm font-semibold text-slate-700">Giới tính</label>
+                                <label className="mb-2 block text-sm font-semibold text-slate-700">
+                                    Giới tính <span className="text-red-500">*</span>
+                                </label>
                                 <div className="relative">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                                        <Users size={20} />
+                                    </div>
                                     <select 
                                         {...register("gender", { required: "Chọn giới tính" })}
-                                        className="w-full rounded-2xl py-3.5 pl-4 pr-10 bg-white border border-slate-200 text-slate-700 font-medium outline-none focus:border-[#28A9E0] focus:ring-4 focus:ring-[#28A9E0]/10 transition-all shadow-sm appearance-none cursor-pointer hover:border-[#28A9E0]"
+                                        className="w-full rounded-2xl py-3.5 pl-11 pr-10 bg-white border border-slate-200 text-slate-700 font-medium outline-none focus:border-[#28A9E0] focus:ring-4 focus:ring-[#28A9E0]/10 transition-all shadow-sm appearance-none cursor-pointer hover:border-[#28A9E0]"
                                     >
                                         <option value="">Chọn giới tính</option>
                                         <option value="Male">Nam</option>
@@ -268,7 +297,6 @@ const OwnerOnboardingStep1 = () => {
                                 />
                             </div>
                             
-                            {/* --- NEW: Structured Address --- */}
                             <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <AdminSelectorsWithApi control={control} setValue={setValue} errors={errors} watch={watch} />
                             </div>
@@ -306,9 +334,7 @@ const OwnerOnboardingStep1 = () => {
             <div className="hidden lg:block w-1/3 min-w-[320px]">
                 <div className="sticky top-28 space-y-6">
                     
-                    {/* Card 1: Benefit */}
                     <div className="bg-gradient-to-br from-[#28A9E0] to-[#0077B6] rounded-[32px] p-8 text-white shadow-2xl shadow-blue-200 relative overflow-hidden">
-                        {/* Decorative Circles */}
                         <div className="absolute top-0 right-0 w-48 h-48 bg-white/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
                         <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -ml-10 -mb-10"></div>
                         
@@ -338,7 +364,6 @@ const OwnerOnboardingStep1 = () => {
                         </ul>
                     </div>
 
-                    {/* Card 2: Help */}
                     <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-xl shadow-slate-200/50">
                          <h3 className="text-lg font-bold text-slate-800 mb-2">Cần hỗ trợ?</h3>
                          <p className="text-slate-500 text-sm mb-6">Bạn gặp khó khăn khi tải ảnh hoặc điền thông tin? Liên hệ ngay:</p>

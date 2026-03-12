@@ -22,14 +22,17 @@ import paymentService from "@/services/payment.service";
 import promotionService from "@/services/promotion.service";
 import './PaymentPage.css';
 
-// --- CONFIG HELPER (Ưu tiên logic R2 của nhánh HEAD) ---
+// --- STRIPE IMPORTS ---
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, useStripe } from '@stripe/react-stripe-js';
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+
 const R2_PUBLIC_URL = "https://pub-fed047aa2ebd4dcaad827464c190ea28.r2.dev";
 
 const getFullImageUrl = (path) => {
     if (!path) return "https://via.placeholder.com/300x200?text=No+Image";
-    // Backend đã trả full URL
     if (path.startsWith("http")) return path;
-    // Path tương đối → Cloudflare R2
     const cleanPath = path.replace(/^\/+/, "");
     return `${R2_PUBLIC_URL}/${cleanPath}`;
 };
@@ -98,7 +101,7 @@ const TotalPriceSection = ({ originalPrice, finalPrice, adminDiscount, ownerDisc
 
                 {adminDiscount > 0 && (
                     <div className="flex justify-between items-center text-sm text-blue-600 font-medium">
-                        <span>TravelMate Voucher</span>
+                        <span>Tripify Voucher</span>
                         <span>- {new Intl.NumberFormat('vi-VN').format(adminDiscount)}₫</span>
                     </div>
                 )}
@@ -122,12 +125,17 @@ const TotalPriceSection = ({ originalPrice, finalPrice, adminDiscount, ownerDisc
     );
 };
 
-export default function PaymentPage() {
+// =========================================================================
+// COMPONENT CHÍNH CỦA TRANG THANH TOÁN
+// =========================================================================
+function PaymentPageContent() {
     const { bookingId } = useParams();
     const navigate = useNavigate();
     const location = useLocation();
+    
+    // Stripe Hooks
+    const stripe = useStripe();
 
-    // ✅ [MỚI - HEAD] Lấy giá chuẩn từ BookingPage (nếu có, để đảm bảo giá cuối tuần đúng)
     const { finalTotalPrice } = location.state || {};
 
     const [booking, setBooking] = useState(location.state?.booking || null);
@@ -135,17 +143,16 @@ export default function PaymentPage() {
     const [isProcessing, setIsProcessing] = useState(false);
     const [toast, setToast] = useState({ show: false, msg: "", type: "info" });
 
-    // --- PROMO STATES (Logic của nhánh Promotion) ---
     const [adminPromo, setAdminPromo] = useState(null);
     const [ownerPromo, setOwnerPromo] = useState(null);
-
-    // State theo dõi thứ tự áp dụng: ['OWNER', 'ADMIN']
     const [promoOrder, setPromoOrder] = useState([]);
 
-    // Modals & Timers
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSuccessOpen, setIsSuccessOpen] = useState(false);
-    const [paymentMethod, setPaymentMethod] = useState('qr_code');
+    
+    // Mặc định chọn paymentMethod là VNPAY nếu không có thẻ, user sẽ tự click chọn sau
+    const [paymentMethod, setPaymentMethod] = useState('VNPAY'); 
+    
     const [timeLeft, setTimeLeft] = useState(5 * 60);
     const [isTimeoutOpen, setIsTimeoutOpen] = useState(false);
     const timerRef = useRef(null);
@@ -155,25 +162,21 @@ export default function PaymentPage() {
         setTimeout(() => setToast({ show: false, msg: "", type: "info" }), 3000);
     };
 
-    // --- HÀM TÍNH TOÁN (HELPER) ---
     const calculateDiscountValue = (promo, priceBasis) => {
         if (!promo || !priceBasis) return 0;
         const val = Number(promo.discountValue) || 0;
         const max = Number(promo.maxDiscountAmount) || 0;
-
         const type = promo.discountType ? promo.discountType.toUpperCase() : '';
+        
         if (type === 'PERCENTAGE' || type === 'PERCENT') {
             let amount = (priceBasis * val) / 100;
-            if (max > 0) {
-                amount = Math.min(amount, max);
-            }
+            if (max > 0) amount = Math.min(amount, max);
             return Math.round(amount);
         } else {
             return val;
         }
     };
 
-    // --- FETCH BOOKING DATA ---
     useEffect(() => {
         const fetchBooking = async () => {
             try {
@@ -193,22 +196,16 @@ export default function PaymentPage() {
                     if (remaining <= 0) handleExpired();
                     else setTimeLeft(remaining);
 
-                    // --- KHÔI PHỤC STATE TỪ DB (FIXED CHO RELOAD) ---
                     const initialOrder = [];
                     if (currentBooking.promotionCode) initialOrder.push('OWNER');
                     if (currentBooking.adminPromotionCode) initialOrder.push('ADMIN');
+                    if (promoOrder.length === 0) setPromoOrder(initialOrder);
 
-                    if (promoOrder.length === 0) {
-                        setPromoOrder(initialOrder);
-                    }
-
-                    // Gọi API lấy lại chi tiết mã để tính toán đúng
                     if (currentBooking.adminPromotionCode && !adminPromo) {
                         try {
                             const p = await promotionService.checkPromotion(currentBooking.adminPromotionCode, currentBooking.propertyId);
                             setAdminPromo(p.data || p);
                         } catch (e) {
-                            // Fallback
                             setAdminPromo({ code: currentBooking.adminPromotionCode, discountValue: 0, description: "Đã áp dụng" });
                         }
                     }
@@ -232,7 +229,6 @@ export default function PaymentPage() {
         fetchBooking();
     }, [bookingId]);
 
-    // Timer Logic
     useEffect(() => {
         if (isTimeoutOpen) return;
         timerRef.current = setInterval(() => {
@@ -260,63 +256,35 @@ export default function PaymentPage() {
         return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
     };
 
-    // =========================================================================
-    // LOGIC TÍNH TOÁN LINH HOẠT (Đã merge: Dùng finalTotalPrice từ HEAD làm gốc)
-    // =========================================================================
-
-    // 1. Dữ liệu giá gốc (Ưu tiên finalTotalPrice từ state nếu có)
     const backendFinalPrice = booking ? booking.totalPrice : 0;
     const backendDiscountAmount = booking ? (booking.discountAmount || 0) : 0;
-
-    // Nếu có finalTotalPrice (từ BookingPage chuyển sang), dùng nó làm base.
-    // Nếu không (F5 reload), dùng logic backend (nhưng có thể sai số nếu backend chưa tính weekend)
     const basePrice = finalTotalPrice || (backendFinalPrice + backendDiscountAmount);
-
     const originalPrice = basePrice;
 
-    // 2. Tính toán dựa trên promoOrder
     let localOwnerDiscount = 0;
     let localAdminDiscount = 0;
-
-    // Xác định ai là người đến trước (Mặc định Owner nếu không rõ)
     const firstApplied = promoOrder.length > 0 ? promoOrder[0] : 'OWNER';
 
     if (firstApplied === 'OWNER') {
-        // OWNER TRƯỚC -> ADMIN SAU
-        if (ownerPromo) {
-            localOwnerDiscount = calculateDiscountValue(ownerPromo, originalPrice);
-        }
-        // Giảm không quá giá trị đơn
+        if (ownerPromo) localOwnerDiscount = calculateDiscountValue(ownerPromo, originalPrice);
         localOwnerDiscount = Math.min(localOwnerDiscount, originalPrice);
-
         const priceAfterOwner = originalPrice - localOwnerDiscount;
-        if (adminPromo) {
-            localAdminDiscount = calculateDiscountValue(adminPromo, priceAfterOwner);
-        }
+        
+        if (adminPromo) localAdminDiscount = calculateDiscountValue(adminPromo, priceAfterOwner);
         localAdminDiscount = Math.min(localAdminDiscount, priceAfterOwner);
-
     } else {
-        // ADMIN TRƯỚC -> OWNER SAU
-        if (adminPromo) {
-            localAdminDiscount = calculateDiscountValue(adminPromo, originalPrice);
-        }
+        if (adminPromo) localAdminDiscount = calculateDiscountValue(adminPromo, originalPrice);
         localAdminDiscount = Math.min(localAdminDiscount, originalPrice);
-
         const priceAfterAdmin = originalPrice - localAdminDiscount;
-        if (ownerPromo) {
-            localOwnerDiscount = calculateDiscountValue(ownerPromo, priceAfterAdmin);
-        }
+        
+        if (ownerPromo) localOwnerDiscount = calculateDiscountValue(ownerPromo, priceAfterAdmin);
         localOwnerDiscount = Math.min(localOwnerDiscount, priceAfterAdmin);
     }
 
-    // 3. Kết quả hiển thị
     const displayAdminDiscount = localAdminDiscount;
     const displayOwnerDiscount = localOwnerDiscount;
     const displayFinalPrice = Math.max(0, originalPrice - displayOwnerDiscount - displayAdminDiscount);
 
-    // =========================================================================
-
-    // --- HANDLE APPLY ---
     const updateOrder = (type, action) => {
         setPromoOrder(prev => {
             let newOrder = [...prev];
@@ -383,7 +351,6 @@ export default function PaymentPage() {
         }
     };
 
-    // ✅ [HEAD] Xử lý nút quay lại: Hủy booking để tránh lỗi trùng lịch
     const handleGoBack = async () => {
         if (!window.confirm("Bạn có chắc muốn quay lại? Đơn hàng hiện tại sẽ bị hủy để bạn đặt lại.")) return;
         try {
@@ -398,10 +365,63 @@ export default function PaymentPage() {
         }
     };
 
-    // --- SUBMIT ---
+    // =========================================================================
+    // XỬ LÝ THANH TOÁN (TÍCH HỢP STRIPE VÀO ĐÂY)
+    // =========================================================================
     const handlePaymentSubmit = async () => {
         if (timeLeft <= 0) return;
 
+        // Nếu ID có tiền tố 'pm_', đích thị là khách hàng chọn thẻ Stripe đã lưu
+        if (paymentMethod.startsWith('pm_')) {
+            if (!stripe) {
+                showToast("Hệ thống thanh toán đang khởi tạo, vui lòng đợi.", "warning");
+                return;
+            }
+
+            setIsProcessing(true);
+            try {
+                // 1. Gọi API Backend để tạo PaymentIntent (trừ tiền)
+                const response = await paymentService.chargeSavedCard({
+                    bookingId: bookingId,
+                    paymentMethodId: paymentMethod,
+                    amount: displayFinalPrice
+                });
+
+                const data = response.data || response;
+
+                // 2. Xử lý kịch bản 3D Secure (Nếu ngân hàng gửi mã OTP)
+                if (data.requiresAction) {
+                    const { error, paymentIntent } = await stripe.confirmCardPayment(data.clientSecret);
+                    
+                    if (error) {
+                        showToast(`Xác thực thất bại: ${error.message}`, "error");
+                        return; // Ngừng thực thi nếu OTP sai hoặc huỷ
+                    }
+                    
+                    if (paymentIntent && paymentIntent.status === 'succeeded') {
+                        setIsSuccessOpen(true);
+                    }
+                } 
+                // 3. Thanh toán thành công ngay lập tức (Không cần 3D Secure)
+                else if (data.success || data.status === 'succeeded') {
+                    setIsSuccessOpen(true);
+                } 
+                else {
+                    showToast("Thanh toán bị từ chối, vui lòng đổi thẻ khác.", "error");
+                }
+            } catch (error) {
+                console.error("Stripe Charge Error:", error);
+                const errorMsg = error.response?.data?.error || error.message;
+                showToast("Lỗi giao dịch: " + errorMsg, "error");
+            } finally {
+                setIsProcessing(false);
+            }
+            return; // KẾT THÚC LUỒNG STRIPE TẠI ĐÂY
+        }
+
+        // ============================================================
+        // LOGIC DÀNH CHO CÁC PHƯƠNG THỨC KHÁC (VNPay, MoMo, QR_Code...)
+        // ============================================================
         const usedCodes = [];
         if (adminPromo && adminPromo.code) usedCodes.push(adminPromo.code);
         if (ownerPromo && ownerPromo.code) usedCodes.push(ownerPromo.code);
@@ -416,7 +436,7 @@ export default function PaymentPage() {
         try {
             await paymentService.submitPayment(
                 bookingId,
-                "Thanh toán tiền mặt (Demo)",
+                "Thanh toán qua cổng",
                 promoCodeString,
                 paymentMethod
             );
@@ -459,11 +479,10 @@ export default function PaymentPage() {
 
     return (
         <main className="max-w-7xl mx-auto px-4 md:px-6 py-8 bg-gray-50 min-h-screen relative">
-            {isProcessing && <LoadingOverlay message="Đang xử lý..." />}
+            {isProcessing && <LoadingOverlay message="Đang xử lý giao dịch..." />}
             <PaymentTimeoutModal open={isTimeoutOpen} onConfirm={handleTimeoutConfirm} />
 
             <div className="mb-6">
-                {/* ✅ Gọi hàm handleGoBack của HEAD */}
                 <Button variant="ghost" onClick={handleGoBack} leftIcon={<ArrowLeft size={18} />} className="mb-2 pl-0 hover:bg-transparent text-gray-500 hover:text-blue-600">Quay lại</Button>
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Thanh toán đơn hàng</h1>
             </div>
@@ -492,15 +511,11 @@ export default function PaymentPage() {
                         bookingPropertyId={booking.propertyId}
                         selectedAdminCode={adminPromo ? adminPromo.code : null}
                         selectedOwnerCode={ownerPromo ? ownerPromo.code : null}
-                        // Dùng biến display đã được xử lý theo thứ tự
                         adminDiscount={displayAdminDiscount}
                         ownerDiscount={displayOwnerDiscount}
-
-                        // ✅ THÊM DÒNG NÀY ĐỂ KÍCH HOẠT NHÃN BEST OFFER
                         totalAmount={originalPrice}
                     />
 
-                    {/* ✅ Hiển thị giá đã tính toán chính xác */}
                     <TotalPriceSection
                         originalPrice={originalPrice}
                         totalPrice={displayFinalPrice}
@@ -509,7 +524,7 @@ export default function PaymentPage() {
                         ownerDiscount={displayOwnerDiscount}
                         onSubmit={handlePaymentSubmit}
                         loading={isProcessing}
-                        disabled={timeLeft <= 0}
+                        disabled={timeLeft <= 0 || !paymentMethod}
                     />
                 </div>
 
@@ -532,7 +547,7 @@ export default function PaymentPage() {
                         <CheckCircle2 size={48} className="text-green-600" />
                     </div>
                     <h3 className="text-xl font-bold text-gray-900">Đã hoàn tất!</h3>
-                    <p className="text-gray-600 text-sm leading-relaxed">Đơn đặt phòng của bạn đã được xác nhận.</p>
+                    <p className="text-gray-600 text-sm leading-relaxed">Đơn đặt phòng của bạn đã được xác nhận và thanh toán thành công.</p>
                     <div className="w-full pt-4 flex flex-col gap-3">
                         <Button onClick={() => navigate('/customer/bookings')} fullWidth size="lg">Đi đến trang Đặt chỗ của tôi</Button>
                         <Button variant="ghost" onClick={() => setIsSuccessOpen(false)} fullWidth>Đóng</Button>
@@ -548,5 +563,14 @@ export default function PaymentPage() {
                 )}
             </ToastPortal>
         </main>
+    );
+}
+
+// Bọc Component chính trong Elements Provider của Stripe
+export default function PaymentPage() {
+    return (
+        <Elements stripe={stripePromise}>
+            <PaymentPageContent />
+        </Elements>
     );
 }

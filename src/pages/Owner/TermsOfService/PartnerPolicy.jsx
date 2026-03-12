@@ -26,8 +26,8 @@ const PartnerPolicy = () => {
                 <div className="text-center mb-10">
                     <Link to="/" className="inline-block mb-4">
                         <img
-                            src="/assets/logo/logo_travelmate_xoafont.png"
-                            alt="TravelMate"
+                            src="src/assets/logo/logo_tripify_xoafont.png"
+                            alt="Tripify"
                             className="h-12 object-contain"
                         />
                     </Link>
@@ -42,7 +42,7 @@ const PartnerPolicy = () => {
                         <div>
                             <h4 className="font-semibold text-blue-900">Nguyên tắc hợp tác</h4>
                             <p className="text-sm text-blue-800 mt-1">
-                                Tài liệu này quy định các nguyên tắc ứng xử, tiêu chuẩn chất lượng và quy trình làm việc giữa TravelMate và các Đối tác (Chủ cơ sở lưu trú).
+                                Tài liệu này quy định các nguyên tắc ứng xử, tiêu chuẩn chất lượng và quy trình làm việc giữa Tripify và các Đối tác (Chủ cơ sở lưu trú).
                             </p>
                         </div>
                     </div>
@@ -53,7 +53,7 @@ const PartnerPolicy = () => {
                             Đối tác cam kết duy trì chất lượng phòng ở, vệ sinh và thái độ phục vụ đúng như mô tả trên hệ thống.
                         </p>
                         <p>
-                            TravelMate có quyền tạm ngưng hoặc chấm dứt hợp tác nếu Đối tác nhận được nhiều phản hồi tiêu cực hoặc vi phạm nghiêm trọng các tiêu chuẩn an toàn.
+                            Tripify có quyền tạm ngưng hoặc chấm dứt hợp tác nếu Đối tác nhận được nhiều phản hồi tiêu cực hoặc vi phạm nghiêm trọng các tiêu chuẩn an toàn.
                         </p>
                     </Section>
 
@@ -62,13 +62,13 @@ const PartnerPolicy = () => {
                             Đối tác cam kết cung cấp mức giá cạnh tranh và không cao hơn giá niêm yết tại cơ sở hoặc trên các nền tảng khác (Rate Parity).
                         </p>
                         <p>
-                            Mọi chương trình khuyến mãi đăng ký trên TravelMate phải được thực hiện đúng cam kết với khách hàng.
+                            Mọi chương trình khuyến mãi đăng ký trên Tripify phải được thực hiện đúng cam kết với khách hàng.
                         </p>
                     </Section>
 
                     <Section title="3. Quy trình Giải quyết Khiếu nại">
                         <p>
-                            Trong trường hợp có tranh chấp với khách hàng (ví dụ: khách đến nhưng hết phòng, phòng không đúng ảnh...), Đối tác có trách nhiệm phối hợp với TravelMate để tìm phương án đền bù hoặc hỗ trợ khách hàng thỏa đáng (nâng hạng phòng, hoàn tiền, chuyển khách sạn tương đương).
+                            Trong trường hợp có tranh chấp với khách hàng (ví dụ: khách đến nhưng hết phòng, phòng không đúng ảnh...), Đối tác có trách nhiệm phối hợp với Tripify để tìm phương án đền bù hoặc hỗ trợ khách hàng thỏa đáng (nâng hạng phòng, hoàn tiền, chuyển khách sạn tương đương).
                         </p>
                     </Section>
 
@@ -80,7 +80,7 @@ const PartnerPolicy = () => {
 
                     <div className="mt-12 pt-8 border-t border-gray-200 flex flex-col items-center">
                         <p className="text-gray-500 italic text-sm mb-6 text-center">
-                            Đối tác cần hỗ trợ vui lòng liên hệ: <strong>partners@travelmate.vn</strong>
+                            Đối tác cần hỗ trợ vui lòng liên hệ: <strong>partners@Tripify.vn</strong>
                         </p>
                         <Button onClick={() => window.close()}>
                             Đã hiểu & Đóng tab

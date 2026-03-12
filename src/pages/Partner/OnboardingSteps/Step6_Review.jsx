@@ -2,8 +2,34 @@ import React from 'react';
 import { Check, Info } from 'lucide-react';
 
 const ImagePreview = ({ file }) => {
-    const src = React.useMemo(() => URL.createObjectURL(file), [file]);
-    return <img src={src} alt={file.name} className="w-24 h-24 object-cover rounded-lg shadow-md" />;
+    const src = React.useMemo(() => {
+        if (!file) return null;
+        
+        // 1. Nếu file đã là một chuỗi string (VD: URL ảnh từ backend hoặc link blob có sẵn)
+        if (typeof file === 'string') return file;
+        
+        // 2. Nếu file là object dạng { preview: '...', ... } (do một số thư viện drag & drop upload tạo ra)
+        if (file.preview && typeof file.preview === 'string') return file.preview;
+        
+        // 3. Nếu là đối tượng File / Blob thuần túy
+        try {
+            return URL.createObjectURL(file);
+        } catch (error) {
+            console.error("Không thể tạo URL hiển thị cho file:", file);
+            return null; // Trả về null thay vì crash nguyên trang web
+        }
+    }, [file]);
+
+    // Nếu không có src hợp lệ, hiển thị 1 ô trống thông báo lỗi nhẹ nhàng
+    if (!src) {
+        return (
+            <div className="w-24 h-24 bg-slate-50 border border-slate-200 rounded-lg flex items-center justify-center text-slate-400 text-xs text-center p-2">
+                Không thể tải ảnh
+            </div>
+        );
+    }
+
+    return <img src={src} alt={file?.name || 'Preview'} className="w-24 h-24 object-cover rounded-lg shadow-md border border-slate-100" />;
 };
 
 const InfoItem = ({ label, value, className }) => (
@@ -23,19 +49,20 @@ const InfoSection = ({ title, children }) => (
 const Step6_Review = ({ data }) => {
     if (!data) return null;
     
+    // TÁCH personalInfo RA KHỎI data (bao gồm fullName, email, address từ Step 1)
     const { 
         propertyInfo = {}, 
-        paymentInfo = {} 
+        paymentInfo = {},
+        ...personalInfo 
     } = data;
 
     const {
         propertyName,
         propertyType,
-        address,
-        ward,
-        district,
-        city,
-        province,
+        propertyAddress,
+        wardName,
+        propertyDistrict, // Hoặc propertyDistrict tùy thuộc vào cách bạn lưu Text ở Step 2
+        propertyCity, // Hoặc propertyCity tùy thuộc vào cách bạn lưu Text ở Step 2
         policies = {},
         unitData = {},
         propertyImages,
@@ -45,20 +72,46 @@ const Step6_Review = ({ data }) => {
 
     const isWholeUnit = ["VILLA", "HOMESTAY"].includes(propertyType);
 
+    // Xử lý chuỗi địa chỉ chỗ nghỉ
+    const fullPropertyAddress = [
+        propertyAddress,
+        wardName,
+        propertyDistrict,
+        propertyCity
+    ].filter(Boolean).join(', ');
+
     return (
         <div className="space-y-8">
-            <InfoSection title="Thông tin chung & Địa chỉ">
+            {/* THÊM MỚI: SECTION THÔNG TIN CÁ NHÂN (TỪ STEP 1) */}
+            <InfoSection title="Thông tin cá nhân (Chủ sở hữu)">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
+                    <InfoItem label="Họ và tên" value={personalInfo.fullName} />
+                    <InfoItem label="Email" value={personalInfo.email} />
+                    <InfoItem label="Số điện thoại" value={personalInfo.phoneNumber} />
+                    <InfoItem label="CCCD/CMND" value={personalInfo.identityCardNumber} />
+                </div>
+                <InfoItem label="Địa chỉ cá nhân" value={personalInfo.address} /> 
+            </InfoSection>
+
+            {/* SECTION THÔNG TIN CHỖ NGHỈ */}
+            <InfoSection title="Thông tin chung & Địa chỉ chỗ nghỉ">
                 <InfoItem label="Tên chỗ nghỉ" value={propertyName} />
                 <InfoItem label="Loại hình" value={propertyType} />
-                <InfoItem label="Địa chỉ" value={`${address || ''}${ward ? `, ${ward}` : ''}${district ? `, ${district}` : ''}${city || province ? `, ${city || province}` : ''}`} />
+                <InfoItem label="Địa chỉ" value={fullPropertyAddress} />
             </InfoSection>
 
             {isWholeUnit && unitData && (
                 <InfoSection title="Chi tiết căn (Villa/Homestay)">
                     <InfoItem label="Tên căn" value={unitData.name} />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4">
-                        <InfoItem label="Giá ngày thường" value={unitData.price ? `${Number(unitData.price).toLocaleString()} VNĐ` : '0 VNĐ'} />
-                        <InfoItem label="Giá cuối tuần" value={unitData.weekendPrice ? `${Number(unitData.weekendPrice).toLocaleString()} VNĐ` : '0 VNĐ'} />
+                        <InfoItem 
+                            label="Giá ngày thường" 
+                            value={unitData.price ? `${Number(String(unitData.price).replace(/[^0-9]/g, '')).toLocaleString('vi-VN')} VNĐ` : '0 VNĐ'} 
+                        />
+                        <InfoItem 
+                            label="Giá cuối tuần" 
+                            value={unitData.weekendPrice ? `${Number(String(unitData.weekendPrice).replace(/[^0-9]/g, '')).toLocaleString('vi-VN')} VNĐ` : '0 VNĐ'} 
+                        />
                         <InfoItem label="Sức chứa" value={`${unitData.capacity || 0} người`} />
                         <InfoItem label="Diện tích" value={`${unitData.area || 0} m²`} />
                     </div>

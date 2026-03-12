@@ -5,13 +5,16 @@ import React from 'react';
 import Card from "@/components/common/Card/Card";
 import Select from "@/components/common/Select/Select";
 import { Globe } from 'lucide-react';
+import { useLanguage } from '@/context/LanguageContext';
 
 const LANGUAGE_OPTIONS = [
     { label: "Tiếng Việt (Vietnamese)", value: "vi" },
     { label: "Tiếng Anh (English)", value: "en" },
 ];
 
-export default function LanguageSettings({ value, onChange }) {
+export default function LanguageSettings() {
+    const { language, changeLanguage } = useLanguage();
+
     return (
         <Card>
             <div className="p-6 flex items-center justify-between">
@@ -22,8 +25,8 @@ export default function LanguageSettings({ value, onChange }) {
 
                 <div className="w-60">
                     <Select
-                        value={value}
-                        onChange={onChange}
+                        value={language}
+                        onChange={changeLanguage}
                         options={LANGUAGE_OPTIONS}
                     />
                 </div>

@@ -1,5 +1,6 @@
 import React from "react";
 import { Star, MapPin, ArrowRight, Heart, Wifi, Utensils, X } from "lucide-react";
+import { formatPrice } from "@/utils/priceUtils";
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8386/api/v1").replace("/api/v1", "");
 
@@ -12,7 +13,7 @@ const MapHotelCard = ({ property, onClose, navigate }) => {
         : `${API_BASE_URL}/images/${property.coverImage}`;
   }
 
-  const priceFormatted = new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumSignificantDigits: 3 }).format(property.minPrice || 0);
+  const priceFormatted = formatPrice(property.minPrice, property.convertedMinPrice, property.currency);
 
   // --- HÀM XỬ LÝ CLICK ---
   const handleNavigate = (e) => {
@@ -47,7 +48,7 @@ const MapHotelCard = ({ property, onClose, navigate }) => {
         />
         
         <div className="absolute top-3 left-3 flex gap-2">
-            <span className="bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-lg uppercase tracking-wide">
+            <span className="bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-wide">
                 {property.propertyType}
             </span>
         </div>
@@ -82,18 +83,19 @@ const MapHotelCard = ({ property, onClose, navigate }) => {
 
         <div className="flex items-end justify-between pt-3 border-t border-gray-100 border-dashed">
             <div className="flex flex-col">
-                <span className="text-[10px] text-gray-400 font-medium line-through decoration-gray-300">
-                    {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumSignificantDigits: 3 }).format((property.minPrice || 0) * 1.2)}
-                </span>
+                {!property.convertedMinPrice && (
+                    <span className="text-[10px] text-gray-400 font-medium line-through decoration-gray-300">
+                        {formatPrice((property.minPrice || 0) * 1.2, null, property.currency)}
+                    </span>
+                )}
                 <div className="flex items-baseline gap-1">
                     <span className="text-lg font-extrabold text-gray-900">{priceFormatted}</span>
-                    <span className="text-xs text-gray-500 font-medium">/đêm</span>
+                    {!property.convertedMinPrice && <span className="text-xs text-gray-500 font-medium">/đêm</span>}
                 </div>
             </div>
             
             <button 
                 className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg p-2.5 shadow-lg shadow-blue-200 transition-colors flex items-center justify-center"
-                // Nút này sẽ kích hoạt onClick của div cha, nên không cần gắn sự kiện riêng
             >
                 <ArrowRight size={18} />
             </button>

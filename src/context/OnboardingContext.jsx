@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
 const OnboardingContext = createContext(null);
 
@@ -76,16 +76,40 @@ const initialFormData = {
 };
 
 export const OnboardingProvider = ({ children }) => {
-    const [formData, setFormData] = useState(initialFormData);
+    // 1. Khởi tạo state từ localStorage để dữ liệu sống sót qua việc tắt Tab
+    const [formData, setFormData] = useState(() => {
+        const savedData = localStorage.getItem('partnerOnboardingData');
+        if (savedData) {
+            try {
+                return JSON.parse(savedData);
+            } catch (e) {
+                console.error("Lỗi đọc dữ liệu Onboarding:", e);
+            }
+        }
+        return initialFormData;
+    });
+
+    // 2. Tự động lưu vào localStorage mỗi khi formData thay đổi
+    useEffect(() => {
+        localStorage.setItem('partnerOnboardingData', JSON.stringify(formData));
+    }, [formData]);
 
     const updateFormData = (newData) => {
         setFormData(prevData => ({ ...prevData, ...newData }));
     };
 
+    // 3. Hàm này cực kỳ quan trọng: GỌI HÀM NÀY SAU KHI NỘP ĐƠN THÀNH CÔNG (Ở BƯỚC CUỐI)
+    // Để dọn dẹp rác trong bộ nhớ trình duyệt
+    const clearFormData = () => {
+        setFormData(initialFormData);
+        localStorage.removeItem('partnerOnboardingData');
+    };
+
     const value = {
         formData,
         updateFormData,
-        setFormData, // Allow full replacement if needed
+        setFormData,
+        clearFormData 
     };
 
     return (

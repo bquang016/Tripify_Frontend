@@ -11,7 +11,7 @@ import OTPModal from "./components/OTPModal";
 import EmailConflictModal from "./components/EmailConflictModal";
 import { authService } from "../../services/auth.service"; 
 import { useOnboarding } from "../../context/OnboardingContext"; // Import useOnboarding
-import logo from "../../assets/logo/logo_travelmate_xoafont.png"; 
+import logo from "@/assets/logo/logo_tripify_xoafont.png"; 
 
 const Spinner = () => (
   <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -41,12 +41,23 @@ const OwnerRegisterPage = () => {
       // Step 1.1: Check Email
       await authService.checkOwnerEmail(data.email);
       
-      // Step 1.2: Send OTP
-      await authService.sendOwnerOtp(data.email);
-      
+      // Hiển thị Modal ngay lập tức sau khi check email thành công
       setEmailForReg(data.email);
       setShowOtpModal(true);
-      toast.success("Mã xác thực đã được gửi đến email của bạn!");
+
+      // Step 1.2: Send OTP (chạy trong nền)
+      authService.sendOwnerOtp(data.email)
+        .then(() => {
+          toast.success("Mã xác thực đã được gửi đến email của bạn!");
+        })
+        .catch((error) => {
+          const msg = error.response?.data?.message || "Không thể gửi mã OTP. Vui lòng thử lại.";
+          toast.error(msg);
+          setShowOtpModal(false); // Đóng modal nếu lỗi gửi OTP
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
 
     } catch (error) {
       const msg = error.response?.data?.message || "Đã có lỗi xảy ra.";

@@ -262,7 +262,10 @@ const checkOwnerEmail = (email) => {
 };
 
 const verifyOwnerOtp = (email, otpCode) => {
-  return api.post("/auth/owner/verify-otp", { email, otpCode });
+  return api.post("/auth/owner/verify-otp", { 
+     email: email, 
+     otp: otpCode 
+  });
 };
 
 const registerOwner = (data) => {

@@ -1,5 +1,7 @@
 // src/layouts/CustomerLayout/Header.jsx
 import React, { useState, useEffect, useRef, useMemo } from "react";
+import logoTripify from "@/assets/logo/logo_Tripify_xoafont.png";
+
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ChevronDown, HelpCircle, Phone, Menu } from "lucide-react";
 
@@ -10,8 +12,11 @@ import ConfirmModal from "../../components/common/Modal/ConfirmModal";
 import Avatar from "../../components/common/Avatar/Avatar";
 import CustomerProfileDropdown from "./CustomerProfileDropdown";
 import CustomerNotificationDropdown from "./CustomerNotificationDropdown";
+import LanguageSwitcher from "./LanguageSwitcher";
+import { useTranslation } from "react-i18next";
 
 const Header = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { currentUser, logout, hasRole, updateUser } = useAuth();
@@ -91,7 +96,7 @@ const Header = () => {
 
   const getPartnerNavigation = () => {
     if (!currentUser) return { label: "Hợp tác với chúng tôi", path: "/partner-with-us" };
-    if (hasRole("ADMIN")) return { label: "Trang quản trị", path: "/admin" };
+    if (currentUser.isSuper || hasRole("ADMIN")) return { label: "Trang quản trị admin", path: "/admin" };
     if (hasRole("OWNER")) return { label: "Trang quản lý", path: "/owner" };
     return { label: "Hợp tác với chúng tôi", path: "/partner-with-us" };
   };
@@ -146,8 +151,8 @@ const Header = () => {
           {/* 1. LOGO */}
           <Link to="/" className="flex items-center gap-2 group relative z-10">
             <img
-              src="/assets/logo/logo_travelmate_xoafont.png"
-              alt="TravelMate"
+              src={logoTripify}
+              alt="Tripify"
               style={{ width: "135px", height: "auto" }}
               className={`object-contain transition-all duration-300 ${headerStyles.logo}`}
             />
@@ -159,13 +164,13 @@ const Header = () => {
               to="/"
               className={`text-[15px] font-bold tracking-wide transition-colors ${headerStyles.text} ${location.pathname === '/' ? 'opacity-100' : 'opacity-90'}`}
             >
-              Trang chủ
+              {t('common.home')}
             </Link>
             <Link
               to="/promotions"
               className={`text-[15px] font-bold tracking-wide transition-colors ${headerStyles.text} ${location.pathname === '/promotions' ? 'opacity-100' : 'opacity-90'}`}
             >
-              Khuyến mãi
+              {t('common.promotions')}
             </Link>
 
             <div className="relative" ref={supportRef}>
@@ -173,7 +178,7 @@ const Header = () => {
                 onClick={() => setSupportOpen(!supportOpen)}
                 className={`flex items-center gap-1.5 text-[15px] font-bold tracking-wide transition-colors ${headerStyles.text} opacity-90 hover:opacity-100`}
               >
-                Hỗ trợ <ChevronDown size={14} strokeWidth={3} className={`transition-transform duration-300 ${supportOpen ? "rotate-180" : ""}`} />
+                {t('common.support')} <ChevronDown size={14} strokeWidth={3} className={`transition-transform duration-300 ${supportOpen ? "rotate-180" : ""}`} />
               </button>
 
               {/* Support Dropdown */}
@@ -233,6 +238,10 @@ const Header = () => {
               </div>
             ) : (
               <div className="flex items-center gap-3">
+                {/* Language Switcher */}
+                <div className="hidden md:block">
+                  <LanguageSwitcher navLinkClass={`flex items-center gap-1 text-[13px] font-bold px-3 py-1.5 rounded-full border transition-all ${headerStyles.buttonGhost}`} />
+                </div>
 
                 {/* ✅ FIX ICON ẨN: Wrapper này dùng CSS selector cực mạnh [&_*] và !important 
                    để ép màu cho icon chuông bên trong Dropdown

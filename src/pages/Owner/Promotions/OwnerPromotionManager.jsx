@@ -4,37 +4,24 @@ import Table from "@/components/common/Table/Table";
 import Button from "@/components/common/Button/Button";
 import OwnerPromotionFormModal from "./components/OwnerPromotionFormModal";
 import promotionService from "@/services/promotion.service";
-import propertyService from "@/services/property.service"; // Import service
+import propertyService from "@/services/property.service"; 
 import toast, { Toaster } from "react-hot-toast";
 import Toast from "@/components/common/Notification/Toast";
+import { useTranslation } from "react-i18next";
 import {
     Plus, Edit, Trash2, Tag, Search,
     Copy, CheckCircle2, AlertCircle, Ticket,
     ChevronLeft, ChevronRight, MoreVertical, PauseCircle, PlayCircle, XCircle,
-    AlertTriangle, Clock, RotateCw, Image as ImageIcon, Building2, MapPin
+    RotateCw, Image as ImageIcon, Building2, MapPin
 } from "lucide-react";
 
-// --- CONFIG ---
 const R2_PUBLIC_URL = "https://pub-fed047aa2ebd4dcaad827464c190ea28.r2.dev";
 
-
-// --- HELPER FUNCTIONS ---
 const getFullImageUrl = (path) => {
     if (!path) return null;
-
-    // Backend đã trả full URL
     if (path.startsWith("http")) return path;
-
-    // Path tương đối → Cloudflare R2
     const cleanPath = path.startsWith("/") ? path.slice(1) : path;
     return `${R2_PUBLIC_URL}/${cleanPath}`;
-};
-
-
-const showToast = (type, message) => {
-    toast.custom((t) => (
-        <Toast type={type} message={message} onClose={() => toast.dismiss(t.id)} />
-    ), { duration: 3000, position: 'bottom-center' });
 };
 
 const parseDate = (dateInput) => {
@@ -45,7 +32,6 @@ const parseDate = (dateInput) => {
     return new Date(dateInput);
 };
 
-// --- COMPONENTS ---
 const BannerImage = ({ url }) => {
     const [error, setError] = useState(false);
     if (!url || error) {
@@ -65,8 +51,9 @@ const BannerImage = ({ url }) => {
     );
 };
 
-
 const StatusConfirmModal = ({ isOpen, onClose, onConfirm, promo }) => {
+    const { t, i18n } = useTranslation();
+    const isVi = i18n.language === 'vi';
     if (!isOpen || !promo) return null;
     const willPause = promo.isActive;
     return (
@@ -74,18 +61,18 @@ const StatusConfirmModal = ({ isOpen, onClose, onConfirm, promo }) => {
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100 animate-slideUp">
                 <div className="p-6 text-center">
                     <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 ${willPause ? 'bg-orange-100 text-orange-600' : 'bg-green-100 text-green-600'}`}>
-                        {willPause ? <AlertTriangle size={32} /> : <CheckCircle2 size={32} />}
+                        {willPause ? <PauseCircle size={32} /> : <PlayCircle size={32} />}
                     </div>
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">{willPause ? "Tạm dừng khuyến mãi?" : "Kích hoạt khuyến mãi?"}</h3>
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">{willPause ? (isVi ? "Tạm dừng khuyến mãi?" : "Pause Promotion?") : (isVi ? "Kích hoạt khuyến mãi?" : "Activate Promotion?")}</h3>
                     <p className="text-gray-500 text-sm mb-6">
-                        Bạn có chắc muốn {willPause ? <span className="text-orange-600 font-bold">tạm dừng</span> : <span className="text-green-600 font-bold">kích hoạt</span>} mã
-                        <span className="font-bold text-gray-800 mx-1">{promo.code}</span> không?
+                        {isVi ? `Bạn có chắc muốn ${willPause ? 'tạm dừng' : 'kích hoạt'} mã` : `Are you sure you want to ${willPause ? 'pause' : 'activate'} code`}
+                        <span className="font-bold text-gray-800 mx-1">{promo.code}</span>?
                     </p>
                     <div className="flex gap-3 justify-center">
-                        <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors w-1/2">Hủy bỏ</button>
+                        <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors w-1/2">{t('common.cancel')}</button>
                         <button onClick={onConfirm} className={`px-5 py-2.5 rounded-xl text-white font-semibold shadow-lg transition-transform active:scale-95 w-1/2 flex items-center justify-center gap-2 ${willPause ? 'bg-orange-500 hover:bg-orange-600 shadow-orange-200' : 'bg-green-500 hover:bg-green-600 shadow-green-200'}`}>
                             {willPause ? <PauseCircle size={18}/> : <PlayCircle size={18}/>}
-                            {willPause ? "Tạm dừng" : "Kích hoạt"}
+                            {willPause ? (isVi ? "Tạm dừng" : "Pause") : (isVi ? "Kích hoạt" : "Activate")}
                         </button>
                     </div>
                 </div>
@@ -95,17 +82,19 @@ const StatusConfirmModal = ({ isOpen, onClose, onConfirm, promo }) => {
 };
 
 const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, promoCode }) => {
+    const { t, i18n } = useTranslation();
+    const isVi = i18n.language === 'vi';
     if (!isOpen) return null;
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 backdrop-blur-sm transition-opacity animate-fadeIn p-4">
             <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all scale-100 animate-slideUp">
                 <div className="p-6 text-center">
                     <div className="mx-auto w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-red-100 text-red-600"><Trash2 size={32} /></div>
-                    <h3 className="text-xl font-bold text-gray-800 mb-2">Xóa khuyến mãi?</h3>
-                    <p className="text-gray-500 text-sm mb-6">Bạn có chắc chắn muốn xóa mã <span className="font-bold text-gray-800 mx-1">{promoCode}</span> không?<br/><span className="text-red-500 font-medium italic mt-1 block">Mã sẽ bị vô hiệu hóa và chuyển vào thùng rác.</span></p>
+                    <h3 className="text-xl font-bold text-gray-800 mb-2">{isVi ? "Xóa khuyến mãi?" : "Delete Promotion?"}</h3>
+                    <p className="text-gray-500 text-sm mb-6">{isVi ? "Bạn có chắc chắn muốn xóa mã" : "Are you sure you want to delete code"} <span className="font-bold text-gray-800 mx-1">{promoCode}</span>?<br/><span className="text-red-500 font-medium italic mt-1 block">{isVi ? "Mã sẽ bị vô hiệu hóa và chuyển vào thùng rác." : "Code will be disabled and moved to trash."}</span></p>
                     <div className="flex gap-3 justify-center">
-                        <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors w-1/2">Hủy bỏ</button>
-                        <button onClick={onConfirm} className="px-5 py-2.5 rounded-xl text-white font-semibold shadow-lg shadow-red-200 bg-red-500 hover:bg-red-600 transition-transform active:scale-95 w-1/2 flex items-center justify-center gap-2"><Trash2 size={18}/> Xóa ngay</button>
+                        <button onClick={onClose} className="px-5 py-2.5 rounded-xl border border-gray-200 text-gray-600 font-medium hover:bg-gray-50 transition-colors w-1/2">{t('common.cancel')}</button>
+                        <button onClick={onConfirm} className="px-5 py-2.5 rounded-xl text-white font-semibold shadow-lg shadow-red-200 bg-red-500 hover:bg-red-600 transition-transform active:scale-95 w-1/2 flex items-center justify-center gap-2"><Trash2 size={18}/> {isVi ? "Xóa ngay" : "Delete now"}</button>
                     </div>
                 </div>
             </div>
@@ -114,6 +103,8 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, promoCode }) => {
 };
 
 const ActionMenu = ({ promo, onEdit, onDelete, onRequestToggle }) => {
+    const { t, i18n } = useTranslation();
+    const isVi = i18n.language === 'vi';
     const [isOpen, setIsOpen] = useState(false);
     const [menuStyle, setMenuStyle] = useState({});
     const buttonRef = useRef(null);
@@ -165,15 +156,15 @@ const ActionMenu = ({ promo, onEdit, onDelete, onRequestToggle }) => {
         <div ref={menuRef} style={menuStyle} className="bg-white rounded-xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.2)] border border-gray-100 overflow-hidden animate-fadeIn">
             <div className="py-1">
                 <button onClick={() => { onEdit(promo); setIsOpen(false); }} className="w-full px-4 py-2.5 text-left text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors flex items-center gap-2">
-                    <Edit size={16} className="text-blue-500"/> Sửa
+                    <Edit size={16} className="text-blue-500"/> {t('owner.edit')}
                 </button>
                 {!isExpired && (
                     <button onClick={() => { onRequestToggle(promo); setIsOpen(false); }} className={`w-full px-4 py-2.5 text-left text-sm text-gray-700 transition-colors flex items-center gap-2 ${isPaused ? 'hover:bg-green-50 hover:text-green-600' : 'hover:bg-orange-50 hover:text-orange-600'}`}>
-                        {isPaused ? <><PlayCircle size={16} className="text-green-500"/> Kích hoạt</> : <><PauseCircle size={16} className="text-orange-500"/> Tạm dừng</>}
+                        {isPaused ? <><PlayCircle size={16} className="text-green-500"/> {isVi ? "Kích hoạt" : "Activate"}</> : <><PauseCircle size={16} className="text-orange-500"/> {isVi ? "Tạm dừng" : "Pause"}</>}
                     </button>
                 )}
                 <div className="border-t border-gray-100 my-1"></div>
-                <button onClick={() => { onDelete(promo); setIsOpen(false); }} className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"><Trash2 size={16} /> Xóa</button>
+                <button onClick={() => { onDelete(promo); setIsOpen(false); }} className="w-full px-4 py-2.5 text-left text-sm text-red-600 hover:bg-red-50 transition-colors flex items-center gap-2"><Trash2 size={16} /> {t('owner.delete')}</button>
             </div>
         </div>
     );
@@ -197,11 +188,12 @@ const StatCard = ({ title, value, icon: Icon, colorClass, bgClass }) => (
 
 
 const OwnerPromotionManager = () => {
+    const { t, i18n } = useTranslation();
+    const isVi = i18n.language === 'vi';
+    
     const [promotions, setPromotions] = useState([]);
-
     const [properties, setProperties] = useState([]);
     const [filterPropertyId, setFilterPropertyId] = useState("ALL");
-
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState("ALL");
@@ -213,6 +205,12 @@ const OwnerPromotionManager = () => {
     const [editingPromo, setEditingPromo] = useState(null);
     const [statusConfirm, setStatusConfirm] = useState({ isOpen: false, promo: null });
     const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, promo: null });
+
+    const showMessage = (type, message) => {
+        toast.custom((t) => (
+            <Toast type={type} message={message} onClose={() => toast.dismiss(t.id)} />
+        ), { duration: 3000, position: 'bottom-center' });
+    };
 
     const fetchPromotions = async () => {
         setIsLoading(true);
@@ -240,8 +238,7 @@ const OwnerPromotionManager = () => {
             mappedData.sort((a, b) => b.id - a.id);
             setPromotions(mappedData);
         } catch (error) {
-            console.error("Failed to fetch promotions:", error);
-            showToast("error", "Lỗi tải dữ liệu!");
+            showMessage("error", isVi ? "Lỗi tải dữ liệu!" : "Failed to load data!");
         } finally {
             setIsLoading(false);
         }
@@ -252,9 +249,7 @@ const OwnerPromotionManager = () => {
             try {
                 const res = await propertyService.getOwnerActiveProperties();
                 setProperties(res.data || []);
-            } catch (error) {
-                console.error("Failed to fetch properties filter:", error);
-            }
+            } catch (error) { console.error(error); }
         };
         fetchProperties();
         fetchPromotions();
@@ -262,7 +257,7 @@ const OwnerPromotionManager = () => {
 
     const handleReload = async () => {
         await fetchPromotions();
-        showToast("success", "Dữ liệu đã được làm mới!");
+        showMessage("success", isVi ? "Dữ liệu đã được làm mới!" : "Data refreshed!");
     };
 
     const getPromoStatus = (promo) => {
@@ -279,9 +274,7 @@ const OwnerPromotionManager = () => {
             const status = getPromoStatus(item);
             const matchesStatus = filterStatus === "ALL" || filterStatus === status;
             const matchesType = filterType === "ALL" || item.type === filterType;
-
             const matchesProperty = filterPropertyId === "ALL" || (item.property && item.property.propertyId === parseInt(filterPropertyId));
-
             return matchesSearch && matchesStatus && matchesType && matchesProperty;
         });
     }, [promotions, searchTerm, filterStatus, filterType, filterPropertyId]);
@@ -292,27 +285,14 @@ const OwnerPromotionManager = () => {
         return filteredPromotions.slice(start, start + itemsPerPage);
     }, [filteredPromotions, currentPage]);
 
-    useMemo(() => setCurrentPage(1), [searchTerm, filterStatus, filterType, filterPropertyId]);
+    useEffect(() => setCurrentPage(1), [searchTerm, filterStatus, filterType, filterPropertyId]);
 
     const getPaginationGroup = () => {
-        const delta = 1;
-        const range = [];
-        const rangeWithDots = [];
-        let l;
+        const range = []; const delta = 1;
         for (let i = 1; i <= totalPages; i++) {
-            if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
-                range.push(i);
-            }
+            if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) range.push(i);
         }
-        range.forEach(i => {
-            if (l) {
-                if (i - l === 2) rangeWithDots.push(l + 1);
-                else if (i - l !== 1) rangeWithDots.push('...');
-            }
-            rangeWithDots.push(i);
-            l = i;
-        });
-        return rangeWithDots;
+        return range;
     };
 
     const handleJumpPage = (e) => {
@@ -332,32 +312,28 @@ const OwnerPromotionManager = () => {
     };
 
     const columns = [
-        { key: "codeDisplay", label: "Mã Code" },
+        { key: "codeDisplay", label: isVi ? "Mã Code" : "Voucher Code" },
         { key: "bannerDisplay", label: "Banner" },
-        { key: "name", label: "Tên chương trình" },
-        { key: "propertyDisplay", label: "Cơ sở áp dụng" },
-        { key: "details", label: "Chi tiết giảm" },
-        { key: "usageProgress", label: "Lượt sử dụng" },
-        { key: "endDateDisplay", label: "Hết hạn" },
-        { key: "statusLabel", label: "Trạng thái" },
-        { key: "actions", label: "Hành động" },
+        { key: "name", label: isVi ? "Tên chương trình" : "Program Name" },
+        { key: "propertyDisplay", label: isVi ? "Cơ sở áp dụng" : "Property" },
+        { key: "details", label: isVi ? "Chi tiết giảm" : "Discount Detail" },
+        { key: "usageProgress", label: isVi ? "Lượt sử dụng" : "Usage" },
+        { key: "endDateDisplay", label: isVi ? "Hết hạn" : "Expiry" },
+        { key: "statusLabel", label: t('owner.status') },
+        { key: "actions", label: t('owner.actions') },
     ];
 
-    const handleCopy = (text) => showToast("success", `Đã copy mã: ${text}`);
+    const handleCopy = (text) => showMessage("success", `${isVi ? 'Đã copy mã' : 'Copied code'}: ${text}`);
     const handleRequestToggleStatus = (promo) => setStatusConfirm({ isOpen: true, promo });
 
     const handleConfirmToggleStatus = async () => {
         if (statusConfirm.promo) {
-            const dataToSend = { ...statusConfirm.promo, isActive: !statusConfirm.promo.isActive };
-            if (!dataToSend.startDate) dataToSend.startDate = dataToSend.endDate;
             try {
-                const propId = statusConfirm.promo.property ? statusConfirm.promo.property.propertyId : null;
-                await promotionService.updatePromotion(dataToSend.id, { ...dataToSend, propertyId: propId });
+                await promotionService.togglePromotion(statusConfirm.promo.id);
                 await fetchPromotions();
-                showToast("success", "Cập nhật trạng thái thành công!");
+                showMessage("success", isVi ? "Cập nhật trạng thái thành công!" : "Status updated!");
             } catch (error) {
-                console.error("Lỗi update:", error);
-                showToast("error", error.response?.data?.message || error.message || "Lỗi cập nhật trạng thái");
+                showMessage("error", error.response?.data?.message || error.message);
             }
             setStatusConfirm({ isOpen: false, promo: null });
         }
@@ -370,10 +346,9 @@ const OwnerPromotionManager = () => {
             try {
                 await promotionService.deletePromotion(deleteConfirm.promo.id);
                 await fetchPromotions();
-                showToast("success", "Đã xóa mã khuyến mãi thành công!");
+                showMessage("success", isVi ? "Đã xóa mã khuyến mãi thành công!" : "Promotion deleted!");
             } catch (error) {
-                console.error(error);
-                showToast("error", error.response?.data?.message || "Lỗi khi xóa mã khuyến mãi");
+                showMessage("error", error.response?.data?.message || "Error");
             }
             setDeleteConfirm({ isOpen: false, promo: null });
         }
@@ -382,18 +357,17 @@ const OwnerPromotionManager = () => {
     const formatDateTimeDisplay = (dateInput) => {
         if (!dateInput) return "";
         const date = parseDate(dateInput);
-        return date.toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
+        return date.toLocaleString(isVi ? 'vi-VN' : 'en-US', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric' });
     };
 
     const getDaysRemaining = (dateInput) => {
         const now = new Date();
         const end = parseDate(dateInput);
-        const diffTime = end - now;
-        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return Math.ceil((end - now) / (1000 * 60 * 60 * 24));
     };
 
     const getDisplayData = (data) => {
-        return data.map((item, index) => {
+        return data.map((item) => {
             const status = getPromoStatus(item);
             const daysRemaining = getDaysRemaining(item.endDate);
             const usagePercent = item.quantity > 0 ? Math.round((item.usedCount / item.quantity) * 100) : 0;
@@ -402,7 +376,7 @@ const OwnerPromotionManager = () => {
             return {
                 ...item,
                 codeDisplay: (
-                    <div className="flex items-center gap-2 group cursor-pointer" onClick={() => handleCopy(item.code)} title="Click để copy">
+                    <div className="flex items-center gap-2 group cursor-pointer" onClick={() => handleCopy(item.code)} title={isVi ? "Click để copy" : "Click to copy"}>
                         <span className={`font-mono font-bold px-2 py-1 rounded border transition-colors ${status === 'ACTIVE' ? 'text-[rgb(40,169,224)] bg-blue-50 border-blue-100 group-hover:bg-blue-100' : (status === 'PAUSED' ? 'text-orange-600 bg-orange-50 border-orange-100 group-hover:bg-orange-100' : 'text-gray-500 bg-gray-100 border-gray-200')}`}>{item.code}</span>
                         <Copy size={14} className="text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"/>
                     </div>
@@ -413,74 +387,41 @@ const OwnerPromotionManager = () => {
                     </div>
                 ),
                 name: <div className="font-medium text-gray-700 line-clamp-2" title={item.name}>{item.name}</div>,
-
                 propertyDisplay: item.property ? (
                     <div className="flex items-center gap-2">
-                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
-                            <Building2 size={16} />
-                        </div>
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600"><Building2 size={16} /></div>
                         <div className="flex flex-col max-w-[150px]">
-                            <span className="text-sm font-medium text-gray-700 truncate" title={item.property.propertyName}>
-                                {item.property.propertyName}
-                            </span>
-                            <span className="text-[10px] text-gray-500 flex items-center gap-1">
-                                <MapPin size={10} /> {item.property.city}
-                            </span>
+                            <span className="text-sm font-medium text-gray-700 truncate">{item.property.propertyName}</span>
+                            <span className="text-[10px] text-gray-500 flex items-center gap-1"><MapPin size={10} /> {item.property.city}</span>
                         </div>
                     </div>
-                ) : (
-                    <span className="text-sm text-gray-400 italic">Toàn hệ thống (Admin)</span>
-                ),
-
-
-                details: item.type === 'PERCENT'
-                    ? (item.maxDiscount > 0
-                        ? `${item.value}% (Tối đa ${Number(item.maxDiscount).toLocaleString()}đ)`
-                        : `${item.value}%`)
-                    : `${Number(item.value).toLocaleString()}đ`,
-
+                ) : <span className="text-sm text-gray-400 italic">{isVi ? "Toàn hệ thống" : "System-wide"}</span>,
+                details: item.type === 'PERCENT' ? `${item.value}%${item.maxDiscount > 0 ? ` (Max ${item.maxDiscount.toLocaleString()}đ)` : ''}` : `${Number(item.value).toLocaleString()}đ`,
                 usageProgress: (
                     <div className="w-32">
-                        <div className="relative w-full h-5 bg-gray-100 rounded-full overflow-hidden shadow-inner border border-gray-100 group" title={`${item.usedCount} đã dùng / ${item.quantity} tổng số`}>
-                            <div className="absolute inset-0 flex items-center justify-center z-0">
-                                <span className="text-[10px] font-bold text-gray-500 select-none">{item.usedCount} / {item.quantity}</span>
-                            </div>
+                        <div className="relative w-full h-5 bg-gray-100 rounded-full overflow-hidden shadow-inner border border-gray-100 group">
                             <div className={`absolute top-0 left-0 h-full z-10 overflow-hidden transition-all duration-700 ease-out ${isNearFull ? 'bg-red-500' : (usagePercent > 50 ? 'bg-orange-400' : 'bg-[rgb(40,169,224)]')}`} style={{ width: `${usagePercent}%` }}>
-                                <div className="w-32 h-full flex items-center justify-center">
-                                    <span className="text-[10px] font-bold text-white drop-shadow-sm select-none">{item.usedCount} / {item.quantity}</span>
-                                </div>
+                                <div className="w-32 h-full flex items-center justify-center"><span className="text-[10px] font-bold text-white drop-shadow-sm select-none">{item.usedCount} / {item.quantity}</span></div>
                             </div>
+                            {!isNearFull && <div className="absolute inset-0 flex items-center justify-center z-0"><span className="text-[10px] font-bold text-gray-500 select-none">{item.usedCount} / {item.quantity}</span></div>}
                         </div>
                     </div>
                 ),
                 endDateDisplay: (
                     <div className="flex flex-col">
                         <span className="text-gray-600 whitespace-nowrap font-medium text-sm">{formatDateTimeDisplay(item.endDate)}</span>
-                        {status === 'ACTIVE' && daysRemaining > 0 && daysRemaining <= 7 && (
-                            <span className="text-[10px] text-orange-500 flex items-center gap-1 font-medium mt-0.5"><Clock size={10} /> Còn {daysRemaining} ngày</span>
-                        )}
-                        {status === 'EXPIRED' && (
-                            <span className="text-[10px] text-red-400 flex items-center gap-1 font-medium mt-0.5">Đã kết thúc</span>
-                        )}
+                        {status === 'ACTIVE' && daysRemaining > 0 && daysRemaining <= 7 && <span className="text-[10px] text-orange-500 flex items-center gap-1 font-medium mt-0.5"><Clock size={10} /> {isVi ? `Còn ${daysRemaining} ngày` : `${daysRemaining} days left`}</span>}
+                        {status === 'EXPIRED' && <span className="text-[10px] text-red-400 flex items-center gap-1 font-medium mt-0.5">{isVi ? "Đã kết thúc" : "Ended"}</span>}
                     </div>
                 ),
                 statusLabel: (
                     <>
-                        {status === 'ACTIVE' && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200 whitespace-nowrap"><span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Hoạt động</span>}
-                        {status === 'PAUSED' && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200 whitespace-nowrap"><span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span> Tạm dừng</span>}
-                        {status === 'EXPIRED' && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200 whitespace-nowrap"><XCircle size={12} /> Hết hạn</span>}
+                        {status === 'ACTIVE' && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200 whitespace-nowrap"><span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> {isVi ? "Hoạt động" : "Active"}</span>}
+                        {status === 'PAUSED' && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-orange-50 text-orange-700 border border-orange-200 whitespace-nowrap"><span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span> {isVi ? "Tạm dừng" : "Paused"}</span>}
+                        {status === 'EXPIRED' && <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200 whitespace-nowrap"><XCircle size={12} /> {isVi ? "Hết hạn" : "Expired"}</span>}
                     </>
                 ),
-                actions: (
-                    <div className="flex justify-center">
-                        <ActionMenu
-                            promo={item}
-                            onEdit={(p) => { setEditingPromo(p); setIsModalOpen(true); }}
-                            onDelete={handleRequestDelete}
-                            onRequestToggle={handleRequestToggleStatus}
-                        />
-                    </div>
-                )
+                actions: <div className="flex justify-center"><ActionMenu promo={item} onEdit={(p) => { setEditingPromo(p); setIsModalOpen(true); }} onDelete={handleRequestDelete} onRequestToggle={handleRequestToggleStatus} /></div>
             };
         });
     };
@@ -489,62 +430,45 @@ const OwnerPromotionManager = () => {
 
     return (
         <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
-            <Toaster containerStyle={{ zIndex: 100000, top: 20, left: 20, bottom: 20, right: 20 }} />
+            <Toaster containerStyle={{ zIndex: 100000 }} />
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div><h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><Tag className="text-[rgb(40,169,224)]" /> Quản lý Khuyến mãi</h1><p className="text-gray-500 mt-1 text-sm">Tạo và quản lý các mã giảm giá, voucher cho khách sạn của bạn.</p></div>
+                <div><h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2"><Tag className="text-[rgb(40,169,224)]" /> {t('owner.promotions')}</h1><p className="text-gray-500 mt-1 text-sm">{isVi ? "Tạo và quản lý các mã giảm giá, voucher cho khách sạn của bạn." : "Create and manage discount codes, vouchers for your hotels."}</p></div>
                 <div className="flex gap-3">
-                    <button onClick={handleReload} disabled={isLoading} className="p-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl hover:bg-gray-50 hover:text-[rgb(40,169,224)] hover:border-[rgb(40,169,224)] transition-all shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed group" title="Làm mới dữ liệu"><RotateCw size={20} className={`transition-transform ${isLoading ? 'animate-spin' : 'group-hover:rotate-180'}`} /></button>
-                    <Button onClick={() => { setEditingPromo(null); setIsModalOpen(true); }} leftIcon={<Plus size={18} />}>Thêm mã mới</Button>
+                    <button onClick={handleReload} className="p-2.5 bg-white border border-gray-200 text-gray-600 rounded-xl hover:text-[rgb(40,169,224)] transition-all group" title={isVi ? "Làm mới" : "Refresh"}><RotateCw size={20} className={isLoading ? 'animate-spin' : 'group-hover:rotate-180'} /></button>
+                    <Button onClick={() => { setEditingPromo(null); setIsModalOpen(true); }} leftIcon={<Plus size={18} />}>{isVi ? "Thêm mã mới" : "Add new code"}</Button>
                 </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <StatCard title="Tổng mã khuyến mãi" value={stats.total} icon={Ticket} bgClass="bg-blue-50" colorClass="text-blue-600" />
-                <StatCard title="Đang hoạt động" value={stats.active} icon={CheckCircle2} bgClass="bg-green-50" colorClass="text-green-600" />
-                <StatCard title="Đã tạm dừng" value={stats.inactive} icon={AlertCircle} bgClass="bg-orange-50" colorClass="text-orange-600" />
+                <StatCard title={isVi ? "Tổng mã khuyến mãi" : "Total Promotions"} value={stats.total} icon={Ticket} bgClass="bg-blue-50" colorClass="text-blue-600" />
+                <StatCard title={isVi ? "Đang hoạt động" : "Active"} value={stats.active} icon={CheckCircle2} bgClass="bg-green-50" colorClass="text-green-600" />
+                <StatCard title={isVi ? "Đã tạm dừng" : "Paused"} value={stats.inactive} icon={AlertCircle} bgClass="bg-orange-50" colorClass="text-orange-600" />
             </div>
 
             <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-200 flex flex-col xl:flex-row gap-4 justify-between items-center">
-                <div className="relative w-full xl:w-96"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} /><input type="text" placeholder="Tìm kiếm theo mã code hoặc tên..." className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
-
-                <div className="flex w-full xl:w-auto gap-3 overflow-x-auto pb-2 xl:pb-0">
-                    <select className={`${selectClassName} min-w-[200px]`} value={filterPropertyId} onChange={(e) => setFilterPropertyId(e.target.value)}>
-                        <option value="ALL">Tất cả khách sạn</option>
-                        {properties.map(p => (
-                            <option key={p.propertyId} value={p.propertyId}>{p.propertyName}</option>
-                        ))}
-                    </select>
-
-                    <select className={selectClassName} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}><option value="ALL">Tất cả trạng thái</option><option value="ACTIVE">Đang hoạt động</option><option value="PAUSED">Tạm dừng</option><option value="EXPIRED">Đã hết hạn</option></select>
-                    <select className={selectClassName} value={filterType} onChange={(e) => setFilterType(e.target.value)}><option value="ALL">Tất cả loại giảm</option><option value="PERCENT">Giảm theo %</option><option value="FIXED">Giảm tiền mặt</option></select>
-
-                    {(searchTerm || filterStatus !== 'ALL' || filterType !== 'ALL' || filterPropertyId !== 'ALL') && (
-                        <button onClick={() => { setSearchTerm(""); setFilterStatus("ALL"); setFilterType("ALL"); setFilterPropertyId("ALL"); }} className="px-4 py-2.5 text-red-500 bg-red-50 hover:bg-red-100 rounded-xl text-sm font-medium whitespace-nowrap transition-colors">
-                            Xóa lọc
-                        </button>
-                    )}
+                <div className="relative w-full xl:w-96"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} /><input type="text" placeholder={isVi ? "Tìm kiếm..." : "Search..."} className="w-full pl-10 pr-4 py-2.5 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500/20" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
+                <div className="flex w-full xl:w-auto gap-3 overflow-x-auto">
+                    <select className={selectClassName} value={filterPropertyId} onChange={(e) => setFilterPropertyId(e.target.value)}><option value="ALL">{isVi ? "Tất cả khách sạn" : "All hotels"}</option>{properties.map(p => (<option key={p.propertyId} value={p.propertyId}>{p.propertyName}</option>))}</select>
+                    <select className={selectClassName} value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}><option value="ALL">{isVi ? "Tất cả trạng thái" : "All status"}</option><option value="ACTIVE">{isVi ? "Đang hoạt động" : "Active"}</option><option value="PAUSED">{isVi ? "Tạm dừng" : "Paused"}</option><option value="EXPIRED">{isVi ? "Đã hết hạn" : "Expired"}</option></select>
+                    <select className={selectClassName} value={filterType} onChange={(e) => setFilterType(e.target.value)}><option value="ALL">{isVi ? "Tất cả loại giảm" : "All types"}</option><option value="PERCENT">{isVi ? "Giảm %" : "Percent"}</option><option value="FIXED">{isVi ? "Giảm tiền" : "Fixed amount"}</option></select>
+                    {(searchTerm || filterStatus !== 'ALL' || filterType !== 'ALL' || filterPropertyId !== 'ALL') && <button onClick={() => { setSearchTerm(""); setFilterStatus("ALL"); setFilterType("ALL"); setFilterPropertyId("ALL"); }} className="px-4 py-2.5 text-red-500 bg-red-50 rounded-xl text-sm font-medium">{isVi ? "Xóa lọc" : "Clear filters"}</button>}
                 </div>
             </div>
 
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col relative [&_th:last-child]:hidden [&_td:last-child]:hidden">
-                {isLoading && (<div className="absolute inset-0 bg-white/80 z-10 flex items-center justify-center min-h-[400px]"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[rgb(40,169,224)]"></div></div>)}
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col relative overflow-hidden">
+                {isLoading && <div className="absolute inset-0 bg-white/80 z-10 flex items-center justify-center min-h-[400px]"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div></div>}
                 {filteredPromotions.length > 0 ? (
                     <>
                         <Table columns={columns} data={getDisplayData(paginatedData)} />
-                        <div className="mt-auto border-t border-gray-100">
-                            <div className="px-6 py-4 flex flex-col sm:flex-row items-center justify-between bg-gray-50/50 gap-4">
-                                <span className="text-sm text-gray-500">Hiển thị <span className="font-semibold text-gray-700">{paginatedData.length}</span> / <span className="font-semibold text-gray-700">{filteredPromotions.length}</span> kết quả</span>
-                                <div className="flex items-center gap-2">
-                                    <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 rounded-lg border bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"><ChevronLeft size={18} /></button>
-                                    <div className="flex gap-1">{getPaginationGroup().map((item, index) => (<button key={index} onClick={() => typeof item === 'number' && setCurrentPage(item)} disabled={item === '...'} className={`w-8 h-8 rounded-lg text-sm font-medium transition-all flex items-center justify-center ${item === currentPage ? 'bg-[rgb(40,169,224)] text-white shadow-sm' : item === '...' ? 'bg-transparent text-gray-400 cursor-default' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}>{item}</button>))}</div>
-                                    <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-2 rounded-lg border bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"><ChevronRight size={18} /></button>
-                                    <div className="flex items-center gap-2 ml-2 pl-2 border-l border-gray-200"><span className="text-sm text-gray-500 whitespace-nowrap">Đi đến:</span><div className="relative"><input type="text" className="w-12 h-8 pl-2 pr-1 rounded-lg border border-gray-200 text-sm text-center focus:outline-none focus:border-[rgb(40,169,224)] focus:ring-1 focus:ring-[rgb(40,169,224)] transition-all" placeholder={currentPage} value={jumpPage} onChange={(e) => { const val = e.target.value; if (val === '' || /^[0-9]+$/.test(val)) setJumpPage(val); }} onKeyDown={handleJumpPage} /></div></div>
-                                </div>
+                        <div className="px-6 py-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-4">
+                            <span className="text-sm text-gray-500">{isVi ? `Hiển thị ${paginatedData.length} / ${filteredPromotions.length}` : `Showing ${paginatedData.length} / ${filteredPromotions.length}`}</span>
+                            <div className="flex items-center gap-2">
+                                <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} className="p-2 rounded-lg border bg-white disabled:opacity-50"><ChevronLeft size={18} /></button>
+                                <div className="flex gap-1">{getPaginationGroup().map((item, idx) => (<button key={idx} onClick={() => typeof item === 'number' && setCurrentPage(item)} className={`w-8 h-8 rounded-lg text-sm ${item === currentPage ? "bg-blue-500 text-white" : "bg-white border"}`}>{item}</button>))}</div>
+                                <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} className="p-2 rounded-lg border bg-white disabled:opacity-50"><ChevronRight size={18} /></button>
                             </div>
                         </div>
                     </>
-                ) : (
-                    !isLoading && (<div className="flex flex-col items-center justify-center py-20 text-center min-h-[400px]"><div className="w-24 h-24 bg-gray-50 rounded-full flex items-center justify-center mb-4"><Search size={40} className="text-gray-300" /></div><h3 className="text-lg font-semibold text-gray-800">Không tìm thấy kết quả</h3><button onClick={() => { setSearchTerm(""); setFilterStatus("ALL"); setFilterType("ALL"); setFilterPropertyId("ALL"); }} className="mt-4 text-blue-600 font-medium hover:underline">Xóa bộ lọc & tìm lại</button></div>)
-                )}
+                ) : !isLoading && <div className="py-20 text-center"><Search size={40} className="text-gray-300 mx-auto mb-4" /><h3 className="text-lg font-semibold">{isVi ? "Không tìm thấy kết quả" : "No results found"}</h3></div>}
             </div>
             <OwnerPromotionFormModal open={isModalOpen} onClose={() => setIsModalOpen(false)} onSuccess={fetchPromotions} initialData={editingPromo} />
             <StatusConfirmModal isOpen={statusConfirm.isOpen} onClose={() => setStatusConfirm({ isOpen: false, promo: null })} onConfirm={handleConfirmToggleStatus} promo={statusConfirm.promo} />
