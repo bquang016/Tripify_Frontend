@@ -28,6 +28,7 @@ import PromotionDetailPage from "@/pages/Customer/Promotion/components/Promotion
 import ProtectedRoute from "@/routes/ProtectedRoute";
 import PartnerRoute from "@/routes/PartnerRoute";
 import CompleteProfile from "@/pages/Auth/CompleteProfile";
+import CardSetupPage from '@/pages/Customer/Profile/CardSetupPage';
 
 
 const customerRoutes = [
@@ -253,6 +254,17 @@ const customerRoutes = [
             <ProtectedRoute roles={["CUSTOMER"]}>
                 <CustomerDashboardLayout>
                     <MembershipPage />
+                </CustomerDashboardLayout>
+            </ProtectedRoute>
+        ),
+    },
+
+    {
+        path: "/customer/cards",
+        element: (
+            <ProtectedRoute roles={["CUSTOMER"]}>
+                <CustomerDashboardLayout>
+                    <CardSetupPage />
                 </CustomerDashboardLayout>
             </ProtectedRoute>
         ),
