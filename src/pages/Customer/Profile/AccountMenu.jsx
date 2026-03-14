@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
     User, Crown, CalendarDays, RefreshCw, 
-    Settings, LogOut, Heart, FileText 
+    Settings, LogOut, Heart, FileText, CreditCard 
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -54,6 +54,11 @@ const AccountMenu = ({
             label: i18n.language === 'vi' ? "Yêu cầu hoàn tiền" : "Refund Requests", 
             path: "/customer/refunds", 
             icon: <RefreshCw size={20} /> 
+        },
+        { 
+            label: i18n.language === 'vi' ? "Phương thức thanh toán" : "Payment Methods", 
+            path: "/customer/cards", 
+            icon: <CreditCard size={20} /> 
         },
         { 
             label: t('profile.settings'), 

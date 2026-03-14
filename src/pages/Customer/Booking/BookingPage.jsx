@@ -234,11 +234,7 @@ export default function BookingPage() {
 
         } catch (error) {
             console.error("Booking Error:", error);
-//             alert("Lỗi: " + (error.response?.data?.message || "Đặt phòng thất bại. Vui lòng thử lại."));
-            const errorMessage = error?.message || error?.data?.message || (typeof error === 'string' ? error : "Đặt phòng thất bại. Vui lòng thử lại sau.");
-
-                // Hiển thị ra màn hình (Nếu bạn đang dùng alert của window)
-                alert(errorMessage);
+            alert("Lỗi: " + (error.response?.data?.message || "Đặt phòng thất bại. Vui lòng thử lại."));
         } finally {
             setSubmitting(false);
         }
