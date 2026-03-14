@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import * as yup from "yup";
 import { yupResolver } from '@hookform/resolvers/yup';
-import { Banknote, CreditCard, ArrowRight, ShieldCheck, ChevronDown, Search, CheckCircle2, Info, Hash, User, Loader2, Sparkles } from 'lucide-react';
+import { Banknote, CreditCard, ArrowRight, ShieldCheck, ChevronDown, Search, CheckCircle2, Hash, User, Loader2, Sparkles, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 import { useOnboarding } from '@/context/OnboardingContext';
@@ -11,7 +11,13 @@ import OnboardingStepper from './components/OnboardingStepper';
 import logo from "@/assets/logo/logo_tripify_xoafont.png";
 import Button from '@/components/common/Button/Button';
 
-// Schema
+// --- STRIPE IMPORTS ---
+import { loadStripe } from '@stripe/stripe-js';
+import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+
+// Schema Validator
 const schema = yup.object().shape({
     paymentMethod: yup.string().required(),
     bankBin: yup.string().when('paymentMethod', {
@@ -30,9 +36,16 @@ const schema = yup.object().shape({
     }),
 });
 
-const OwnerOnboardingStep3 = () => {
+// =======================================================
+// COMPONENT NỘI DUNG CHÍNH
+// =======================================================
+const OwnerOnboardingStep3Content = () => {
     const navigate = useNavigate();
     const { formData, updateFormData } = useOnboarding();
+
+    // Stripe hooks
+    const stripe = useStripe();
+    const elements = useElements();
 
     const { register, handleSubmit, watch, reset, getValues, setValue, trigger, formState: { errors, isValid } } = useForm({
         resolver: yupResolver(schema),
@@ -66,8 +79,8 @@ const OwnerOnboardingStep3 = () => {
     const [searchBank, setSearchBank] = useState("");
     const dropdownRef = useRef(null);
 
-    // --- STATE CHO VERIFY TÀI KHOẢN ---
-    const [isVerifying, setIsVerifying] = useState(false);
+    // --- STATE CHO VERIFY TÀI KHOẢN VÀ STRIPE ---
+    const [isProcessing, setIsProcessing] = useState(false); // Dùng chung cho cả verify bank và tạo token Stripe
     const [isVerified, setIsVerified] = useState(false);
     const [verifyError, setVerifyError] = useState("");
 
@@ -144,69 +157,82 @@ const OwnerOnboardingStep3 = () => {
         setValue("accountName", val, { shouldValidate: true });
     };
 
-    // --- HÀM TRA CỨU TÀI KHOẢN (MOCKUP/CALL API) ---
+    // --- HÀM TRA CỨU TÀI KHOẢN (MOCKUP) ---
     const verifyBankAccount = async () => {
         if (!watchBankBin || !watchAccountNumber || watchAccountNumber.length < 5) {
             setVerifyError("Vui lòng nhập số tài khoản hợp lệ trước khi kiểm tra.");
             return;
         }
 
-        setIsVerifying(true);
+        setIsProcessing(true);
         setVerifyError("");
 
         try {
-            // LƯU Ý: Đây là đoạn gọi API tra cứu. 
-            // Hiện tại tôi dùng endpoint Của VietQR (yêu cầu tạo client_id và apikey miễn phí trên my.vietqr.io)
-            // Nếu bạn không có API Key, nó sẽ tự động fallback về việc "Giả lập" sau 2 giây.
-
-            /* -- ĐOẠN CODE GỌI API THẬT (BỎ COMMENT NẾU CÓ KEY) --
-            const response = await fetch("https://api.vietqr.io/v2/lookup", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "x-client-id": "YOUR_CLIENT_ID_HERE",
-                    "x-api-key": "YOUR_API_KEY_HERE"
-                },
-                body: JSON.stringify({
-                    bin: watchBankBin,
-                    accountNumber: watchAccountNumber
-                })
-            });
-            const result = await response.json();
-            
-            if (result.code === "00") {
-                setValue("accountName", result.data.accountName, { shouldValidate: true });
-                setIsVerified(true);
-            } else {
-                setVerifyError("Không tìm thấy chủ tài khoản. Vui lòng kiểm tra lại.");
-            }
-            */
-
-            // --- GIẢ LẬP TRẢ VỀ (MOCKUP XỊN) ---
             await new Promise(resolve => setTimeout(resolve, 1500));
-            
-            // Giả vờ tìm thấy:
             setValue("accountName", "BUI DANG QUANG", { shouldValidate: true });
             setIsVerified(true);
             trigger("accountName"); 
-
         } catch (error) {
             setVerifyError("Hệ thống tra cứu đang bận, vui lòng nhập tay tên tài khoản.");
         } finally {
-            setIsVerifying(false);
+            setIsProcessing(false);
         }
     };
 
-
     const handleMajorStepClick = (stepId) => {
-        if (!isValid) { trigger(); return; } // Yêu cầu điền đúng mới cho nhảy cóc
+        if (!isValid) { trigger(); return; }
         updateFormData({ paymentInfo: getValues() });
         navigate(`/partner/onboarding/step-${stepId}`);
     };
 
-    const onNext = (data) => {
+    // --- SUBMIT FORM VÀ XỬ LÝ STRIPE TOKEN ---
+    const onNext = async (data) => {
+        // Xử lý tạo Stripe Token nếu Owner chọn nhận tiền qua thẻ
+        if (data.paymentMethod === 'card') {
+            if (!stripe || !elements) return;
+            
+            setIsProcessing(true);
+            setVerifyError("");
+            
+            const cardElement = elements.getElement(CardElement);
+            
+            // Gọi API Stripe.js để tokenize thẻ
+            const { error, token } = await stripe.createToken(cardElement, {
+                currency: 'vnd',
+            });
+
+            setIsProcessing(false);
+
+            if (error) {
+                setVerifyError(error.message);
+                return; // Chặn luồng nếu thẻ lỗi
+            }
+
+            // Gắn token vào data để mang qua Step tiếp theo và gửi xuống DB
+            data.stripeToken = token.id;
+            data.cardLast4 = token.card.last4;
+            data.cardBrand = token.card.brand;
+        }
+
+        // Lưu vào Context API
         updateFormData({ paymentInfo: data });
         navigate('/partner/onboarding/step-4');
+    };
+
+    // Style cho Card Element
+    const cardStyle = {
+        style: {
+            base: {
+                iconColor: '#28A9E0',
+                color: '#1e293b',
+                fontWeight: '600',
+                fontFamily: 'Inter, sans-serif',
+                fontSize: '16px',
+                '::placeholder': { color: '#94a3b8' },
+            },
+            invalid: { iconColor: '#ef4444', color: '#ef4444' },
+        },
+        hidePostalCode: true,
     };
 
     return (
@@ -233,10 +259,10 @@ const OwnerOnboardingStep3 = () => {
             <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
                  <div className="mb-8 text-center">
                     <h1 className="text-3xl font-bold text-slate-800 tracking-tight">Thông tin Thanh toán</h1>
-                    <p className="text-slate-500 mt-2 text-lg">Cung cấp thông tin để chúng tôi có thể thanh toán cho bạn.</p>
+                    <p className="text-slate-500 mt-2 text-lg">Cung cấp phương thức để Tripify thanh toán doanh thu cho bạn.</p>
                 </div>
 
-                <div className="bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/40 border border-slate-100">
+                <div className="bg-white p-8 rounded-3xl shadow-xl shadow-slate-200/40 border border-slate-100 relative">
                     <form onSubmit={handleSubmit(onNext)}>
                         
                         {/* TAB */}
@@ -248,18 +274,21 @@ const OwnerOnboardingStep3 = () => {
                                 <Banknote size={18} />
                                 <span className="font-bold">Tài khoản ngân hàng</span>
                             </label>
-                             <label className={`flex items-center gap-2 px-6 py-4 cursor-pointer border-b-2 transition-all -mb-px
+                            
+                            <label className={`flex items-center gap-2 px-6 py-4 cursor-pointer border-b-2 transition-all -mb-px
                                 ${paymentMethod === 'card' ? 'border-[#28A9E0] text-[#28A9E0]' : 'border-transparent text-gray-500 hover:text-gray-800'}`}
                             >
                                 <input type="radio" value="card" {...register('paymentMethod')} className="hidden" />
                                 <CreditCard size={18} />
-                                <span className="font-bold">Thẻ (Sắp ra mắt)</span>
+                                <span className="font-bold">Thẻ Quốc Tế (Payouts)</span>
                             </label>
                         </div>
 
+                        {/* ================================================== */}
+                        {/* NỘI DUNG TAB 1: NGÂN HÀNG (GIỮ NGUYÊN) */}
+                        {/* ================================================== */}
                         {paymentMethod === 'bank' && (
                             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                
                                 {/* CỘT TRÁI */}
                                 <div className="lg:col-span-7 space-y-6">
                                     <div className="flex items-center justify-between pb-2">
@@ -314,26 +343,25 @@ const OwnerOnboardingStep3 = () => {
                                                 <input type="text" placeholder="VD: 0123456789" maxLength={20} {...register("accountNumber")} onChange={handleAccountNumberChange} className={`w-full rounded-2xl py-3.5 pl-11 pr-4 bg-white border ${errors.accountNumber ? 'border-red-400' : 'border-slate-200 hover:border-[#28A9E0] focus:ring-4 focus:ring-[#28A9E0]/10'} text-slate-800 font-bold tracking-wider outline-none transition-all shadow-sm`} />
                                             </div>
                                             
-                                            {/* NÚT KIỂM TRA NAPAS */}
                                             <button 
                                                 type="button" 
                                                 onClick={verifyBankAccount}
-                                                disabled={!watchBankBin || !watchAccountNumber || isVerifying || isVerified}
+                                                disabled={!watchBankBin || !watchAccountNumber || isProcessing || isVerified}
                                                 className={`px-5 rounded-2xl font-bold text-sm flex items-center gap-2 transition-all shadow-sm
                                                     ${isVerified ? 'bg-emerald-50 text-emerald-600 border border-emerald-200' 
                                                     : watchBankBin && watchAccountNumber ? 'bg-[#28A9E0] text-white hover:bg-[#2088b6] hover:shadow-md' 
                                                     : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}
                                             >
-                                                {isVerifying ? <Loader2 size={18} className="animate-spin" /> : 
+                                                {isProcessing ? <Loader2 size={18} className="animate-spin" /> : 
                                                  isVerified ? <CheckCircle2 size={18} /> : <Sparkles size={18} />}
-                                                {isVerifying ? "Đang dò..." : isVerified ? "Đã xác thực" : "Kiểm tra"}
+                                                {isProcessing ? "Đang dò..." : isVerified ? "Đã xác thực" : "Kiểm tra"}
                                             </button>
                                         </div>
-                                        {verifyError && <p className="text-xs font-medium text-amber-600 mt-1">{verifyError}</p>}
+                                        {verifyError && paymentMethod === 'bank' && <p className="text-xs font-medium text-amber-600 mt-1">{verifyError}</p>}
                                         {errors.accountNumber && <p className="text-xs font-medium text-red-500 mt-1">{errors.accountNumber.message}</p>}
                                     </div>
 
-                                    {/* 3. TÊN CHỦ TÀI KHOẢN (TỰ ĐỘNG ĐIỀN NẾU TÌM THẤY) */}
+                                    {/* 3. TÊN CHỦ TÀI KHOẢN */}
                                     <div className="space-y-2 relative">
                                         <label className="block text-sm font-semibold text-slate-700">Tên chủ tài khoản *</label>
                                         <div className="relative group">
@@ -358,13 +386,11 @@ const OwnerOnboardingStep3 = () => {
                                         </div>
                                         {errors.accountName && <p className="text-xs font-medium text-red-500 mt-1">{errors.accountName.message}</p>}
                                     </div>
-
                                 </div>
 
                                 {/* CỘT PHẢI: CARD PREVIEW */}
                                 <div className="lg:col-span-5 flex flex-col justify-center relative">
                                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4 text-center lg:text-left">Bản xem trước</h3>
-                                    
                                     <motion.div 
                                         className="w-full max-w-[400px] mx-auto h-[220px] rounded-3xl p-6 relative overflow-hidden shadow-2xl flex flex-col justify-between border border-white/20 transition-all duration-500"
                                         style={{ background: isVerified ? "linear-gradient(135deg, #10b981 0%, #047857 100%)" : watchBankBin ? "linear-gradient(135deg, #28A9E0 0%, #0D668E 100%)" : "linear-gradient(135deg, #94a3b8 0%, #475569 100%)" }}
@@ -373,7 +399,6 @@ const OwnerOnboardingStep3 = () => {
                                     >
                                         <div className="absolute -top-24 -right-24 w-64 h-64 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
                                         <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-black/10 rounded-full blur-2xl pointer-events-none"></div>
-
                                         <div className="flex justify-between items-start relative z-10">
                                             <div className="w-12 h-10 bg-yellow-200/80 rounded-md flex items-center justify-center overflow-hidden backdrop-blur-sm shadow-sm border border-yellow-100/50">
                                                 <div className="w-8 h-6 border border-yellow-400/50 rounded-sm grid grid-cols-3 gap-px opacity-70">
@@ -383,7 +408,6 @@ const OwnerOnboardingStep3 = () => {
                                             </div>
                                             {watchBankLogo ? <div className="bg-white p-1.5 rounded-lg shadow-sm"><img src={watchBankLogo} alt="Bank Logo" className="h-8 max-w-[80px] object-contain" /></div> : <div className="text-white/60 font-bold italic tracking-wider text-xl">BANK</div>}
                                         </div>
-
                                         <div className="relative z-10 space-y-4">
                                             <div className="font-mono text-2xl tracking-[0.15em] text-white text-shadow-sm flex justify-between items-center">
                                                 {watchAccountNumber ? watchAccountNumber.match(/.{1,4}/g)?.join(' ') : <span className="opacity-40">XXXX XXXX XXXX</span>}
@@ -410,17 +434,53 @@ const OwnerOnboardingStep3 = () => {
                             </div>
                         )}
 
+                        {/* ================================================== */}
+                        {/* NỘI DUNG TAB 2: THẺ STRIPE PAYOUT (ĐÃ MỞ KHÓA) */}
+                        {/* ================================================== */}
                         {paymentMethod === 'card' && (
-                             <div className="text-center p-12 bg-slate-50 rounded-2xl border border-slate-100">
-                                <div className="w-16 h-16 bg-slate-200 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400"><CreditCard size={32} /></div>
-                                <h3 className="text-lg font-bold text-slate-700 mb-2">Tính năng đang phát triển</h3>
-                                <p className="font-medium text-slate-500 max-w-md mx-auto">Vui lòng sử dụng phương thức chuyển khoản ngân hàng.</p>
-                             </div>
+                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-2xl mx-auto space-y-6">
+                                <div className="text-center mb-8">
+                                    <div className="w-16 h-16 bg-[#28A9E0]/10 rounded-full flex items-center justify-center mx-auto mb-4 text-[#28A9E0]">
+                                        <CreditCard size={32} />
+                                    </div>
+                                    <h3 className="text-xl font-bold text-slate-800 mb-2">Thanh toán qua Thẻ Quốc Tế</h3>
+                                    <p className="text-slate-500">Doanh thu sẽ được Tripify tự động thanh toán trực tiếp vào thẻ VISA/Mastercard của bạn hàng tháng thông qua nền tảng Stripe Connect.</p>
+                                </div>
+
+                                <div className="bg-slate-50 p-6 rounded-2xl border border-slate-200">
+                                    <div className="flex items-center justify-between mb-4">
+                                        <label className="block text-sm font-bold text-slate-700">Thông tin thẻ thụ hưởng <span className="text-rose-500">*</span></label>
+                                        <div className="flex items-center gap-1.5 text-xs text-green-600 bg-green-100 px-2 py-1 rounded-md font-bold">
+                                            <Lock size={12} /> Stripe Secured
+                                        </div>
+                                    </div>
+                                    
+                                    {/* THÀNH PHẦN NHẬP THẺ CỦA STRIPE */}
+                                    <div className="relative">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none z-10">
+                                            <CreditCard size={18} className="text-slate-400" />
+                                        </div>
+                                        <div className="pl-12 pr-4 py-4 border border-slate-200 rounded-xl bg-white shadow-sm focus-within:ring-4 focus-within:ring-[#28A9E0]/20 focus-within:border-[#28A9E0] transition-all">
+                                            <CardElement options={cardStyle} />
+                                        </div>
+                                    </div>
+
+                                    {verifyError && paymentMethod === 'card' && (
+                                        <p className="text-sm font-medium text-red-500 mt-3 text-center bg-red-50 py-2 rounded-lg border border-red-100">{verifyError}</p>
+                                    )}
+                                </div>
+                            </div>
                         )}
 
                         <div className="flex justify-between items-center pt-8 mt-12 border-t border-gray-100">
                             <Button type="button" variant="ghost" onClick={() => navigate('/partner/onboarding/step-2')}>Quay lại</Button>
-                            <Button type="submit" rightIcon={<ArrowRight size={18} />}>Lưu & Tiếp tục</Button>
+                            <Button 
+                                type="submit" 
+                                rightIcon={isProcessing ? <Loader2 className="animate-spin" size={18} /> : <ArrowRight size={18} />}
+                                disabled={isProcessing}
+                            >
+                                {isProcessing ? 'Đang xử lý...' : 'Lưu & Tiếp tục'}
+                            </Button>
                         </div>
                     </form>
                 </div>
@@ -429,4 +489,13 @@ const OwnerOnboardingStep3 = () => {
     );
 };
 
-export default OwnerOnboardingStep3;
+// =======================================================
+// BỌC TRONG ELEMENTS PROVIDER ĐỂ SỬ DỤNG ĐƯỢC STRIPE
+// =======================================================
+export default function OwnerOnboardingStep3() {
+    return (
+        <Elements stripe={stripePromise}>
+            <OwnerOnboardingStep3Content />
+        </Elements>
+    );
+}

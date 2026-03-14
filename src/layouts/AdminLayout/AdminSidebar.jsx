@@ -17,7 +17,7 @@ import {
   Ticket,
   FileSearch,
   Bell,
-  ShieldCheck
+  ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -99,6 +99,12 @@ const AdminSidebar = () => {
       name: t('admin.notifications'),
       icon: <Bell size={20} />, 
       path: "/admin/notifications"
+    },
+
+    {
+    name: 'Thanh toán Đối tác',
+    icon: <DollarSign size={20} />, // Nhớ import DollarSign từ lucide-react
+    path: '/admin/payouts'
     },
 
     {

@@ -20,6 +20,7 @@ import UserManagementPage from "../pages/Admin/Users/UserManagementPage";
 import TransactionManagementPage from "../pages/Admin/Transactions/TransactionManagementPage";
 import RoleManagementPage from "../pages/Admin/Roles/RoleManagementPage";
 import SystemSettingsPage from "../pages/Admin/Settings/SystemSettingsPage";
+import AdminPayoutsPage from '@/pages/Admin/Transactions/AdminPayoutsPage';
 
 const adminRoutes = [
     {
@@ -140,6 +141,16 @@ const adminRoutes = [
             <AdminLayout>
                 <ProtectedRoute requiredRole="ADMIN">
                     <AdminNotificationsPage />
+                </ProtectedRoute>
+            </AdminLayout>
+        ),
+    },
+        {
+        path: "/admin/payouts",
+        element: (
+            <AdminLayout>
+                <ProtectedRoute requiredRole="ADMIN">
+                    <AdminPayoutsPage />
                 </ProtectedRoute>
             </AdminLayout>
         ),
