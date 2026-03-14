@@ -9,7 +9,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, Cartes
 
 import roomService from "@/services/room.service";
 import Spinner from "@/components/common/Loading/Spinner";
-import { formatCurrency } from "@/utils/priceUtils";
+// import { formatCurrency } from "@/utils/priceUtils";
 
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
@@ -18,14 +18,20 @@ const BookingDateModal = ({
     open, onClose, onConfirm, occupiedDates = [], selectedRoomId, 
     roomPrice: initialRoomPrice, convertedPrice,
     weekendPrice, convertedWeekendPrice,
-    currency = 'VND'
 }) => {
+
+    const formatVND = (price) => {
+        if (!price || isNaN(price)) return "0 ₫";
+        return new Intl.NumberFormat('vi-VN', { 
+            style: 'currency', 
+            currency: 'VND' 
+        }).format(price);
+    };
 
     // --- 1. Logic Khởi tạo & Fallback ---
     // Ưu tiên giá đã quy đổi nếu có
     const standardPrice = Number(convertedPrice || initialRoomPrice) || 0;
     const endPrice = Number(convertedWeekendPrice || weekendPrice || standardPrice) || 0;
-
     // State lưu giá (dùng cho tính toán tiền)
     const [prices, setPrices] = useState({ weekday: standardPrice, weekend: endPrice });
 
@@ -183,8 +189,12 @@ const BookingDateModal = ({
             tempDate = addDays(tempDate, 1);
         }
         const nights = Math.max(1, differenceInCalendarDays(selection.endDate, selection.startDate));
-        return { total, nights, weekdayCount, weekendCount, prices, currency };
-    }, [selection, prices, currency]);
+        
+        // ĐÃ XOÁ 'currency' khỏi phần return
+        return { total, nights, weekdayCount, weekendCount, prices }; 
+        
+    // ĐÃ XOÁ 'currency' khỏi mảng dependencies
+    }, [selection, prices]);
 
     const handleConfirm = () => {
         if (!isRangeValid) {
@@ -233,7 +243,7 @@ const BookingDateModal = ({
                         }
                     </div>
                     <div className="text-base font-extrabold text-blue-600 mb-1">
-                        {formatCurrency(data.price, currency)}
+                        {formatVND(data.price)}
                     </div>
                     {data.savings > 0 && (
                         <div className="text-green-600 font-medium flex items-center gap-1">
@@ -317,7 +327,7 @@ const BookingDateModal = ({
                                             <p className="text-xs text-gray-500 mt-1 pl-9 h-4">
                                                 {hoverInfo ? (
                                                     <span className="text-blue-600 font-medium transition-all">
-                                                        {hoverInfo.fullDateStr}: {formatCurrency(hoverInfo.price, currency)}
+                                                        {hoverInfo.fullDateStr}: {formatVND(hoverInfo.price)}
                                                         {hoverInfo.savings > 0 ? ` (Rẻ hơn ${hoverInfo.savings}%)` : ''}
                                                     </span>
                                                 ) : "Di chuột vào cột để xem chi tiết giá"}
@@ -453,13 +463,13 @@ const BookingDateModal = ({
                             <div className="space-y-3 text-sm">
                                 {bookingCalculation.weekdayCount > 0 && (
                                     <div className="flex justify-between text-gray-600">
-                                        <span>Ngày thường ({formatCurrency(prices.weekday, currency)})</span>
+                                        <span>Ngày thường ({formatVND(prices.weekday)})</span>
                                         <span className="font-medium">x {bookingCalculation.weekdayCount} đêm</span>
                                     </div>
                                 )}
                                 {bookingCalculation.weekendCount > 0 && (
                                     <div className="flex justify-between text-orange-600 font-medium">
-                                        <span>Cuối tuần ({formatCurrency(prices.weekend, currency)})</span>
+                                        <span>Cuối tuần ({formatVND(prices.weekend)})</span>
                                         <span>x {bookingCalculation.weekendCount} đêm</span>
                                     </div>
                                 )}
@@ -472,12 +482,13 @@ const BookingDateModal = ({
                                 <div className="border-t-2 border-dashed border-gray-100 my-2 pt-3 flex justify-between items-end">
                                     <span className="font-bold text-gray-800 text-base">Tổng tạm tính</span>
                                     <span className="text-2xl font-extrabold text-[rgb(40,169,224)]">
-                                        {formatCurrency(bookingCalculation.total, currency)}
+                                        {formatVND(bookingCalculation.total)}
                                     </span>
                                 </div>
                                 <p className="text-[10px] text-gray-400 text-right italic">*Giá đã bao gồm thuế & phí</p>
                             </div>
                         </div>
+
 
                         {/* Nút bấm */}
                         <div className="flex flex-col gap-3 mt-auto pt-4 border-t border-gray-100">

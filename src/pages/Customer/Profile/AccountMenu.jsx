@@ -72,7 +72,9 @@ const AccountMenu = ({
             onSelect(item.internalId);
         } else {
             navigate(item.path);
+
         }
+
     };
 
     const checkActive = (item) => {
@@ -117,6 +119,7 @@ const AccountMenu = ({
                         <Crown size={12} className="text-white fill-white" />
                     </div>
                 </div>
+                
 
                 <div className="relative z-10">
                     <h3 className="font-bold text-gray-900 text-lg">{profileName}</h3>
