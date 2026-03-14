@@ -101,7 +101,19 @@ const paymentService = {
   },
   deleteSavedCard: async (paymentMethodId) => {
     return await api.delete(`/payments/stripe/cards/${paymentMethodId}`);
-  }
+  },
+  // 1. Cập nhật hàm submitPayment để gửi thêm amount
+  submitPayment: async (bookingId, note, method, amount) => {
+    return await api.post(`/payments/${bookingId}/pay`, null, {
+      params: { note, method, amount }
+    });
+  },
+
+  // 2. Thêm hàm hứng kết quả từ VNPay
+  verifyVNPayReturn: async (queryString) => {
+    // queryString có dạng: ?vnp_Amount=...&vnp_BankCode=...
+    return await api.get(`/payments/vnpay-return${queryString}`);
+  },
 };
 
 export default paymentService;

@@ -434,13 +434,35 @@ function PaymentPageContent() {
 
         setIsProcessing(true);
         try {
-            await paymentService.submitPayment(
-                bookingId,
-                "Thanh toán qua cổng",
-                promoCodeString,
-                paymentMethod
-            );
-            setIsSuccessOpen(true);
+            // 1. Xử lý VNPay (Chuyển hướng)
+            if (paymentMethod === 'VNPAY') {
+                const res = await paymentService.submitPayment(
+                    bookingId,
+                    "Thanh toán qua cổng VNPay",
+                    "VNPAY",
+                    displayFinalPrice // Truyền số tiền xuống Backend
+                );
+                
+                const data = res.data || res;
+                // Nếu Backend trả về URL của VNPay -> Chuyển hướng ngay lập tức
+                if (data.paymentUrl) {
+                    window.location.href = data.paymentUrl;
+                    return; // Dừng tại đây, không set trạng thái success nữa vì đã nhảy trang
+                } else {
+                    // Fallback nếu có lỗi logic trả URL
+                    setIsSuccessOpen(true);
+                }
+            } 
+            // 2. Xử lý các phương thức khác (Giả lập)
+            else {
+                await paymentService.submitPayment(
+                    bookingId,
+                    "Thanh toán qua cổng",
+                    promoCodeString,
+                    paymentMethod
+                );
+                setIsSuccessOpen(true);
+            }
         } catch (error) {
             showToast("Thanh toán thất bại: " + error.message, "error");
         } finally {

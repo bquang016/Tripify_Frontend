@@ -28,6 +28,9 @@ import OwnerOnboardingStep2 from '@/pages/Partner/OwnerOnboardingStep2';
 import OwnerOnboardingStep3 from '@/pages/Partner/OwnerOnboardingStep3';
 import OwnerOnboardingStep4 from '@/pages/Partner/OwnerOnboardingStep4';
 
+// VNPAY RETURN HANDLER
+import VNPayReturnPage from '@/pages/Customer/Booking/VNPayReturnPage';
+
 // ✅ 1. Import Component xử lý khóa tài khoản
 import SessionExpiredHandler from "@/pages/Admin/Users/components/SessionExpiredHandler";
 const AppRoutes = () => {
@@ -65,6 +68,7 @@ const AppRoutes = () => {
                 <Route path="/partner/onboarding/step-2" element={<OwnerOnboardingStep2 />} />
                 <Route path="/partner/onboarding/step-3" element={<OwnerOnboardingStep3 />} />
                 <Route path="/partner/onboarding/step-4" element={<OwnerOnboardingStep4 />} />
+                <Route path="/payment/vnpay-return" element={<VNPayReturnPage />} />
                 {customerRoutes.map((route, index) => (
                     <Route
                         key={`customer-${index}`}
