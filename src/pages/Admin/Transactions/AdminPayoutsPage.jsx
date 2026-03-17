@@ -1,16 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CreditCard, DollarSign, RefreshCcw, CheckCircle2, AlertCircle, Plus, Search, Loader2 } from 'lucide-react';
 import adminService from '@/services/admin.service';
 import Button from '@/components/common/Button/Button';
 import { formatCurrency } from '@/utils/priceUtils';
 import Modal from '@/components/common/Modal/Modal';
-import { useToast } from '@/components/common/Notification/ToastPortal';
+// 1. Đổi cách import ToastPortal (Import default)
+import ToastPortal from '@/components/common/Notification/ToastPortal';
 
 export default function AdminPayoutsPage() {
     const [payouts, setPayouts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [processingId, setProcessingId] = useState(null);
-    const { addToast } = useToast();
+    
+    // 2. Khởi tạo ref để gọi Toast
+    const toastRef = useRef(null);
 
     // Modal tính doanh thu
     const [isCalcModalOpen, setIsCalcModalOpen] = useState(false);
@@ -23,7 +26,8 @@ export default function AdminPayoutsPage() {
             const res = await adminService.getAllPayouts();
             setPayouts(res.data?.data || []);
         } catch (error) {
-            addToast({ type: 'error', message: 'Lỗi tải danh sách Payout: ' + error.message });
+            // 3. Sửa cách gọi hàm thông báo (Dùng mode thay cho type)
+            toastRef.current?.addMessage({ mode: 'error', message: 'Lỗi tải danh sách Payout: ' + error.message });
         } finally {
             setLoading(false);
         }
@@ -36,18 +40,18 @@ export default function AdminPayoutsPage() {
     // TEST API 1: TÍNH TOÁN DOANH THU
     const handleCalculate = async () => {
         if (!ownerIdInput.trim()) {
-            addToast({ type: 'warning', message: 'Vui lòng nhập ID của Chủ khách sạn' });
+            toastRef.current?.addMessage({ mode: 'warning', message: 'Vui lòng nhập ID của Chủ khách sạn' });
             return;
         }
         setIsCalculating(true);
         try {
             const res = await adminService.calculatePayout(ownerIdInput.trim());
-            addToast({ type: 'success', message: res.data?.message || 'Tính toán thành công!' });
+            toastRef.current?.addMessage({ mode: 'success', message: res.data?.message || 'Tính toán thành công!' });
             setIsCalcModalOpen(false);
             setOwnerIdInput('');
             fetchPayouts(); // Reload bảng
         } catch (error) {
-            addToast({ type: 'error', message: error.response?.data?.message || error.message });
+            toastRef.current?.addMessage({ mode: 'error', message: error.response?.data?.message || error.message });
         } finally {
             setIsCalculating(false);
         }
@@ -60,10 +64,10 @@ export default function AdminPayoutsPage() {
         setProcessingId(payoutId);
         try {
             const res = await adminService.processPayout(payoutId);
-            addToast({ type: 'success', message: 'Chuyển tiền thành công! Mã giao dịch: ' + res.data?.data?.stripeTransferId });
+            toastRef.current?.addMessage({ mode: 'success', message: 'Chuyển tiền thành công! Mã giao dịch: ' + res.data?.data?.stripeTransferId });
             fetchPayouts(); // Reload bảng
         } catch (error) {
-            addToast({ type: 'error', message: error.response?.data?.message || 'Lỗi chuyển tiền' });
+            toastRef.current?.addMessage({ mode: 'error', message: error.response?.data?.message || 'Lỗi chuyển tiền' });
         } finally {
             setProcessingId(null);
         }
@@ -72,7 +76,7 @@ export default function AdminPayoutsPage() {
     const getStatusBadge = (status) => {
         switch (status) {
             case 'COMPLETED': return <span className="px-2 py-1 bg-green-100 text-green-700 rounded-md text-xs font-bold flex items-center gap-1"><CheckCircle2 size={12}/> Đã thanh toán</span>;
-            case 'PENDING': return <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-md text-xs font-bold flex items-center gap-1"><RefreshCcw size={12}/> Chờ chuyển tiền</span>;
+            case 'PENDING': return <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-md text-xs font-bold flex items-center gap-1"><RefreshCcw size={12}/> Chờ chuyển khoản</span>;
             case 'FAILED': return <span className="px-2 py-1 bg-red-100 text-red-700 rounded-md text-xs font-bold flex items-center gap-1"><AlertCircle size={12}/> Lỗi giao dịch</span>;
             case 'MANUAL_REQUIRED': return <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-md text-xs font-bold flex items-center gap-1"><CreditCard size={12}/> Chuyển khoản tay</span>;
             default: return <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-bold">{status}</span>;
@@ -169,6 +173,9 @@ export default function AdminPayoutsPage() {
                     </div>
                 </div>
             </Modal>
+
+            {/* 4. Nhúng component ToastPortal vào cuối trang */}
+            <ToastPortal ref={toastRef} autoClose={true} autoCloseTime={3000} />
         </div>
     );
 }
