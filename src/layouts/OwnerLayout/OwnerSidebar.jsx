@@ -12,7 +12,8 @@ import {
   Plus,
   ChevronDown,
   Tag,
-  Bell 
+  Bell,
+  Wallet // Bổ sung import Wallet icon
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTranslation } from "react-i18next";
@@ -39,6 +40,8 @@ const OwnerSidebar = () => {
       ]
     },
     { name: t('owner.room_mgmt'), icon: <BedDouble size={20} />, path: "/owner/rooms" },
+    // BỔ SUNG MENU VÍ CỦA TÔI
+    { name: i18n.language === 'vi' ? "Ví của tôi" : "My Wallet", icon: <Wallet size={20} />, path: "/owner/wallet" },
   ];
 
   const handleSubMenuToggle = (key) => {

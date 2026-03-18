@@ -11,6 +11,7 @@ import OwnerBookingsPage from "@/pages/Owner/Bookings/OwnerBookingsPage";
 import OwnerPromotionManager from "@/pages/Owner/Promotions/OwnerPromotionManager";
 // ✅ IMPORT TRANG THÔNG BÁO MỚI
 import OwnerNotificationsPage from "@/pages/Owner/Notifications/OwnerNotificationsPage";
+import OwnerWalletPage from '../pages/Owner/Wallet/OwnerWalletPage';
 
 const ownerRoutes = [
     {
@@ -150,6 +151,17 @@ const ownerRoutes = [
             <OwnerLayout>
                 <ProtectedRoute requiredRole="OWNER">
                     <PlaceholderPage title="Hồ sơ Chủ nhà" />
+                </ProtectedRoute>
+            </OwnerLayout>
+        ),
+    },
+    // --- ✅ ROUTE MỚI: QUẢN LÝ VÍ RÚT TIỀN ---
+    {
+        path: "/owner/wallet",
+        element: (
+            <OwnerLayout>
+                <ProtectedRoute requiredRole="OWNER">
+                    <OwnerWalletPage />
                 </ProtectedRoute>
             </OwnerLayout>
         ),
