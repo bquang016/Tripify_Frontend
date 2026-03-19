@@ -12,10 +12,13 @@ import {
   Plus,
   ChevronDown,
   Tag,
-  Bell 
+  Bell,
+  Wallet,
+  Settings2 // Bổ sung import Wallet icon
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTranslation } from "react-i18next";
+import tripifyLogo from "../../assets/logo/logo_tripify_xoafont.png";
 
 const OwnerSidebar = () => {
   const { t, i18n } = useTranslation();
@@ -39,6 +42,10 @@ const OwnerSidebar = () => {
       ]
     },
     { name: t('owner.room_mgmt'), icon: <BedDouble size={20} />, path: "/owner/rooms" },
+    // BỔ SUNG MENU VÍ CỦA TÔI
+    { name: i18n.language === 'vi' ? "Ví của tôi" : "My Wallet", icon: <Wallet size={20} />, path: "/owner/wallet" },
+    // BỔ SUNG MENU CÀI ĐẶT RÚT TIỀN
+    { name: i18n.language === 'vi' ? "Cài đặt rút tiền" : "Payout Settings", icon: <Settings2 size={20} />, path: "/owner/payout-settings" },
   ];
 
   const handleSubMenuToggle = (key) => {
@@ -54,7 +61,7 @@ const OwnerSidebar = () => {
           {!collapsed && (
               <Link to="/" className="flex items-center gap-2">
                 <img
-                    src="src/assets/logo/logo_tripify_xoafont.png"
+                    src={tripifyLogo}
                     alt="Tripify"
                     style={{ width: "135px", height: "43px" }}
                     className="object-contain"

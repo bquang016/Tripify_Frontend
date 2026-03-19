@@ -20,6 +20,8 @@ import UserManagementPage from "../pages/Admin/Users/UserManagementPage";
 import TransactionManagementPage from "../pages/Admin/Transactions/TransactionManagementPage";
 import RoleManagementPage from "../pages/Admin/Roles/RoleManagementPage";
 import SystemSettingsPage from "../pages/Admin/Settings/SystemSettingsPage";
+import AdminPayoutsPage from '@/pages/Admin/Transactions/AdminPayoutsPage';
+import AdminWithdrawalPage from '../pages/Admin/Withdrawals/AdminWithdrawalPage';
 
 const adminRoutes = [
     {
@@ -140,6 +142,16 @@ const adminRoutes = [
             <AdminLayout>
                 <ProtectedRoute requiredRole="ADMIN">
                     <AdminNotificationsPage />
+                </ProtectedRoute>
+            </AdminLayout>
+        ),
+    },
+        {
+        path: "/admin/withdrawals",
+        element: (
+            <AdminLayout>
+                <ProtectedRoute requiredRole="ADMIN">
+                    <AdminWithdrawalPage />
                 </ProtectedRoute>
             </AdminLayout>
         ),

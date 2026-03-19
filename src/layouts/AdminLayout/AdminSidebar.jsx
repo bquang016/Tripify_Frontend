@@ -17,13 +17,18 @@ import {
   Ticket,
   FileSearch,
   Bell,
-  ShieldCheck
+  ShieldCheck,
+  Wallet,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTranslation } from "react-i18next";
 
+// SỬA LỖI LOGO: Import trực tiếp file ảnh
+import tripifyLogo from "../../assets/logo/logo_tripify_xoafont.png";
+
 const AdminSidebar = () => {
-  const { t } = useTranslation();
+  // SỬA LỖI CRASH: Thêm i18n vào hook useTranslation
+  const { t, i18n } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
   const [openSubMenu, setOpenSubMenu] = useState(""); 
   const location = useLocation();
@@ -101,6 +106,12 @@ const AdminSidebar = () => {
       path: "/admin/notifications"
     },
 
+    { 
+      name: i18n.language === 'vi' ? "Duyệt Rút Tiền" : "Withdrawals", 
+      icon: <Wallet size={20} />, 
+      path: "/admin/withdrawals" 
+    },
+
     {
       name: t('admin.audit_logs'),
       icon: <FileSearch size={20} />,
@@ -134,8 +145,9 @@ const AdminSidebar = () => {
       <div className={`flex items-center p-4 border-b border-gray-200 h-16 ${collapsed ? "justify-center" : "justify-between"}`}>
         {!collapsed && (
           <Link to="/" className="flex items-center gap-2">
+            {/* Sử dụng biến tripifyLogo đã import ở trên */}
             <img
-              src="src/assets/logo/logo_tripify_xoafont.png"
+              src={tripifyLogo}
               alt="Tripify"
               style={{ width: "135px", height: "43px" }} 
               className="object-contain"
@@ -193,7 +205,7 @@ const AdminSidebar = () => {
       <div className="p-3 border-t border-gray-200">
         <button
           onClick={() => {
-            if (confirm(t('admin.logout_confirm'))) {
+            if (confirm(t('admin.logout_confirm') || "Bạn có chắc chắn muốn đăng xuất?")) {
               logout();
             }
           }}
@@ -201,7 +213,7 @@ const AdminSidebar = () => {
           className={`flex items-center gap-3 py-2.5 px-4 rounded-lg transition-all w-full text-red-500 hover:bg-red-50 ${collapsed ? "justify-center" : ""}`}
         >
           <LogOut size={20} />
-          {!collapsed && <span className="font-medium text-sm">{t('common.logout')}</span>}
+          {!collapsed && <span className="font-medium text-sm">{t('common.logout') || "Đăng xuất"}</span>}
         </button>
       </div>
     </aside>

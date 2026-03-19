@@ -83,6 +83,42 @@ submitRegistration: async (formData, token) => {
       throw error;
     }
   },
+  /**
+   * [GIAI ĐOẠN 3] Lấy thông tin thanh toán (Payout Settings)
+   * Endpoint: GET /api/v1/owner/wallet/payout-settings
+   */
+  getPayoutSettings: async () => {
+    try {
+      const response = await api.get("/owner/wallet/payout-settings");
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching payout settings:", error);
+      throw error;
+    }
+  },
+
+  /**
+   * [GIAI ĐOẠN 3] Cập nhật thông tin thanh toán (Payout Settings)
+   * Endpoint: PUT /api/v1/owner/wallet/payout-settings
+   */
+  updatePayoutSettings: async (data) => {
+    try {
+      const response = await api.put("/owner/wallet/payout-settings", data);
+      return response.data;
+    } catch (error) {
+      console.error("Error updating payout settings:", error);
+      throw error;
+    }
+  },
+  deletePayoutMethod: async (type) => {
+    try {
+      const response = await api.delete(`/owner/wallet/payout-settings/${type}`);
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting payout method:", error);
+      throw error;
+    }
+  },
 };
 
 // ✅ Quan trọng: Export cả 2 kiểu để tương thích

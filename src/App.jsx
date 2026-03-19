@@ -1,8 +1,8 @@
 // src/App.jsx
 import { BrowserRouter } from "react-router-dom";
-import { AuthContextProvider } from "@/context/AuthContext";
-import { OnboardingProvider } from "@/context/OnboardingContext";
-import { LanguageProvider } from "@/context/LanguageContext";
+import { AuthContextProvider } from "./context/AuthContext";
+import { OnboardingProvider } from "./context/OnboardingContext";
+import { LanguageProvider } from "./context/LanguageContext";
 import ScrollToTop from "./components/common/ScrollToTop";
 import AppRoutes from "./routes";
 import { Toaster } from "react-hot-toast"; // Thêm dòng này
