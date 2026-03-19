@@ -25,16 +25,19 @@ const WalletBalanceCard = ({ balance, onWithdrawClick }) => {
           </p>
         </div>
 
-        <div className="flex-shrink-0">
-          <Button 
-            variant="outline" 
-            className="bg-white hover:bg-white/90 text-[#1E40AF] border-none shadow-lg py-4 px-8 rounded-full flex items-center gap-3 font-semibold text-base transition-all duration-300 hover:scale-105"
-            onClick={onWithdrawClick}
-            disabled={balance < 500000} // Cập nhật hạn mức động nếu cần
+        <div className="flex-shrink-0 relative z-20"> {/* Thêm relative z-20 để chắc chắn không bị đè */}
+          <button 
+            type="button" // Bắt buộc có type="button" để tránh reload trang
+            className="bg-white hover:bg-gray-100 text-[#1E40AF] border-none shadow-lg py-4 px-8 rounded-full flex items-center gap-3 font-semibold text-base transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={(e) => {
+                console.log("Nút đã được click!"); // Bật F12 lên xem có dòng này không
+                onWithdrawClick();
+            }}
+            disabled={Number(balance) < 500000} // Ép kiểu Number cho chắc chắn
           >
             <ArrowDownToLine size={20} />
             Yêu cầu rút tiền
-          </Button>
+          </button>
         </div>
       </div>
     </div>
