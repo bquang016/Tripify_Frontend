@@ -34,15 +34,18 @@ const RefundManagementPage = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await paymentService.getAllTransactions();
+      // ✅ SỬA: Sử dụng API mới chuyên biệt cho Refund Requests
+      const res = await paymentService.getRefundRequests();
       const data = res.data || res;
       
-      const refundList = Array.isArray(data) 
-        ? data.filter(t_item => t_item.refundInfo !== null)
-        : [];
+      const refundList = Array.isArray(data) ? data : [];
       
-      // Sắp xếp: Mới nhất lên đầu
-      refundList.sort((a, b) => new Date(b.refundInfo.requestDate) - new Date(a.refundInfo.requestDate));
+      // Sắp xếp: Mới nhất lên đầu (Dựa trên requestDate trong refundInfo)
+      refundList.sort((a, b) => {
+        const dateA = a.refundInfo?.requestDate || 0;
+        const dateB = b.refundInfo?.requestDate || 0;
+        return new Date(dateB) - new Date(dateA);
+      });
         
       setRefunds(refundList);
     } catch (error) {
