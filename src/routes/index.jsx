@@ -31,6 +31,9 @@ import OwnerOnboardingStep4 from '@/pages/Partner/OwnerOnboardingStep4';
 // VNPAY RETURN HANDLER
 import VNPayReturnPage from '@/pages/Customer/Booking/VNPayReturnPage';
 
+// ERROR PAGES
+import Forbidden from "@/pages/Error/Forbidden";
+
 // ✅ 1. Import Component xử lý khóa tài khoản
 import SessionExpiredHandler from "@/pages/Admin/Users/components/SessionExpiredHandler";
 const AppRoutes = () => {
@@ -41,9 +44,7 @@ const AppRoutes = () => {
             <SessionExpiredHandler />
 
             <Routes>
-                {/* =========================================================
-                    AUTHENTICATION ROUTES
-                ========================================================= */}
+                {/* ... existing routes ... */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -98,6 +99,11 @@ const AppRoutes = () => {
                         element={route.element}
                     />
                 ))}
+
+                {/* =========================================================
+                    ERROR ROUTES
+                ========================================================= */}
+                <Route path="/403" element={<Forbidden />} />
 
                 {/* =========================================================
                     FALLBACK (404)
