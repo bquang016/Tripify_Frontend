@@ -48,7 +48,7 @@ export const AuthContextProvider = ({ children }) => {
     };
   };
 
-  // ✅ Tự động đồng bộ profile khi vào trang
+  // Tự động đồng bộ profile khi vào trang
   useEffect(() => {
     const syncUser = async () => {
       const token = authService.getAccessToken();
@@ -63,7 +63,7 @@ export const AuthContextProvider = ({ children }) => {
           }
         } catch (err) {
           console.error("Failed to sync user profile:", err);
-          // ⚠️ CHỈ logout nếu thực sự là lỗi 401 từ server và không phải ở trang login
+          // CHỈ logout nếu thực sự là lỗi 401 từ server và không phải ở trang login
           if (err.response?.status === 401 && window.location.pathname !== "/login") {
             console.warn("Session expired or invalid token. Logging out...");
             logout();
@@ -141,7 +141,14 @@ export const AuthContextProvider = ({ children }) => {
     });
   };
 
-  // 5. Kiểm tra Role hoặc Permission
+  // ✅ 5. Cập nhật trạng thái First Login
+  const updateFirstLoginStatus = () => {
+    if (currentUser) {
+      updateUser({ isFirstLogin: false });
+    }
+  };
+
+  // 6. Kiểm tra Role hoặc Permission
   const hasRole = (target) => {
     if (!currentUser) return false;
     if (currentUser.isSuper) return true;
@@ -159,6 +166,7 @@ export const AuthContextProvider = ({ children }) => {
         loginWithOAuth2,
         logout,
         updateUser, 
+        updateFirstLoginStatus, // ✅ Export hàm ra ngoài
         loading,
         error,
         hasRole 

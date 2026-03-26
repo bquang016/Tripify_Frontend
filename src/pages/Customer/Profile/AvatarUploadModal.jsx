@@ -16,6 +16,7 @@ export default function AvatarUploadModal({ isOpen, onClose, onSave, isLoading }
 
   const fileInputRef = useRef(null);
 
+
   // Reset khi đóng modal
   useEffect(() => {
     if (!isOpen) {
@@ -31,6 +32,7 @@ export default function AvatarUploadModal({ isOpen, onClose, onSave, isLoading }
       const file = e.target.files[0];
       if (file.size > 5 * 1024 * 1024) {
         alert("File quá lớn! Vui lòng chọn ảnh dưới 5MB.");
+        
         return;
       }
       // Đọc file dưới dạng URL để đưa vào Cropper
