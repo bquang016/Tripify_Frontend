@@ -15,7 +15,7 @@ const ForgotPassword = () => {
 
   // Form State
   const [email, setEmail] = useState("");
-  
+
   // UI State
   const [loading, setLoading] = useState(false);
   const [showOTPModal, setShowOTPModal] = useState(false);

@@ -141,37 +141,6 @@ const bookingService = {
       throw error.response?.data || error.message;
     }
   },
+  };
 
-  // ==========================================
-  // 12. [ADMIN] DUYỆT YÊU CẦU HOÀN TIỀN
-  // ==========================================
-  approveRefund: async (bookingId) => {
-    try {
-      const response = await api.put(`/bookings/approve-refund/${bookingId}`);
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error.message;
-    }
-  },
-
-  // ==========================================
-  // 13. [ADMIN] LẤY DANH SÁCH YÊU CẦU HOÀN TIỀN
-  // ==========================================
-  getAllRefundRequests: async () => {
-    try {
-      const response = await api.get("/bookings/admin/refund-requests");
-      return response.data;
-    } catch (error) {
-      console.error("Lỗi lấy danh sách hoàn tiền:", error);
-      throw error.response?.data || error.message;
-    }
-  }
-};
-
-
-
-
-
-
-
-export default bookingService;
+  export default bookingService;

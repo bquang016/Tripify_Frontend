@@ -70,18 +70,19 @@ const AdminSidebar = () => {
       name: t('admin.financial_mgmt'), 
       icon: <DollarSign size={20} />, 
       key: "finance", 
-      permission: "TRANSACTION_VIEW",
+      // Chấp nhận một trong các mã quyền này
+      permissions: ["TRANSACTION_VIEW", "PAYMENT_VIEW", "FINANCE_VIEW"],
       children: [
         { 
           name: t('admin.payments_mgmt'), 
           path: "/admin/transactions", 
-          icon: <CreditCard size={16} /> 
+          icon: <CreditCard size={16} />,
         },
         { 
           name: t('admin.refunds_mgmt'),
           path: "/admin/refunds",
           icon: <RotateCcw size={16} />,
-          permission: "REFUND_MANAGE"
+          permissions: ["REFUND_MANAGE", "REFUND_VIEW"]
         },
       ]
     },
@@ -133,7 +134,15 @@ const AdminSidebar = () => {
 
   const filteredMenuItems = menuItems.filter(item => {
     if (currentUser?.isSuper) return true;
+    
+    // Nếu có mảng quyền, chỉ cần thỏa mãn 1 trong số đó
+    if (item.permissions && Array.isArray(item.permissions)) {
+      return item.permissions.some(p => hasRole(p));
+    }
+    
+    // Nếu chỉ có 1 quyền duy nhất (chuỗi)
     if (item.permission && !hasRole(item.permission)) return false;
+    
     return true;
   });
 
@@ -165,6 +174,11 @@ const AdminSidebar = () => {
             const isSubMenuOpen = openSubMenu === item.key;
             const filteredChildren = item.children.filter(child => {
               if (currentUser?.isSuper) return true;
+              
+              if (child.permissions && Array.isArray(child.permissions)) {
+                return child.permissions.some(p => hasRole(p));
+              }
+
               if (child.permission && !hasRole(child.permission)) return false;
               return true;
             });
