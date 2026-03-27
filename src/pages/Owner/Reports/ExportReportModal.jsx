@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import Modal from "@/components/common/Modal/Modal";
-import { Download, FileText, FileSpreadsheet, Calendar, Loader2, X, BarChart3, Building } from "lucide-react";
+import { Download, FileText, FileSpreadsheet, Loader2, X, BarChart3, Building } from "lucide-react";
 import { reportService } from "@/services/report.service";
-import propertyService from "@/services/property.service"; // Giả định bạn có service này để lấy list KS
+import propertyService from "@/services/property.service";
 
 export default function ExportReportModal({ open, onClose }) {
   const [loading, setLoading] = useState(false);
@@ -17,7 +17,6 @@ export default function ExportReportModal({ open, onClose }) {
   // Các State lưu thời gian được chọn
   const currentDate = new Date();
   const [dailyRange, setDailyRange] = useState({ start: "", end: "" });
-  const [monthlyData, setMonthlyData] = useState({ month: currentDate.getMonth() + 1, year: currentDate.getFullYear() });
   const [yearlyData, setYearlyData] = useState(currentDate.getFullYear());
 
   // Lấy danh sách Property khi mở Modal
@@ -53,11 +52,9 @@ export default function ExportReportModal({ open, onClose }) {
 
   const minYear = minDateObj.getFullYear();
   const currentYear = currentDate.getFullYear();
-  const minMonth = minDateObj.getMonth() + 1; // 1-12
 
-  // Các mảng dữ liệu cho Dropdown
+  // Mảng dữ liệu cho Dropdown năm
   const yearsList = Array.from({ length: currentYear - minYear + 1 }, (_, i) => currentYear - i);
-  const monthsList = Array.from({ length: 12 }, (_, i) => i + 1);
 
   // Xử lý khi nhấn Tải xuống
   const handleDownload = async () => {
@@ -73,14 +70,14 @@ export default function ExportReportModal({ open, onClose }) {
       finalEndDate = dailyRange.end;
     } 
     else if (reportType === "MONTHLY") {
-      // Lấy ngày đầu tháng và ngày cuối tháng
-      finalStartDate = `${monthlyData.year}-${String(monthlyData.month).padStart(2, '0')}-01`;
-      const lastDay = new Date(monthlyData.year, monthlyData.month, 0).getDate();
-      finalEndDate = `${monthlyData.year}-${String(monthlyData.month).padStart(2, '0')}-${lastDay}`;
-    } 
-    else if (reportType === "YEARLY") {
+      // Báo cáo theo tháng: lấy từ đầu năm đến cuối năm để biểu diễn 12 tháng
       finalStartDate = `${yearlyData}-01-01`;
       finalEndDate = `${yearlyData}-12-31`;
+    } 
+    else if (reportType === "YEARLY") {
+      // Báo cáo theo năm: lấy từ năm hoạt động đầu tiên đến năm hiện tại
+      finalStartDate = `${minYear}-01-01`;
+      finalEndDate = `${currentYear}-12-31`;
     }
 
     setLoading(true);
@@ -168,42 +165,10 @@ export default function ExportReportModal({ open, onClose }) {
 
           {/* B. THEO THÁNG */}
           {reportType === "MONTHLY" && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <span className="text-xs font-semibold text-slate-500 mb-1 block">Chọn Tháng</span>
-                <select 
-                  value={monthlyData.month} 
-                  onChange={(e) => setMonthlyData({...monthlyData, month: parseInt(e.target.value)})}
-                  className="w-full p-2.5 bg-white border border-slate-200 rounded-lg outline-none focus:border-emerald-500 text-sm font-medium"
-                >
-                  {monthsList.map(m => {
-                    // Logic Chặn Tháng: Không cho chọn tháng trước khi mở cửa HOẶC tháng trong tương lai
-                    const isDisabled = (monthlyData.year === minYear && m < minMonth) || (monthlyData.year === currentYear && m > currentDate.getMonth() + 1);
-                    return (
-                      <option key={m} value={m} disabled={isDisabled}>
-                        Tháng {m} {isDisabled ? '(Chưa có dữ liệu)' : ''}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-              <div>
-                <span className="text-xs font-semibold text-slate-500 mb-1 block">Chọn Năm</span>
-                <select 
-                  value={monthlyData.year} 
-                  onChange={(e) => setMonthlyData({...monthlyData, year: parseInt(e.target.value)})}
-                  className="w-full p-2.5 bg-white border border-slate-200 rounded-lg outline-none focus:border-emerald-500 text-sm font-medium"
-                >
-                  {yearsList.map(y => <option key={y} value={y}>Năm {y}</option>)}
-                </select>
-              </div>
-            </div>
-          )}
-
-          {/* C. THEO NĂM */}
-          {reportType === "YEARLY" && (
             <div>
-              <span className="text-xs font-semibold text-slate-500 mb-1 block">Chọn Năm Xuất Báo Cáo</span>
+              <span className="text-xs font-semibold text-slate-500 mb-1 block">
+                Chọn Năm (Hệ thống sẽ thống kê doanh thu theo 12 tháng trong năm)
+              </span>
               <select 
                 value={yearlyData} 
                 onChange={(e) => setYearlyData(parseInt(e.target.value))}
@@ -211,6 +176,13 @@ export default function ExportReportModal({ open, onClose }) {
               >
                 {yearsList.map(y => <option key={y} value={y}>Năm {y}</option>)}
               </select>
+            </div>
+          )}
+
+          {/* C. THEO NĂM */}
+          {reportType === "YEARLY" && (
+            <div className="p-3 bg-white border border-slate-200 rounded-lg text-sm text-slate-600 font-medium text-center">
+              Hệ thống sẽ thống kê tổng quan doanh thu qua tất cả các năm (Từ {minYear} đến {currentYear}).
             </div>
           )}
         </div>
@@ -226,7 +198,7 @@ export default function ExportReportModal({ open, onClose }) {
         </div>
 
         {/* Nút Submit */}
-        <button onClick={handleDownload} disabled={loading} className={`w-full py-4 rounded-xl font-black text-white flex items-center justify-center gap-2 mt-2 ${loading ? "bg-slate-400" : "bg-gradient-to-r from-emerald-500 to-teal-600 hover:shadow-lg active:scale-[0.98]"}`}>
+        <button onClick={handleDownload} disabled={loading} className={`w-full py-4 rounded-xl font-black text-white flex items-center justify-center gap-2 mt-2 ${loading ? "bg-slate-400 cursor-not-allowed" : "bg-gradient-to-r from-emerald-500 to-teal-600 hover:shadow-lg active:scale-[0.98]"}`}>
           {loading ? <Loader2 className="animate-spin" /> : <Download size={20} />} {loading ? "Đang trích xuất..." : "Tải Báo Cáo Xuống"}
         </button>
       </div>

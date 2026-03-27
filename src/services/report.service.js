@@ -3,12 +3,17 @@ import api from "./axios.config.js";
 const exportOwnerRevenue = async (startDate, endDate, format = "pdf", reportType = "MONTHLY", propertyId = "ALL") => {
   try {
     const response = await api.get(`/reports/owner/revenue`, {
-      // ✅ Bổ sung propertyId vào query params
       params: { startDate, endDate, format, reportType, propertyId }, 
       responseType: "blob",
     });
 
-    const url = window.URL.createObjectURL(new Blob([response.data]));
+    // SỬA Ở ĐÂY: Fallback an toàn nếu interceptor đã trả thẳng data
+    const blobData = response.data ? response.data : response;
+    const contentType = format === "excel" 
+      ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
+      : "application/pdf";
+
+    const url = window.URL.createObjectURL(new Blob([blobData], { type: contentType }));
     const link = document.createElement("a");
     link.href = url;
     
