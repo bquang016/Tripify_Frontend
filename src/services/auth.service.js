@@ -272,6 +272,16 @@ const registerOwner = (data) => {
   return api.post("/auth/owner/register", data);
 };
 
+// ✅ 15. ĐỔI MẬT KHẨU
+const changePassword = async (userId, payload) => {
+  try {
+    // Đã sửa thành phương thức POST và bỏ đoạn /${userId} đi
+    const response = await api.post(`/auth/change-password`, payload);
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+};
 
 export const authService = {
   login,
@@ -295,6 +305,7 @@ export const authService = {
   checkOwnerEmail,
   verifyOwnerOtp,
   registerOwner,
+  changePassword,
 };
 
 export default authService;

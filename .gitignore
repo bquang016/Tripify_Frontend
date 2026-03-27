@@ -32,3 +32,6 @@ build/
 *.lock
 
 .env
+playwright-report/
+test-results/
+tests/

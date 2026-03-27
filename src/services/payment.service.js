@@ -72,7 +72,19 @@ const paymentService = {
     }
   },
 
-  // 5. Xử lý hoàn tiền (Duyệt/Từ chối) (Cho trang RefundManagementPage)
+  // 5. Lấy danh sách yêu cầu hoàn tiền (MỚI)
+  getRefundRequests: async () => {
+    try {
+      const response = await api.get("/payments/refund-requests");
+      const result = response.data;
+      return Array.isArray(result) ? result : (result.data || []);
+    } catch (error) {
+      console.error("Lỗi lấy danh sách yêu cầu hoàn tiền:", error);
+      throw new Error(error.response?.data?.message || "Không thể tải danh sách hoàn tiền");
+    }
+  },
+
+  // 6. Xử lý hoàn tiền (Duyệt/Từ chối) (Cho trang RefundManagementPage)
   processRefundRequest: async (requestId, isApproved, note) => {
     try {
       const response = await api.put(`/payments/refund-process/${requestId}`, null, {

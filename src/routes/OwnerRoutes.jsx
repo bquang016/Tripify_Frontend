@@ -11,6 +11,8 @@ import OwnerBookingsPage from "@/pages/Owner/Bookings/OwnerBookingsPage";
 import OwnerPromotionManager from "@/pages/Owner/Promotions/OwnerPromotionManager";
 // ✅ IMPORT TRANG THÔNG BÁO MỚI
 import OwnerNotificationsPage from "@/pages/Owner/Notifications/OwnerNotificationsPage";
+import OwnerWalletPage from '../pages/Owner/Wallet/OwnerWalletPage';
+import PayoutSettingsPage from '../pages/Owner/Wallet/PayoutSettingsPage';
 
 const ownerRoutes = [
     {
@@ -154,6 +156,29 @@ const ownerRoutes = [
             </OwnerLayout>
         ),
     },
+    // --- ✅ ROUTE MỚI: QUẢN LÝ VÍ RÚT TIỀN ---
+    {
+        path: "/owner/wallet",
+        element: (
+            <OwnerLayout>
+                <ProtectedRoute requiredRole="OWNER">
+                    <OwnerWalletPage />
+                </ProtectedRoute>
+            </OwnerLayout>
+        ),
+    },
+    // --- ✅ ROUTE MỚI: CÀI ĐẶT RÚT TIỀN ---
+    {
+        path: "/owner/payout-settings",
+        element: (
+            <OwnerLayout>
+                <ProtectedRoute requiredRole="OWNER">
+                    <PayoutSettingsPage />
+                </ProtectedRoute>
+            </OwnerLayout>
+        ),
+    }
+
 ];
 
 export default ownerRoutes;

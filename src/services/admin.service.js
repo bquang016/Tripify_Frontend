@@ -227,6 +227,17 @@ const adminService = {
       throw new Error(error.response?.data?.message || "Lỗi khi xóa người dùng");
     }
   },
+  getAllPayouts: async () => {
+    return await api.get('/admin/payouts');
+  },
+
+  calculatePayout: async (ownerId) => {
+    return await api.post(`/admin/payouts/calculate/${ownerId}`);
+  },
+
+  processPayout: async (payoutId) => {
+    return await api.post(`/admin/payouts/process/${payoutId}`);
+  }
 };
 
 export default adminService;

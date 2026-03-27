@@ -33,8 +33,8 @@ import CardSetupPage from '@/pages/Customer/Profile/CardSetupPage';
 
 const customerRoutes = [
     {
-    path: "/auth/complete-profile",
-    element: <CompleteProfile />
+        path: "/auth/complete-profile",
+        element: <CompleteProfile />
     },
     {
         path: "/oauth2/redirect",
@@ -107,11 +107,11 @@ const customerRoutes = [
         ),
     },
 
-    // ✅ ROUTE ĐẶT PHÒNG (Yêu cầu đăng nhập)
+    // ✅ ROUTE ĐẶT PHÒNG (Cho phép cả CUSTOMER và OWNER)
     {
         path: "/booking/:propertyId",
         element: (
-            <ProtectedRoute roles={["CUSTOMER"]}>
+            <ProtectedRoute roles={["CUSTOMER", "OWNER"]}>
                 <CustomerLayout>
                     <BookingPage />
                 </CustomerLayout>
@@ -119,11 +119,11 @@ const customerRoutes = [
         ),
     },
 
-    // ✅ ROUTE THANH TOÁN (Yêu cầu đăng nhập)
+    // ✅ ROUTE THANH TOÁN
     {
         path: "/booking/payment/:bookingId",
         element: (
-            <ProtectedRoute roles={["CUSTOMER"]}>
+            <ProtectedRoute roles={["CUSTOMER", "OWNER"]}>
                 <CustomerLayout>
                     <PaymentPage />
                 </CustomerLayout>
@@ -143,7 +143,7 @@ const customerRoutes = [
         path: "/customer/profile",
         element: (
             <CustomerLayout>
-                <ProtectedRoute roles={["CUSTOMER"]}>
+                <ProtectedRoute roles={["CUSTOMER", "OWNER"]}>
                     <ProfilePage />
                 </ProtectedRoute>
             </CustomerLayout>
@@ -152,7 +152,7 @@ const customerRoutes = [
     {
         path: "/customer/profile/settings",
         element: (
-            <ProtectedRoute roles={["CUSTOMER"]}>
+            <ProtectedRoute roles={["CUSTOMER", "OWNER"]}>
                 <CustomerDashboardLayout>
                     <SettingsPage />
                 </CustomerDashboardLayout>
@@ -162,7 +162,7 @@ const customerRoutes = [
     {
         path: "/customer/profile/change-password",
         element: (
-            <ProtectedRoute roles={["CUSTOMER"]}>
+            <ProtectedRoute roles={["CUSTOMER", "OWNER"]}>
                 <CustomerDashboardLayout>
                     <ChangePassword />
                 </CustomerDashboardLayout>
@@ -177,7 +177,7 @@ const customerRoutes = [
     {
         path: "/customer/settings",
         element: (
-            <ProtectedRoute roles={["CUSTOMER"]}>
+            <ProtectedRoute roles={["CUSTOMER", "OWNER"]}>
                 <CustomerDashboardLayout>
                     <SettingsPage />
                 </CustomerDashboardLayout>
@@ -187,7 +187,7 @@ const customerRoutes = [
     {
         path: "/customer/profile/language",
         element: (
-            <ProtectedRoute roles={["CUSTOMER"]}>
+            <ProtectedRoute roles={["CUSTOMER", "OWNER"]}>
                 <CustomerDashboardLayout>
                     <LanguageSettings />
                 </CustomerDashboardLayout>
@@ -195,11 +195,10 @@ const customerRoutes = [
         ),
     },
 
-    // ✅ CẬP NHẬT: Dùng MyBookings Component
     {
         path: "/customer/bookings",
         element: (
-            <ProtectedRoute roles={["CUSTOMER"]}>
+            <ProtectedRoute roles={["CUSTOMER", "OWNER"]}>
                 <CustomerDashboardLayout>
                     <MyBookings />
                 </CustomerDashboardLayout>
@@ -210,7 +209,7 @@ const customerRoutes = [
     {
         path: "/customer/my-inbox",
         element: (
-            <ProtectedRoute roles={["CUSTOMER"]}>
+            <ProtectedRoute roles={["CUSTOMER", "OWNER"]}>
                 <CustomerDashboardLayout>
                     <MyInboxPage />
                 </CustomerDashboardLayout>
@@ -221,7 +220,7 @@ const customerRoutes = [
     {
         path: "/customer/transactions",
         element: (
-            <ProtectedRoute roles={["CUSTOMER"]}>
+            <ProtectedRoute roles={["CUSTOMER", "OWNER"]}>
                 <CustomerDashboardLayout>
                     <TransactionHistory />
                 </CustomerDashboardLayout>
@@ -240,7 +239,7 @@ const customerRoutes = [
     {
         path: "/customer/refunds",
         element: (
-            <ProtectedRoute roles={["CUSTOMER"]}>
+            <ProtectedRoute roles={["CUSTOMER", "OWNER"]}>
                 <CustomerDashboardLayout>
                     <Refunds />
                 </CustomerDashboardLayout>
@@ -251,7 +250,7 @@ const customerRoutes = [
     {
         path: "/customer/membership",
         element: (
-            <ProtectedRoute roles={["CUSTOMER"]}>
+            <ProtectedRoute roles={["CUSTOMER", "OWNER"]}>
                 <CustomerDashboardLayout>
                     <MembershipPage />
                 </CustomerDashboardLayout>
@@ -262,7 +261,7 @@ const customerRoutes = [
     {
         path: "/customer/cards",
         element: (
-            <ProtectedRoute roles={["CUSTOMER"]}>
+            <ProtectedRoute roles={["CUSTOMER", "OWNER"]}>
                 <CustomerDashboardLayout>
                     <CardSetupPage />
                 </CustomerDashboardLayout>

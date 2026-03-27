@@ -17,13 +17,18 @@ import {
   Ticket,
   FileSearch,
   Bell,
-  ShieldCheck
+  ShieldCheck,
+  Wallet,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useTranslation } from "react-i18next";
 
+// SỬA LỖI LOGO: Import trực tiếp file ảnh
+import tripifyLogo from "../../assets/logo/logo_tripify_xoafont.png";
+
 const AdminSidebar = () => {
-  const { t } = useTranslation();
+  // SỬA LỖI CRASH: Thêm i18n vào hook useTranslation
+  const { t, i18n } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
   const [openSubMenu, setOpenSubMenu] = useState(""); 
   const location = useLocation();
@@ -65,18 +70,19 @@ const AdminSidebar = () => {
       name: t('admin.financial_mgmt'), 
       icon: <DollarSign size={20} />, 
       key: "finance", 
-      permission: "TRANSACTION_VIEW",
+      // Chấp nhận một trong các mã quyền này
+      permissions: ["TRANSACTION_VIEW", "PAYMENT_VIEW", "FINANCE_VIEW"],
       children: [
         { 
           name: t('admin.payments_mgmt'), 
           path: "/admin/transactions", 
-          icon: <CreditCard size={16} /> 
+          icon: <CreditCard size={16} />,
         },
         { 
           name: t('admin.refunds_mgmt'),
           path: "/admin/refunds",
           icon: <RotateCcw size={16} />,
-          permission: "REFUND_MANAGE"
+          permissions: ["REFUND_MANAGE", "REFUND_VIEW"]
         },
       ]
     },
@@ -101,6 +107,12 @@ const AdminSidebar = () => {
       path: "/admin/notifications"
     },
 
+    { 
+      name: i18n.language === 'vi' ? "Duyệt Rút Tiền" : "Withdrawals", 
+      icon: <Wallet size={20} />, 
+      path: "/admin/withdrawals" 
+    },
+
     {
       name: t('admin.audit_logs'),
       icon: <FileSearch size={20} />,
@@ -122,7 +134,15 @@ const AdminSidebar = () => {
 
   const filteredMenuItems = menuItems.filter(item => {
     if (currentUser?.isSuper) return true;
+    
+    // Nếu có mảng quyền, chỉ cần thỏa mãn 1 trong số đó
+    if (item.permissions && Array.isArray(item.permissions)) {
+      return item.permissions.some(p => hasRole(p));
+    }
+    
+    // Nếu chỉ có 1 quyền duy nhất (chuỗi)
     if (item.permission && !hasRole(item.permission)) return false;
+    
     return true;
   });
 
@@ -134,8 +154,9 @@ const AdminSidebar = () => {
       <div className={`flex items-center p-4 border-b border-gray-200 h-16 ${collapsed ? "justify-center" : "justify-between"}`}>
         {!collapsed && (
           <Link to="/" className="flex items-center gap-2">
+            {/* Sử dụng biến tripifyLogo đã import ở trên */}
             <img
-              src="src/assets/logo/logo_tripify_xoafont.png"
+              src={tripifyLogo}
               alt="Tripify"
               style={{ width: "135px", height: "43px" }} 
               className="object-contain"
@@ -153,6 +174,11 @@ const AdminSidebar = () => {
             const isSubMenuOpen = openSubMenu === item.key;
             const filteredChildren = item.children.filter(child => {
               if (currentUser?.isSuper) return true;
+              
+              if (child.permissions && Array.isArray(child.permissions)) {
+                return child.permissions.some(p => hasRole(p));
+              }
+
               if (child.permission && !hasRole(child.permission)) return false;
               return true;
             });
@@ -193,7 +219,7 @@ const AdminSidebar = () => {
       <div className="p-3 border-t border-gray-200">
         <button
           onClick={() => {
-            if (confirm(t('admin.logout_confirm'))) {
+            if (confirm(t('admin.logout_confirm') || "Bạn có chắc chắn muốn đăng xuất?")) {
               logout();
             }
           }}
@@ -201,7 +227,7 @@ const AdminSidebar = () => {
           className={`flex items-center gap-3 py-2.5 px-4 rounded-lg transition-all w-full text-red-500 hover:bg-red-50 ${collapsed ? "justify-center" : ""}`}
         >
           <LogOut size={20} />
-          {!collapsed && <span className="font-medium text-sm">{t('common.logout')}</span>}
+          {!collapsed && <span className="font-medium text-sm">{t('common.logout') || "Đăng xuất"}</span>}
         </button>
       </div>
     </aside>
