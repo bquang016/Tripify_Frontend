@@ -1,42 +1,94 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Modal from "@/components/common/Modal/Modal";
-import { Download, FileText, FileSpreadsheet, Calendar, Loader2, X } from "lucide-react";
+import { Download, FileText, FileSpreadsheet, Calendar, Loader2, X, BarChart3, Building } from "lucide-react";
 import { reportService } from "@/services/report.service";
-// Nếu bạn dùng react-hot-toast, hãy uncomment dòng dưới
-// import toast from "react-hot-toast"; 
+import propertyService from "@/services/property.service"; // Giả định bạn có service này để lấy list KS
 
 export default function ExportReportModal({ open, onClose }) {
   const [loading, setLoading] = useState(false);
-  const [format, setFormat] = useState("pdf"); // 'pdf' | 'excel'
-  
-  // Mặc định lấy từ đầu tháng đến ngày hiện tại
-  const today = new Date();
-  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
-  const currentDay = today.toISOString().split('T')[0];
-
-  const [dates, setDates] = useState({ start: firstDay, end: currentDay });
+  const [format, setFormat] = useState("pdf"); 
+  const [reportType, setReportType] = useState("MONTHLY"); 
   const [error, setError] = useState("");
 
+  // Dữ liệu Cơ sở lưu trú
+  const [properties, setProperties] = useState([]);
+  const [selectedPropertyId, setSelectedPropertyId] = useState("ALL");
+
+  // Các State lưu thời gian được chọn
+  const currentDate = new Date();
+  const [dailyRange, setDailyRange] = useState({ start: "", end: "" });
+  const [monthlyData, setMonthlyData] = useState({ month: currentDate.getMonth() + 1, year: currentDate.getFullYear() });
+  const [yearlyData, setYearlyData] = useState(currentDate.getFullYear());
+
+  // Lấy danh sách Property khi mở Modal
+  useEffect(() => {
+    if (open) {
+      fetchProperties();
+      setError("");
+    }
+  }, [open]);
+
+  const fetchProperties = async () => {
+    try {
+      const res = await propertyService.getOwnerProperties(); 
+      // Tự động lấy mảng dữ liệu dù Backend bọc bằng "data" hay "result"
+      const propertyList = res?.result || res?.data || (Array.isArray(res) ? res : []);
+      setProperties(propertyList);
+    } catch (err) {
+      console.error("Không lấy được danh sách cơ sở lưu trú", err);
+    }
+  };
+
+  // Tính toán Ngày Kích Hoạt (Min Date) dựa trên Property được chọn
+  const minDateObj = useMemo(() => {
+    if (!properties || properties.length === 0) return new Date(2020, 0, 1); // Fallback
+    if (selectedPropertyId === "ALL") {
+      // Tìm ngày mở cửa của KS cũ nhất
+      const oldest = properties.reduce((min, p) => (new Date(p.createdAt) < new Date(min.createdAt) ? p : min), properties[0]);
+      return new Date(oldest.createdAt);
+    }
+    const prop = properties.find(p => p.propertyId === selectedPropertyId);
+    return prop ? new Date(prop.createdAt) : new Date(2020, 0, 1);
+  }, [selectedPropertyId, properties]);
+
+  const minYear = minDateObj.getFullYear();
+  const currentYear = currentDate.getFullYear();
+  const minMonth = minDateObj.getMonth() + 1; // 1-12
+
+  // Các mảng dữ liệu cho Dropdown
+  const yearsList = Array.from({ length: currentYear - minYear + 1 }, (_, i) => currentYear - i);
+  const monthsList = Array.from({ length: 12 }, (_, i) => i + 1);
+
+  // Xử lý khi nhấn Tải xuống
   const handleDownload = async () => {
     setError("");
-    if (!dates.start || !dates.end) {
-      setError("Vui lòng chọn đầy đủ ngày bắt đầu và ngày kết thúc.");
-      return;
-    }
+    let finalStartDate = "";
+    let finalEndDate = "";
 
-    if (new Date(dates.start) > new Date(dates.end)) {
-      setError("Ngày bắt đầu không được lớn hơn ngày kết thúc.");
-      return;
+    // Xử lý dữ liệu thời gian trước khi gửi xuống API
+    if (reportType === "DAILY") {
+      if (!dailyRange.start || !dailyRange.end) return setError("Vui lòng chọn đầy đủ ngày.");
+      if (new Date(dailyRange.start) > new Date(dailyRange.end)) return setError("Ngày bắt đầu không hợp lệ.");
+      finalStartDate = dailyRange.start;
+      finalEndDate = dailyRange.end;
+    } 
+    else if (reportType === "MONTHLY") {
+      // Lấy ngày đầu tháng và ngày cuối tháng
+      finalStartDate = `${monthlyData.year}-${String(monthlyData.month).padStart(2, '0')}-01`;
+      const lastDay = new Date(monthlyData.year, monthlyData.month, 0).getDate();
+      finalEndDate = `${monthlyData.year}-${String(monthlyData.month).padStart(2, '0')}-${lastDay}`;
+    } 
+    else if (reportType === "YEARLY") {
+      finalStartDate = `${yearlyData}-01-01`;
+      finalEndDate = `${yearlyData}-12-31`;
     }
 
     setLoading(true);
     try {
-      await reportService.exportOwnerRevenue(dates.start, dates.end, format);
-      // toast.success("Tải báo cáo thành công!");
-      alert("Tải báo cáo thành công!");
+      await reportService.exportOwnerRevenue(finalStartDate, finalEndDate, format, reportType, selectedPropertyId);
       onClose();
     } catch (err) {
-      setError("Có lỗi xảy ra khi tạo báo cáo. Vui lòng thử lại.");
+      setError("Có lỗi xảy ra khi tạo báo cáo.");
     } finally {
       setLoading(false);
     }
@@ -44,103 +96,139 @@ export default function ExportReportModal({ open, onClose }) {
 
   return (
     <Modal open={open} onClose={onClose} title="Xuất Báo Cáo Doanh Thu" maxWidth="max-w-md">
-      <div className="space-y-6 pt-4 animate-fade-in">
-        
+      <div className="space-y-5 pt-4 animate-fade-in">
         {error && (
           <div className="p-3 rounded-lg bg-rose-50 border border-rose-100 text-rose-600 text-sm font-semibold flex items-start gap-2">
-            <X size={16} className="mt-0.5 shrink-0" />
-            <span>{error}</span>
+            <X size={16} className="mt-0.5 shrink-0" /><span>{error}</span>
           </div>
         )}
 
-        {/* --- Chọn khoảng thời gian --- */}
+        {/* --- 1. CHỌN CƠ SỞ LƯU TRÚ --- */}
         <div>
-          <label className="text-sm font-bold text-slate-700 flex items-center gap-2 mb-3">
-            <Calendar size={16} className="text-emerald-600" />
-            Thời gian báo cáo
+          <label className="text-sm font-bold text-slate-700 flex items-center gap-2 mb-2">
+            <Building size={16} className="text-emerald-600" /> Cơ sở lưu trú
           </label>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <span className="text-xs font-semibold text-slate-500 mb-1 block">Từ ngày</span>
-              <input
-                type="date"
-                value={dates.start}
-                onChange={(e) => setDates({ ...dates, start: e.target.value })}
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 focus:bg-white transition-all font-medium text-slate-700"
-              />
-            </div>
-            <div>
-              <span className="text-xs font-semibold text-slate-500 mb-1 block">Đến ngày</span>
-              <input
-                type="date"
-                value={dates.end}
-                onChange={(e) => setDates({ ...dates, end: e.target.value })}
-                className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 focus:bg-white transition-all font-medium text-slate-700"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* --- Chọn định dạng --- */}
-        <div>
-          <label className="text-sm font-bold text-slate-700 block mb-3">
-            Định dạng tập tin
-          </label>
-          <div className="flex gap-3">
-            {/* Nút PDF */}
-            <button
-              type="button"
-              onClick={() => setFormat("pdf")}
-              className={`flex-1 flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all ${
-                format === "pdf"
-                  ? "border-rose-500 bg-rose-50 text-rose-600 shadow-sm"
-                  : "border-slate-100 bg-white text-slate-400 hover:border-slate-200"
-              }`}
-            >
-              <FileText size={28} strokeWidth={1.5} />
-              <span className="font-bold text-sm">Tài liệu PDF</span>
-            </button>
-
-            {/* Nút Excel */}
-            <button
-              type="button"
-              onClick={() => setFormat("excel")}
-              className={`flex-1 flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all ${
-                format === "excel"
-                  ? "border-emerald-500 bg-emerald-50 text-emerald-600 shadow-sm"
-                  : "border-slate-100 bg-white text-slate-400 hover:border-slate-200"
-              }`}
-            >
-              <FileSpreadsheet size={28} strokeWidth={1.5} />
-              <span className="font-bold text-sm">Bảng tính Excel</span>
-            </button>
-          </div>
-        </div>
-
-        {/* --- Nút Tải xuống --- */}
-        <div className="pt-4 border-t border-slate-100 mt-2">
-          <button
-            onClick={handleDownload}
-            disabled={loading}
-            className={`w-full py-4 rounded-xl font-black text-white transition-all flex items-center justify-center gap-2 shadow-lg ${
-              loading 
-                ? "bg-slate-400 cursor-not-allowed" 
-                : "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 shadow-emerald-500/30 active:scale-[0.98]"
-            }`}
+          <select
+            value={selectedPropertyId}
+            onChange={(e) => setSelectedPropertyId(e.target.value)}
+            className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-emerald-500 text-sm font-semibold text-slate-700"
           >
-            {loading ? (
-              <>
-                <Loader2 className="animate-spin" size={20} />
-                Đang trích xuất dữ liệu...
-              </>
-            ) : (
-              <>
-                <Download size={20} />
-                Tải báo cáo ngay
-              </>
-            )}
+            <option value="ALL">Tất cả cơ sở lưu trú</option>
+            {properties.map((p) => (
+              <option key={p.propertyId || p.id} value={p.propertyId || p.id}>
+                {p.propertyName || p.name || "Khách sạn chưa cập nhật tên"} 
+                {p.createdAt ? ` (Hoạt động từ: ${new Date(p.createdAt).toLocaleDateString('vi-VN')})` : ""}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* --- 2. CHỌN LOẠI BÁO CÁO --- */}
+        <div>
+          <label className="text-sm font-bold text-slate-700 flex items-center gap-2 mb-2">
+            <BarChart3 size={16} className="text-emerald-600" /> Chu kỳ báo cáo
+          </label>
+          <div className="flex bg-slate-100 p-1 rounded-xl">
+            <button onClick={() => setReportType("DAILY")} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${reportType === "DAILY" ? "bg-white shadow-sm text-emerald-600" : "text-slate-500"}`}>Theo Ngày</button>
+            <button onClick={() => setReportType("MONTHLY")} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${reportType === "MONTHLY" ? "bg-white shadow-sm text-emerald-600" : "text-slate-500"}`}>Theo Tháng</button>
+            <button onClick={() => setReportType("YEARLY")} className={`flex-1 py-2 text-sm font-bold rounded-lg transition-all ${reportType === "YEARLY" ? "bg-white shadow-sm text-emerald-600" : "text-slate-500"}`}>Theo Năm</button>
+          </div>
+        </div>
+
+        {/* --- 3. GIAO DIỆN CHỌN THỜI GIAN ĐỘNG --- */}
+        <div className="p-4 bg-emerald-50/50 rounded-xl border border-emerald-100/50">
+          
+          {/* A. THEO NGÀY */}
+          {reportType === "DAILY" && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <span className="text-xs font-semibold text-slate-500 mb-1 block">Từ ngày</span>
+                <input 
+                  type="date" 
+                  min={minDateObj.toISOString().split('T')[0]} // Chặn ngày quá khứ
+                  max={currentDate.toISOString().split('T')[0]} // Chặn ngày tương lai
+                  value={dailyRange.start} 
+                  onChange={(e) => setDailyRange({ ...dailyRange, start: e.target.value })} 
+                  className="w-full p-2.5 bg-white border border-slate-200 rounded-lg outline-none focus:border-emerald-500 text-sm" 
+                />
+              </div>
+              <div>
+                <span className="text-xs font-semibold text-slate-500 mb-1 block">Đến ngày</span>
+                <input 
+                  type="date" 
+                  min={dailyRange.start || minDateObj.toISOString().split('T')[0]} 
+                  max={currentDate.toISOString().split('T')[0]} 
+                  value={dailyRange.end} 
+                  onChange={(e) => setDailyRange({ ...dailyRange, end: e.target.value })} 
+                  className="w-full p-2.5 bg-white border border-slate-200 rounded-lg outline-none focus:border-emerald-500 text-sm" 
+                />
+              </div>
+            </div>
+          )}
+
+          {/* B. THEO THÁNG */}
+          {reportType === "MONTHLY" && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <span className="text-xs font-semibold text-slate-500 mb-1 block">Chọn Tháng</span>
+                <select 
+                  value={monthlyData.month} 
+                  onChange={(e) => setMonthlyData({...monthlyData, month: parseInt(e.target.value)})}
+                  className="w-full p-2.5 bg-white border border-slate-200 rounded-lg outline-none focus:border-emerald-500 text-sm font-medium"
+                >
+                  {monthsList.map(m => {
+                    // Logic Chặn Tháng: Không cho chọn tháng trước khi mở cửa HOẶC tháng trong tương lai
+                    const isDisabled = (monthlyData.year === minYear && m < minMonth) || (monthlyData.year === currentYear && m > currentDate.getMonth() + 1);
+                    return (
+                      <option key={m} value={m} disabled={isDisabled}>
+                        Tháng {m} {isDisabled ? '(Chưa có dữ liệu)' : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+              <div>
+                <span className="text-xs font-semibold text-slate-500 mb-1 block">Chọn Năm</span>
+                <select 
+                  value={monthlyData.year} 
+                  onChange={(e) => setMonthlyData({...monthlyData, year: parseInt(e.target.value)})}
+                  className="w-full p-2.5 bg-white border border-slate-200 rounded-lg outline-none focus:border-emerald-500 text-sm font-medium"
+                >
+                  {yearsList.map(y => <option key={y} value={y}>Năm {y}</option>)}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* C. THEO NĂM */}
+          {reportType === "YEARLY" && (
+            <div>
+              <span className="text-xs font-semibold text-slate-500 mb-1 block">Chọn Năm Xuất Báo Cáo</span>
+              <select 
+                value={yearlyData} 
+                onChange={(e) => setYearlyData(parseInt(e.target.value))}
+                className="w-full p-2.5 bg-white border border-slate-200 rounded-lg outline-none focus:border-emerald-500 text-sm font-medium"
+              >
+                {yearsList.map(y => <option key={y} value={y}>Năm {y}</option>)}
+              </select>
+            </div>
+          )}
+        </div>
+
+        {/* --- 4. ĐỊNH DẠNG TẬP TIN --- */}
+        <div className="flex gap-3">
+          <button onClick={() => setFormat("pdf")} className={`flex-1 flex flex-col items-center p-3 rounded-xl border-2 ${format === "pdf" ? "border-rose-500 bg-rose-50 text-rose-600" : "border-slate-100 text-slate-400"}`}>
+            <FileText size={24} /><span className="font-bold text-sm mt-1">PDF</span>
+          </button>
+          <button onClick={() => setFormat("excel")} className={`flex-1 flex flex-col items-center p-3 rounded-xl border-2 ${format === "excel" ? "border-emerald-500 bg-emerald-50 text-emerald-600" : "border-slate-100 text-slate-400"}`}>
+            <FileSpreadsheet size={24} /><span className="font-bold text-sm mt-1">Excel</span>
           </button>
         </div>
+
+        {/* Nút Submit */}
+        <button onClick={handleDownload} disabled={loading} className={`w-full py-4 rounded-xl font-black text-white flex items-center justify-center gap-2 mt-2 ${loading ? "bg-slate-400" : "bg-gradient-to-r from-emerald-500 to-teal-600 hover:shadow-lg active:scale-[0.98]"}`}>
+          {loading ? <Loader2 className="animate-spin" /> : <Download size={20} />} {loading ? "Đang trích xuất..." : "Tải Báo Cáo Xuống"}
+        </button>
       </div>
     </Modal>
   );
