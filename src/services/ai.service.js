@@ -1,18 +1,29 @@
-// src/services/ai.service.js
-import api from "./axios.config";
+import api from "./axios.config"; // Dùng instance axios của bạn để nó tự đính kèm Token đăng nhập nhé!
 
 const aiService = {
-  // Gửi tin nhắn tới AI
   sendMessage: async (message) => {
     try {
-      // Backend yêu cầu body là ChatRequestDTO: { message: "..." }
-      const response = await api.post("/ai/chat", { message });
-      
-      // Backend trả về ApiResponse<ChatResponseDTO>
-      // response.data sẽ là cấu trúc ApiResponse
-      return response.data; 
+      // 1. Chỉ gọi về Backend Java, KHÔNG truyền sessionId nữa (Java tự lấy từ Token rồi)
+      const response = await api.post("/ai/chat", {
+        message: message
+      });
+
+      // Bóc đúng lớp vỏ mà Java đang bọc (response.data.data)
+      const javaDto = response.data.data || response.data;
+
+      // 3. Đóng gói lại thành format mà FloatingChatBot đang chờ đợi
+      return {
+        data: {
+          // Bắt mọi trường hợp tên biến mà Java có thể trả về
+          action: javaDto.action,
+          response: javaDto.response,
+          payload: javaDto.payload
+        }
+      };
+
     } catch (error) {
-      throw error.response?.data || error.message;
+      console.error("❌ Lỗi kết nối đến Backend Java:", error);
+      throw error;
     }
   },
 };

@@ -16,7 +16,7 @@ const FloatingChatBot = () => {
         if (saved) {
             try {
                 return JSON.parse(saved);
-            } catch (_) {}
+            } catch (_) { }
         }
 
         return [
@@ -82,71 +82,54 @@ const FloatingChatBot = () => {
         setIsLoading(true);
 
         try {
+            // 1. CHỈ CẦN GỌI TEXT (Bỏ cái userEmail đi)
             const res = await aiService.sendMessage(text);
+            console.log("👉 DỮ LIỆU REACT NHẬN ĐƯỢC TỪ JAVA:", res);
 
+            // 2. LẤY DỮ LIỆU SẠCH TỪ JAVA TRẢ VỀ (Không cần dùng split để cắt chữ PAYLOAD nữa)
             const action = res.data?.action;
-            const responseText = res.data?.response;
+            const cleanResponse = res.data?.response;
             const payload = res.data?.payload;
 
-            let cleanResponse = responseText;
+            // 3. PUSH CÂU CHỮ CỦA AI TRƯỚC (Dù là chat thường hay tìm phòng, AI vẫn phải nói chuyện)
             if (cleanResponse) {
-                cleanResponse = cleanResponse.split("PAYLOAD:")[0].trim();
-            }
-
-            // ============================
-            // CASE 1: Chat thường
-            // ============================
-            if (action === "ASKING" || action === "NORMAL_CHAT") {
                 setMessages((prev) => [
                     ...prev,
                     {
                         id: Date.now() + 1,
                         sender: "ai",
                         text: cleanResponse,
-                        payload: payload || null,
                         timestamp: new Date(),
                     },
                 ]);
             }
 
-            // ============================
-            // CASE 2: Search room
-            // ============================
-            if (action === "SEARCH_ROOM_RESULT") {
-                // ❗ NO RESULT → trả text
-                if (payload?.type === "NO_RESULT") {
-                    setMessages((prev) => [
-                        ...prev,
-                        {
-                            id: Date.now() + 2,
-                            sender: "ai",
-                            text: payload.message || cleanResponse,
-                            payload,
-                            timestamp: new Date(),
-                        },
-                    ]);
-                }
-                // ✅ CÓ RESULT → hiển thị list
-                else {
+            // 4. PUSH THẺ KHÁCH SẠN (Nếu hành động là tìm phòng và có payload)
+            if (action === "SEARCH_ROOM_RESULT" && payload) {
+                if (payload.type === "NO_RESULT") {
+                    // Nếu không có kết quả, không cần đẩy Card, AI đã nói ở text trên rồi
+                } else {
+                    // Đẩy Card Khách sạn xuống dưới câu nói của AI
                     setMessages((prev) => [
                         ...prev,
                         {
                             id: Date.now() + 2,
                             sender: "ai",
                             type: "hotel_list",
-                            payload,
+                            payload: payload,
                             timestamp: new Date(),
                         },
                     ]);
                 }
             }
+
         } catch (err) {
             setMessages((prev) => [
                 ...prev,
                 {
                     id: Date.now(),
                     sender: "ai",
-                    text: "Đã có lỗi xảy ra. Vui lòng thử lại sau.",
+                    text: "Đã có lỗi xảy ra hoặc hết phiên đăng nhập. Vui lòng thử lại sau.",
                     timestamp: new Date(),
                 },
             ]);
