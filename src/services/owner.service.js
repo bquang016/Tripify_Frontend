@@ -119,6 +119,15 @@ submitRegistration: async (formData, token) => {
       throw error;
     }
   },
+  replyToReview: async (reviewId, replyText) => {
+    try {
+      const response = await api.post(`/owner/reviews/${reviewId}/reply`, { reply: replyText });
+      return response.data;
+    } catch (error) {
+      console.error("Error replying to review:", error);
+      throw error;
+    }
+  },
 };
 
 // ✅ Quan trọng: Export cả 2 kiểu để tương thích

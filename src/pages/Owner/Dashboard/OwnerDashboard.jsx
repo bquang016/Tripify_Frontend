@@ -5,8 +5,9 @@ import { Download } from "lucide-react"; // ✅ IMPORT THÊM ICON
 
 import HotelStatCards from "./components/HotelStatCards";
 import HotelRevenueChart from "./components/HotelRevenueChart";
-import RecentReviewsWidget from "./components/RecentReviewsWidget";
 import DailyActivityFeed from "./components/DailyActivityFeed";
+import PropertyPerformanceReport from "./components/PropertyPerformanceReport";
+import ReviewStatisticsReport from "./components/ReviewStatisticsReport"; // IMPORT COMPONENT MỚI B9
 
 // ✅ IMPORT MODAL (Đảm bảo bạn đã tạo file này ở đúng đường dẫn)
 import ExportReportModal from "@/pages/Owner/Reports/ExportReportModal"; 
@@ -71,11 +72,14 @@ const OwnerDashboard = () => {
                     <DailyActivityFeed bookings={data?.recentBookings} />
                 </div>
             </div>
+            <div className="w-full">
+                {hasData && <PropertyPerformanceReport data={data?.revenueByType} />}
+            </div>
 
             {/* 3. ✅ SỬA: Đánh giá gần đây - FULL WIDTH */}
             {/* Không đặt trong grid col-span-1 nữa, để nó tự nhiên chiếm 100% */}
             <div className="w-full">
-                <RecentReviewsWidget reviews={data?.recentReviews} />
+                {hasData && <ReviewStatisticsReport reviews={data?.recentReviews} />}
             </div>
 
             {/* ✅ GỌI MODAL XUẤT BÁO CÁO (Nó sẽ ẩn cho đến khi showExportModal = true) */}
