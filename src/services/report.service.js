@@ -32,6 +32,37 @@ const exportOwnerRevenue = async (startDate, endDate, format = "pdf", reportType
     throw error;
   }
 };
+const exportAdminRevenue = async (startDate, endDate, format = "pdf", reportType = "MONTHLY") => {
+  try {
+    // CHÚ Ý: Đường dẫn ở đây là /reports/admin/revenue
+    const response = await api.get(`/reports/admin/revenue`, {
+      params: { startDate, endDate, format, reportType }, 
+      responseType: "blob",
+    });
 
-export const reportService = { exportOwnerRevenue };
+    const blobData = response.data ? response.data : response;
+    const contentType = format === "excel" 
+      ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
+      : "application/pdf";
+
+    const url = window.URL.createObjectURL(new Blob([blobData], { type: contentType }));
+    const link = document.createElement("a");
+    link.href = url;
+    
+    const extension = format === "excel" ? "xlsx" : "pdf";
+    link.setAttribute("download", `Admin_Bao_Cao_Doanh_Thu_${reportType}.${extension}`);
+    
+    document.body.appendChild(link);
+    link.click();
+    link.parentNode.removeChild(link);
+    window.URL.revokeObjectURL(url);
+
+    return true;
+  } catch (error) {
+    console.error("Lỗi khi tải báo cáo Admin:", error);
+    throw error;
+  }
+};
+
+export const reportService = { exportOwnerRevenue, exportAdminRevenue };
 export default reportService;

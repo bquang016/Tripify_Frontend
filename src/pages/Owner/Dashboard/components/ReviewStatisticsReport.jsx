@@ -49,6 +49,7 @@ const ReviewStatisticsReport = ({ reviews = [] }) => {
             </div>
         );
     }
+    
 
     return (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 mt-6 animate-fade-in">
