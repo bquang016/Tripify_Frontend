@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Bot, X } from "lucide-react";
- 
+
 const ChatFab = ({ open, onClick }) => {
   // 1. Thêm state để kiểm tra trạng thái hover
   const [isHovered, setIsHovered] = useState(false);
- 
+
   return (
     <div
       className="fixed bottom-6 right-6 z-[9999] flex items-center gap-4"
@@ -33,7 +33,7 @@ const ChatFab = ({ open, onClick }) => {
           </motion.div>
         )}
       </AnimatePresence>
- 
+
       {/* --- NÚT CHAT CHÍNH --- */}
       <motion.button
         onClick={onClick}
@@ -73,6 +73,6 @@ const ChatFab = ({ open, onClick }) => {
     </div>
   );
 };
- 
+
 export default ChatFab;
 
