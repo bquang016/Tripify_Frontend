@@ -1,3 +1,4 @@
+// src/layouts/CustomerLayout/FloatingChatBot.jsx
 import React, { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import ChatFab from "./ChatBot/ChatFab";
@@ -9,7 +10,11 @@ const STORAGE_KEY = "Tripify_chat_history";
 
 const FloatingChatBot = () => {
     const { currentUser } = useAuth();
+
+    // Quản lý trạng thái mở/đóng Chat
     const [open, setOpen] = useState(false);
+    // Quản lý trạng thái phóng to/thu nhỏ
+    const [isExpanded, setIsExpanded] = useState(false);
 
     const [messages, setMessages] = useState(() => {
         const saved = localStorage.getItem(STORAGE_KEY);
@@ -31,7 +36,11 @@ const FloatingChatBot = () => {
 
     const [isLoading, setIsLoading] = useState(false);
 
-    const toggleChat = () => setOpen((prev) => !prev);
+    const toggleChat = () => {
+        setOpen((prev) => !prev);
+        // Thu nhỏ lại mỗi khi đóng chat
+        if (open) setIsExpanded(false);
+    };
 
     useEffect(() => {
         if (messages.length > 1) {
@@ -82,16 +91,11 @@ const FloatingChatBot = () => {
         setIsLoading(true);
 
         try {
-            // 1. CHỈ CẦN GỌI TEXT (Bỏ cái userEmail đi)
             const res = await aiService.sendMessage(text);
-            console.log("👉 DỮ LIỆU REACT NHẬN ĐƯỢC TỪ JAVA:", res);
-
-            // 2. LẤY DỮ LIỆU SẠCH TỪ JAVA TRẢ VỀ (Không cần dùng split để cắt chữ PAYLOAD nữa)
             const action = res.data?.action;
             const cleanResponse = res.data?.response;
             const payload = res.data?.payload;
 
-            // 3. PUSH CÂU CHỮ CỦA AI TRƯỚC (Dù là chat thường hay tìm phòng, AI vẫn phải nói chuyện)
             if (cleanResponse) {
                 setMessages((prev) => [
                     ...prev,
@@ -104,12 +108,8 @@ const FloatingChatBot = () => {
                 ]);
             }
 
-            // 4. PUSH THẺ KHÁCH SẠN (Nếu hành động là tìm phòng và có payload)
             if (action === "SEARCH_ROOM_RESULT" && payload) {
-                if (payload.type === "NO_RESULT") {
-                    // Nếu không có kết quả, không cần đẩy Card, AI đã nói ở text trên rồi
-                } else {
-                    // Đẩy Card Khách sạn xuống dưới câu nói của AI
+                if (payload.type !== "NO_RESULT") {
                     setMessages((prev) => [
                         ...prev,
                         {
@@ -140,12 +140,15 @@ const FloatingChatBot = () => {
 
     return (
         <>
-            <ChatFab open={open} onClick={toggleChat} />
+            {/* Truyền isExpanded cho nút Fab bên ngoài */}
+            <ChatFab open={open} isExpanded={isExpanded} onClick={toggleChat} />
 
             <AnimatePresence>
                 {open && (
                     <ChatPanel
                         onClose={() => setOpen(false)}
+                        isExpanded={isExpanded}
+                        onToggleExpand={() => setIsExpanded(!isExpanded)}
                         messages={messages}
                         isLoading={isLoading}
                         onSendMessage={handleSendMessage}
