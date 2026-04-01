@@ -11,19 +11,13 @@ import {
   Loader2
 } from "lucide-react";
 import Button from "@/components/common/Button/Button";
-import api from "@/services/axios.config";
+import api, { IMAGE_BASE_URL } from "@/services/axios.config";
 
 // Helper xử lý ảnh
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8386/api/v1").replace("/api/v1", "");
 const getFullImageUrl = (url) => {
   if (!url) return "/assets/images/placeholder.png";
   if (url.startsWith("http")) return url;
-  
-  let path = url.startsWith("/") ? url : `/${url}`;
-  if (!path.startsWith("/uploads")) {
-    path = `/uploads${path}`;
-  }
-  return `${API_BASE_URL}${path}`;
+  return `${IMAGE_BASE_URL}${url}`;
 };
 
 const ViewPropertyModal = ({ open, onClose, property }) => {

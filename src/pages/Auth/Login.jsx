@@ -11,9 +11,9 @@ import LoginSlider from "@/components/auth/LoginSlider";
 import OTPModal from "@/components/auth/OTPModal";
 import toast from "react-hot-toast";
 import { extractErrorMessage } from "@/utils/errorHandler";
+import { BASE_URL } from "../../services/axios.config";
 
 // URL Backend (Cổng OAuth2)
-const API_BASE_URL = "http://localhost:8386";
 const BG_URL = "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop";
 
 const Login = () => {
@@ -67,7 +67,7 @@ const Login = () => {
     };
 
     const handleSocialLogin = (provider) => {
-        window.location.href = `${API_BASE_URL}/oauth2/authorization/${provider}`;
+        window.location.href = `${BASE_URL}/oauth2/authorization/${provider}`;
     };
 
     // ✅ HÀM ĐÓNG MODAL

@@ -1,11 +1,26 @@
 import axios from "axios";
 
-// Lấy URL từ biến môi trường hoặc fallback về localhost
-const API_URL =
-    import.meta.env.VITE_REACT_APP_API_URL || "http://localhost:8386/api/v1";
+// =========================================================================
+// 0. KHAI BÁO VÀ XUẤT CÁC BIẾN MÔI TRƯỜNG TẬP TRUNG
+// Lấy từ .env, nếu không có thì mặc định lấy IP VPS hiện tại
+// =========================================================================
 
+// URL gốc của Backend (dùng để lấy ảnh, file, websocket) - Không có /api/v1
+export const BASE_URL = import.meta.env.VITE_BASE_URL || "http://136.115.222.186:8386";
+
+// URL dành riêng cho việc gọi API (Có chứa /api/v1)
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://136.115.222.186:8386/api/v1";
+
+// URL chuyên dùng để nối chuỗi khi hiển thị ảnh ở các Component
+export const IMAGE_BASE_URL = `${BASE_URL}/images/`;
+
+
+
+// =========================================================================
+// KHỞI TẠO AXIOS INSTANCE
+// =========================================================================
 const api = axios.create({
-    baseURL: API_URL,
+    baseURL: API_BASE_URL,
     withCredentials: true, // Thêm dòng này để gửi kèm Cookie/Session
     headers: {
         "Content-Type": "application/json",

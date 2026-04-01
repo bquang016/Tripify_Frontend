@@ -11,9 +11,8 @@ import toast from "react-hot-toast";
 import Toast from "@/components/common/Notification/Toast";
 import CustomSelect from "@/components/common/Select/CustomSelect";
 import DatePickerInput from "@/components/common/Input/DatePickerInput";
+import { IMAGE_BASE_URL } from "../../../../services/axios.config";
 
-const BE_BASE_URL = "http://127.0.0.1:8386";
-const UPLOAD_DIR = "/uploads/";
 const MIN_VND = 1000;
 
 const showToast = (type, message) => {
@@ -115,8 +114,7 @@ const PromotionFormModal = ({ open, onClose, onSuccess, initialData }) => {
     const getFullImageUrl = (path) => {
         if (!path) return null;
         if (path.startsWith("http")) return path;
-        const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-        return `${BE_BASE_URL}${UPLOAD_DIR}${cleanPath}`;
+        return `${IMAGE_BASE_URL}${path}`;
     };
 
     const normalizeDateTime = (dateInput) => {
