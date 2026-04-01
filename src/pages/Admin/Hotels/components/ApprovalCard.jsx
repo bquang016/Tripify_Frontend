@@ -1,31 +1,31 @@
 import React, { forwardRef } from "react";
 import { User, Eye, Clock, CheckCircle, XCircle, Briefcase, Calendar, MapPin } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import Button from "@/components/common/Button/Button";
-
-// URL Base cho ảnh
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8386/api/v1").replace("/api/v1", "");
+import { IMAGE_BASE_URL } from "../../../../services/axios.config";
 
 const getImageUrl = (path) => {
     if (!path) return null;
-    return path.startsWith("http") ? path : `${API_BASE_URL}${path}`;
-};
-
-// Helper: Cấu hình Badge trạng thái
-const getStatusConfig = (status) => {
-  switch (status) {
-    case "PENDING":
-      return { label: "Chờ duyệt", className: "bg-yellow-100 text-yellow-700 border-yellow-300 ring-2 ring-yellow-400/50 shadow-sm animate-pulse", icon: <Clock size={14} className="animate-spin-slow" /> };
-    case "APPROVED":
-      return { label: "Đã duyệt", className: "bg-green-100 text-green-700 border-green-200", icon: <CheckCircle size={14} /> };
-    case "REJECTED":
-      return { label: "Từ chối", className: "bg-red-100 text-red-700 border-red-200", icon: <XCircle size={14} /> };
-    default:
-      return { label: status, className: "bg-gray-100 text-gray-600", icon: null };
-  }
+    return path.startsWith("http") ? path : `${IMAGE_BASE_URL}${path}`;
 };
 
 const ApprovalCard = forwardRef(({ application, onViewDetails }, ref) => {
+  const { t } = useTranslation();
   if (!application) return null;
+
+  // Helper: Cấu hình Badge trạng thái
+  const getStatusConfig = (status) => {
+    switch (status) {
+      case "PENDING":
+        return { label: t('hotels.pending'), className: "bg-yellow-100 text-yellow-700 border-yellow-300 ring-2 ring-yellow-400/50 shadow-sm animate-pulse", icon: <Clock size={14} className="animate-spin-slow" /> };
+      case "APPROVED":
+        return { label: t('hotels.approved'), className: "bg-green-100 text-green-700 border-green-200", icon: <CheckCircle size={14} /> };
+      case "REJECTED":
+        return { label: t('hotels.rejected'), className: "bg-red-100 text-red-700 border-red-200", icon: <XCircle size={14} /> };
+      default:
+        return { label: status, className: "bg-gray-100 text-gray-600", icon: null };
+    }
+  };
 
   const statusConfig = getStatusConfig(application.status);
   
@@ -68,7 +68,7 @@ const ApprovalCard = forwardRef(({ application, onViewDetails }, ref) => {
         <div className="text-sm text-gray-600 space-y-2">
             <div className="flex items-center gap-2">
                 <MapPin size={14} className="text-gray-400 shrink-0"/>
-                <span className="truncate">{application.permanentAddress || "Chưa cập nhật địa chỉ"}</span>
+                <span className="truncate">{application.address || application.permanentAddress || t('owner_approvals.not_updated')}</span>
             </div>
             <div className="flex items-center gap-2">
                 <User size={14} className="text-gray-400 shrink-0"/>
@@ -77,7 +77,7 @@ const ApprovalCard = forwardRef(({ application, onViewDetails }, ref) => {
         </div>
 
         <div className="pt-3 mt-auto border-t border-gray-100 flex justify-between items-center text-xs text-gray-500">
-            <span className="flex items-center gap-1"><Calendar size={12}/> Nộp ngày:</span>
+            <span className="flex items-center gap-1"><Calendar size={12}/> {t('owner_approvals.submitted_date')}:</span>
             <span className="font-medium text-gray-800">{application.submittedDate}</span>
         </div>
       </div>
@@ -93,7 +93,7 @@ const ApprovalCard = forwardRef(({ application, onViewDetails }, ref) => {
                 onViewDetails();
             }}
         >
-            <Eye size={14} className="mr-2"/> Xem hồ sơ
+            <Eye size={14} className="mr-2"/> {t('owner_approvals.view_application')}
         </Button>
       </div>
     </div>

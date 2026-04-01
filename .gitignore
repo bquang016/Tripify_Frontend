@@ -25,3 +25,13 @@ dist-ssr
 
 *storybook.log
 storybook-static
+node_modules/
+.git/
+dist/
+build/      
+*.lock
+
+.env
+playwright-report/
+test-results/
+tests/

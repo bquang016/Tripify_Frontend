@@ -143,13 +143,23 @@ export default function ExploreMapPage() {
     );
   };
 
-  const fetchNearbyProperties = async (lat, lng) => {
+const fetchNearbyProperties = async (lat, lng) => {
     setIsSearching(true);
     try {
-      const data = await propertyService.findNearbyProperties(lat, lng, 15);
-      // API Nearby trả về mảng trực tiếp nên không cần xử lý phức tạp như Search
-      setProperties(data || []);
-      renderMarkers(data || []);
+      const res = await propertyService.findNearbyProperties(lat, lng, 15);
+      
+      // ✅ FIX: Kiểm tra và bóc tách dữ liệu mảng an toàn
+      let hotels = [];
+      if (res?.data && Array.isArray(res.data)) {
+          hotels = res.data;
+      } else if (res?.result && Array.isArray(res.result)) {
+          hotels = res.result;
+      } else if (Array.isArray(res)) {
+          hotels = res;
+      }
+
+      setProperties(hotels);
+      renderMarkers(hotels);
     } catch (error) {
       console.error(error);
     } finally {

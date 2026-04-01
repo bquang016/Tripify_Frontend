@@ -83,7 +83,7 @@ const HotelResultCard = ({ data }) => {
                         <div className="p-3 pt-0 mt-auto pb-3">
                             <a
                                 href={hotel.bookingUrl}
-                                target="_blank"
+                                target="_parent"
                                 rel="noopener noreferrer"
                                 className="flex items-center justify-center w-full gap-2 bg-[rgb(40,169,224)] hover:bg-[#1b98d6] text-white text-xs font-bold py-2.5 rounded-lg transition-colors shadow-sm"
                             >

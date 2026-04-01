@@ -1,52 +1,60 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-    ArrowRight, MapPin, Star, Heart, 
-    Sparkles // Đã xóa Zap khỏi import
+import {
+    ArrowRight, MapPin, Star, Heart,
+    Sparkles
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 // Components & Services
 import Skeleton from "@/components/common/Loading/Skeleton";
 import propertyService from "@/services/property.service";
 import placeholderImg from "@/assets/images/placeholder.png";
-
-// Cấu hình đường dẫn ảnh
-const BASE_IMAGE_URL = "http://localhost:8386/images/"; 
+import { formatPrice } from "@/utils/priceUtils";
+import { useLanguage } from "@/context/LanguageContext";
+import { IMAGE_BASE_URL } from "../../../services/axios.config";
 
 // ====================================================================
 // 1. SUB-COMPONENT: HEADER
 // ====================================================================
-const SectionHeader = ({ onSeeAll }) => (
-    <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-10 px-2">
-        <div className="max-w-2xl">
-            <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
-                Điểm Đến <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Nổi Bật Nhất</span>
-            </h2>
-            <p className="text-gray-500 mt-3 font-medium text-base leading-relaxed">
-                Được bình chọn bởi cộng đồng du lịch, mang lại trải nghiệm nghỉ dưỡng đẳng cấp và tiện nghi vượt trội.
-            </p>
-        </div>
-
-        <button 
-            onClick={onSeeAll}
-            className="hidden md:flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-blue-600 transition-all bg-white px-5 py-2.5 rounded-full border border-gray-200 hover:border-blue-200 shadow-sm hover:shadow-md group"
-        >
-            Xem tất cả 
-            <div className="bg-gray-100 group-hover:bg-blue-100 p-1 rounded-full transition-colors">
-                <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+const SectionHeader = ({ onSeeAll }) => {
+    // Đã thêm hook useTranslation vào đây
+    const { t } = useTranslation(); 
+    
+    return (
+        <div className="flex flex-col md:flex-row justify-between items-end gap-6 mb-10 px-2">
+            <div className="max-w-2xl">
+                <h2 className="text-3xl md:text-4xl font-black text-gray-900 tracking-tight leading-tight">
+                    Điểm Đến <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Nổi Bật Nhất</span>
+                </h2>
+                <p className="text-gray-500 mt-3 font-medium text-base leading-relaxed">
+                    Được bình chọn bởi cộng đồng du lịch, mang lại trải nghiệm nghỉ dưỡng đẳng cấp và tiện nghi vượt trội.
+                </p>
             </div>
-        </button>
-    </div>
-);
+
+            {/* Đã sửa lại lỗi HTML: Chỉ giữ 1 button và đóng thẻ đúng cách */}
+            <button 
+                onClick={onSeeAll}
+                className="hidden md:flex items-center gap-2 text-sm font-bold text-gray-600 hover:text-blue-600 transition-all bg-white px-5 py-2.5 rounded-full border border-gray-200 hover:border-blue-200 shadow-sm hover:shadow-md group"
+            >
+                {t('home.see_all', 'Xem tất cả')}
+                <div className="bg-gray-100 group-hover:bg-blue-100 p-1 rounded-full transition-colors">
+                    <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                </div>
+            </button>
+        </div>
+    );
+};
 
 // ====================================================================
 // 2. SUB-COMPONENT: HOTEL CARD
 // ====================================================================
-const ModernHotelCard = ({ hotel }) => {
+const ModernHotelCard = ({ hotel, currentCurrency }) => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
 
     return (
-        <div 
+        <div
             onClick={() => navigate(`/hotels/${hotel.id}`)}
             className="group relative bg-white rounded-[1.5rem] overflow-hidden border border-gray-100 shadow-lg shadow-gray-200/50 hover:shadow-2xl hover:shadow-blue-900/10 transition-all duration-300 cursor-pointer h-full flex flex-col"
         >
@@ -56,7 +64,7 @@ const ModernHotelCard = ({ hotel }) => {
                     src={hotel.image}
                     alt={hotel.name}
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    onError={(e) => { e.target.src = placeholderImg; }} 
+                    onError={(e) => { e.target.src = placeholderImg; }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />
 
@@ -64,7 +72,7 @@ const ModernHotelCard = ({ hotel }) => {
                 <div className="absolute top-4 left-4 flex gap-2">
                     {hotel.isPopular && (
                         <span className="bg-rose-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1">
-                            <Sparkles size={10} fill="currentColor" /> POPULAR
+                            <Sparkles size={10} fill="currentColor" /> {t('home.popular')}
                         </span>
                     )}
                 </div>
@@ -100,16 +108,15 @@ const ModernHotelCard = ({ hotel }) => {
 
                 <div className="flex items-center justify-between mt-4">
                     <div>
-                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Giá chỉ từ</p>
+                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">{t('home.price_from')}</p>
                         <div className="flex items-baseline gap-1">
                             <span className="text-xl font-black text-blue-600">
                                 {hotel.formattedPrice}
                             </span>
-                            <span className="text-sm text-gray-400 font-medium">₫/đêm</span>
+                            <span className="text-sm text-gray-400 font-medium">/{t('home.night')}</span>
                         </div>
                     </div>
-                    
-                    {/* ✅ ĐÃ THAY THẾ ICON TẠI ĐÂY */}
+
                     <button className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-all shadow-sm">
                         <ArrowRight size={20} />
                     </button>
@@ -124,23 +131,25 @@ const ModernHotelCard = ({ hotel }) => {
 // ====================================================================
 const FeaturedHotels = () => {
     const navigate = useNavigate();
+    const { t } = useTranslation();
+    const { currency } = useLanguage();
     const [hotels, setHotels] = useState([]);
     const [loading, setLoading] = useState(true);
 
     const getCoverImage = (item) => {
         if (item.coverImage) {
-            return item.coverImage.startsWith("http") 
-                ? item.coverImage 
-                : `${BASE_IMAGE_URL}${item.coverImage}`;
+            return item.coverImage.startsWith("http")
+                ? item.coverImage
+                : `${IMAGE_BASE_URL}${item.coverImage}`;
         }
 
         if (item.images && item.images.length > 0) {
             const firstImg = item.images[0];
-            return firstImg.startsWith("http") 
-                ? firstImg 
-                : `${BASE_IMAGE_URL}${firstImg}`;
+            return firstImg.startsWith("http")
+                ? firstImg
+                : `${IMAGE_BASE_URL}${firstImg}`;
         }
-        
+
         return placeholderImg;
     };
 
@@ -148,58 +157,50 @@ const FeaturedHotels = () => {
         const fetchHotels = async () => {
             try {
                 setLoading(true);
-                
-                // 1. Dùng hàm chuyên biệt (đã thêm ở bước trước) thay vì searchProperties thủ công
+
                 const res = await propertyService.getFeaturedProperties();
-                
                 console.log("Featured Data:", res); // Debug log
 
-                // 2. Bóc tách dữ liệu an toàn (Xử lý mọi trường hợp cấu trúc JSON)
                 let rawData = [];
 
                 if (res && res.result && Array.isArray(res.result.content)) {
-                    // TRƯỜNG HỢP CHUẨN (ApiResponse): { result: { content: [...] } }
                     rawData = res.result.content;
-                } 
+                }
                 else if (res && res.data && Array.isArray(res.data.content)) {
-                    // Trường hợp dự phòng: { data: { content: [...] } }
                     rawData = res.data.content;
-                } 
+                }
                 else if (res && Array.isArray(res.content)) {
-                    // Trường hợp Page trực tiếp: { content: [...] }
                     rawData = res.content;
-                } 
+                }
                 else if (Array.isArray(res)) {
-                    // Trường hợp trả về mảng trực tiếp
                     rawData = res;
                 }
 
-                // 3. Map dữ liệu (Lúc này rawData chắc chắn là Array)
                 const mapped = rawData.map(item => ({
                     id: item.propertyId,
                     name: item.propertyName,
                     location: item.address || item.city || "Việt Nam",
-                    price: item.minPrice || 0, // Giá thấp nhất
-                    formattedPrice: new Intl.NumberFormat('vi-VN').format(item.minPrice || 0),
+                    price: item.minPrice || 0,
+                    formattedPrice: formatPrice(item.minPrice, item.convertedMinPrice, item.currency || currency),
+                    isConverted: !!item.convertedMinPrice,
                     image: getCoverImage(item),
-                    rating: item.rating || 5.0,
-                    reviews: item.reviewCount || 0,
-                    isPopular: (item.rating || 0) >= 4.5
+                    rating: item.rating ?? 0,
+                    reviews: item.reviewCount ?? 0,
+                    isPopular: (item.rating ?? 0) >= 4.5
                 }));
 
-                setHotels(mapped.slice(0, 4)); // Chỉ lấy 4 cái
+                setHotels(mapped.slice(0, 4));
             } catch (err) {
                 console.error("❌ Lỗi khi tải khách sạn nổi bật:", err);
-                setHotels([]); // Set mảng rỗng để tránh lỗi render
+                setHotels([]);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchHotels();
-    }, []);
+    }, [currency]);
 
-    // Skeleton
     const renderSkeletons = () => (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {[...Array(4)].map((_, i) => (
@@ -226,12 +227,12 @@ const FeaturedHotels = () => {
                 renderSkeletons()
             ) : hotels.length === 0 ? (
                 <div className="text-center py-20 bg-gray-50 rounded-[2rem] border border-dashed border-gray-200">
-                    <p className="text-gray-500">Hệ thống đang cập nhật danh sách khách sạn...</p>
+                    <p className="text-gray-500">{t('home.updating')}</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                     {hotels.map((h) => (
-                        <ModernHotelCard key={h.id} hotel={h} />
+                        <ModernHotelCard key={h.id} hotel={h} currentCurrency={currency} />
                     ))}
                 </div>
             )}

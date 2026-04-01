@@ -1,55 +1,7 @@
 import React from "react";
 import { Bot } from "lucide-react";
 import AIPayloadCard from "./AIPayloadCard";
-
-// Icon bullet
-const BulletIcon = () => (
-    <span className="inline-block w-2 h-2 bg-gray-500 rounded-full mr-2 mt-[0.4rem] shrink-0"></span>
-);
-
-// Format text
-const formatMessage = (text, isBot) => {
-    if (!text) return null;
-
-    const lines = text.split("\n");
-
-    return (
-        <div className="space-y-1">
-            {lines.map((line, index) => {
-                const trimmed = line.trim();
-
-                // Tiêu đề
-                if (trimmed.endsWith(":") && !trimmed.startsWith("-")) {
-                    return (
-                        <div
-                            key={index}
-                            className="mt-2 mb-1 font-semibold text-gray-900 text-[0.95rem]"
-                        >
-                            {trimmed}
-                        </div>
-                    );
-                }
-
-                // Bullet
-                if (trimmed.startsWith("- ")) {
-                    return (
-                        <div key={index} className="flex items-start ml-3 text-gray-800">
-                            <BulletIcon />
-                            <span>{trimmed.replace("- ", "")}</span>
-                        </div>
-                    );
-                }
-
-                // Dòng bình thường
-                return (
-                    <p key={index} className={`${isBot ? "text-gray-800" : "text-white"}`}>
-                        {trimmed}
-                    </p>
-                );
-            })}
-        </div>
-    );
-};
+import ReactMarkdown from "react-markdown";
 
 const ChatMessage = ({ message }) => {
     const { text, sender, payload } = message;
@@ -72,19 +24,54 @@ const ChatMessage = ({ message }) => {
 
             {/* Bubble */}
             <div
-                className={`p-3 rounded-2xl max-w-[75%] break-words shadow-sm text-sm leading-relaxed
-                ${
-                    isBot
+                className={`p-3 rounded-2xl max-w-[85%] break-words shadow-sm text-sm leading-relaxed
+                ${isBot
                         ? "bg-white text-gray-800 border border-gray-100 rounded-tl-none shadow-md"
                         : "bg-[#28A9E0] text-white rounded-tr-none shadow-md"
-                }`}
+                    }`}
             >
-                {/* Nội dung text */}
-                {formatMessage(displayText, isBot)}
+                {/* Nội dung text xử lý bằng React Markdown */}
+                {displayText && (
+                    <div className="prose prose-sm max-w-none prose-p:my-1 prose-headings:my-2 prose-ul:my-1 prose-li:my-0">
+                        <ReactMarkdown
+                            components={{
+                                // Custom thẻ a (Link)
+                                a: ({ node, ...props }) => (
+                                    <a
+                                        {...props}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-600 hover:text-blue-800 font-semibold underline decoration-blue-300 hover:decoration-blue-600 underline-offset-2 transition-colors duration-200"
+                                    />
+                                ),
+                                // Custom thẻ strong (In đậm)
+                                strong: ({ node, ...props }) => (
+                                    <strong {...props} className="font-bold text-gray-900" />
+                                ),
+                                // Custom thẻ ul (Danh sách không thứ tự)
+                                ul: ({ node, ...props }) => (
+                                    <ul {...props} className="list-disc pl-5 space-y-1" />
+                                ),
+                                // Custom thẻ ol (Danh sách có thứ tự)
+                                ol: ({ node, ...props }) => (
+                                    <ol {...props} className="list-decimal pl-5 space-y-1" />
+                                ),
+                                // Custom thẻ p (Đoạn văn) để màu chữ cho bot và user chuẩn
+                                p: ({ node, ...props }) => (
+                                    <p {...props} className={`${isBot ? "text-gray-800" : "text-white"} mb-2 last:mb-0`} />
+                                ),
+                            }}
+                        >
+                            {displayText}
+                        </ReactMarkdown>
+                    </div>
+                )}
 
                 {/* ========== PAYLOAD ========== */}
                 {isBot && payload && (
-                    <AIPayloadCard payload={payload} />
+                    <div className="mt-3">
+                        <AIPayloadCard payload={payload} />
+                    </div>
                 )}
             </div>
         </div>

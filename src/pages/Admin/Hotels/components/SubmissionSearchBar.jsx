@@ -3,8 +3,10 @@ import React from "react";
 import { Search, X } from "lucide-react";
 import { useDebouncedCallback } from "use-debounce";
 import { motion } from "framer-motion";
+import { useTranslation } from "react-i18next";
 
-const SubmissionSearchBar = ({ onSearch, initialValue = "" }) => {
+const SubmissionSearchBar = ({ onSearch, initialValue = "", placeholder }) => {
+  const { t } = useTranslation();
   const [value, setValue] = React.useState(initialValue);
 
   const debounced = useDebouncedCallback((val) => {
@@ -44,7 +46,7 @@ const SubmissionSearchBar = ({ onSearch, initialValue = "" }) => {
             focus:ring-2 focus:ring-blue-100 focus:border-blue-500 focus:outline-none
             hover:border-blue-300
           "
-          placeholder="Tìm kiếm khách sạn, chủ sở hữu..."
+          placeholder={placeholder || t('hotels.search_placeholder')}
           value={value}
           onChange={handleChange}
         />

@@ -51,7 +51,7 @@ const CompleteProfile = () => {
         </h2>
         <p className="text-gray-600 text-center mb-6 text-sm">
           Tài khoản Facebook của bạn chưa cung cấp địa chỉ email. 
-          Vui lòng nhập email để hoàn tất việc tạo tài khoản TravelMate.
+          Vui lòng nhập email để hoàn tất việc tạo tài khoản Tripify.
         </p>
 
         {error && (

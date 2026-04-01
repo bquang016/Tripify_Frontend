@@ -2,61 +2,66 @@ import React, { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { 
     User, Crown, CalendarDays, RefreshCw, 
-    Settings, LogOut, Heart, FileText 
+    Settings, LogOut, Heart, FileText, CreditCard 
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { useTranslation } from "react-i18next";
 import AvatarUpload from "@/components/common/Input/AvatarUpload"; 
 import AvatarUploadModal from "./AvatarUploadModal"; 
 
 const AccountMenu = ({ 
     activeSection, 
-    
     onSelect, 
     userData, 
     onAvatarUpload, 
     isUploadingAvatar 
-    
 }) => {
+    const { t, i18n } = useTranslation();
     const location = useLocation();
     const navigate = useNavigate();
     const { logout } = useAuth();
     
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const profileName = userData?.fullName || "Khách hàng";
+    const profileName = userData?.fullName || (i18n.language === 'vi' ? "Khách hàng" : "Customer");
     const profileImage = userData?.profilePhotoUrl || null;
     const profileEmail = userData?.email || "";
-    const membershipRank = userData?.membershipRank || "Thành viên";
+    const membershipRank = userData?.membershipRank || (i18n.language === 'vi' ? "Thành viên" : "Member");
 
     const menuItems = [
         { 
-            label: "Hồ sơ cá nhân", 
+            label: t('profile.personal_info'), 
             path: "/customer/profile",
             internalId: "account-settings",
             icon: <User size={20} /> 
         },
         { 
-            label: "Hạng thành viên & Điểm", 
+            label: i18n.language === 'vi' ? "Hạng thành viên & Điểm" : "Membership & Points", 
             path: "/customer/membership", 
             icon: <Crown size={20} /> 
         },
         { 
-            label: "Lịch sử đặt chỗ", 
+            label: t('profile.my_bookings'), 
             path: "/customer/bookings", 
             icon: <CalendarDays size={20} /> 
         },
         { 
-            label: "Giao dịch", 
+            label: t('profile.transactions'), 
             path: "/customer/transactions", 
             icon: <FileText size={20} /> 
         },
         { 
-            label: "Yêu cầu hoàn tiền", 
+            label: i18n.language === 'vi' ? "Yêu cầu hoàn tiền" : "Refund Requests", 
             path: "/customer/refunds", 
             icon: <RefreshCw size={20} /> 
         },
         { 
-            label: "Cài đặt tài khoản", 
+            label: i18n.language === 'vi' ? "Phương thức thanh toán" : "Payment Methods", 
+            path: "/customer/cards", 
+            icon: <CreditCard size={20} /> 
+        },
+        { 
+            label: t('profile.settings'), 
             path: "/customer/settings", 
             icon: <Settings size={20} /> 
         },
@@ -67,7 +72,9 @@ const AccountMenu = ({
             onSelect(item.internalId);
         } else {
             navigate(item.path);
+
         }
+
     };
 
     const checkActive = (item) => {
@@ -90,8 +97,6 @@ const AccountMenu = ({
 
     return (
         <div className="space-y-6">
-            
-            {/* 1. CARD THÔNG TIN & UPLOAD AVATAR */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col items-center text-center relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-20 bg-gradient-to-b from-blue-50 to-white z-0"></div>
                 
@@ -107,25 +112,24 @@ const AccountMenu = ({
                         />
                     </div>
                     
-                    {/* ✅ SỬA Ở ĐÂY: Đổi vị trí badge từ bottom-1 -> top-0 để tránh đè icon máy ảnh */}
                     <div 
                         className="absolute top-0 right-0 bg-yellow-400 p-1.5 rounded-full border-2 border-white shadow-sm transform translate-x-1 -translate-y-1" 
-                        title={`Hạng: ${membershipRank}`}
+                        title={`Rank: ${membershipRank}`}
                     >
                         <Crown size={12} className="text-white fill-white" />
                     </div>
                 </div>
+                
 
                 <div className="relative z-10">
                     <h3 className="font-bold text-gray-900 text-lg">{profileName}</h3>
                     <p className="text-gray-500 text-sm mb-2">{profileEmail}</p>
                     <span className="inline-block text-xs font-semibold px-3 py-1 bg-blue-50 text-blue-600 rounded-full border border-blue-100">
-                        {membershipRank || "Thành viên"}
+                        {membershipRank}
                     </span>
                 </div>
             </div>
 
-            {/* 2. MENU NAVIGATION */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
                 <nav className="p-3 space-y-1">
                     {menuItems.map((item) => {
@@ -146,7 +150,6 @@ const AccountMenu = ({
                                     {item.icon}
                                 </span>
                                 {item.label}
-                                
                                 {isActive && (
                                     <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[rgb(40,169,224)]"></div>
                                 )}
@@ -163,7 +166,7 @@ const AccountMenu = ({
                         className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl text-red-600 hover:bg-red-50 transition-all duration-200 font-medium text-sm group"
                     >
                         <LogOut size={20} className="text-red-400 group-hover:text-red-600 transition-colors" />
-                        Đăng xuất
+                        {t('common.logout')}
                     </button>
                 </div>
             </div>

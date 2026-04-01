@@ -2,17 +2,19 @@
 import React from "react";
 import { Filter } from "lucide-react";
 import { motion } from "framer-motion";
-
-const PROPERTY_TYPES = [
-  { value: "ALL", label: "Tất cả loại hình" },
-  { value: "HOTEL", label: "Khách sạn" },
-  { value: "RESORT", label: "Resort" },
-  { value: "VILLA", label: "Villa" },
-  { value: "HOMESTAY", label: "Homestay" },
-];
-
+import { useTranslation } from "react-i18next";
 
 const SubmissionTypeFilter = ({ currentType, onTypeChange }) => {
+  const { t } = useTranslation();
+
+  const PROPERTY_TYPES = [
+    { value: "ALL", label: t('hotels.all') },
+    { value: "HOTEL", label: t('add_property_flow.hotel_label') },
+    { value: "RESORT", label: t('add_property_flow.resort_label') },
+    { value: "VILLA", label: t('add_property_flow.villa_label') },
+    { value: "HOMESTAY", label: t('add_property_flow.homestay_label') },
+  ];
+
   return (
     <motion.div
       initial={{ opacity: 0, x: 10 }}

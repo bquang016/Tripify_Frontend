@@ -1,6 +1,7 @@
 // src/components/search/DestinationSelector.jsx
 import React, { useEffect, useRef, useState } from "react";
 import { Search, MapPin, Hotel } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 // Dữ liệu giả cho dropdown (Req #4)
 const mockSuggestions = [
@@ -27,12 +28,10 @@ const SuggestionItem = ({ item, onClick }) => {
 };
 
 export default function DestinationSelector({ value, onChange }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
   
-  // ✅ 1. XÓA STATE NỘI BỘ 'query'
-  // const [query, setQuery] = useState(value || ""); // <-- XÓA DÒNG NÀY
-
   // Xử lý click ra ngoài để đóng dropdown
   useEffect(() => {
     const onClickOutside = (e) => {
@@ -49,7 +48,6 @@ export default function DestinationSelector({ value, onChange }) {
 
   // Hàm xử lý khi chọn một mục
   const handleSelect = (item) => {
-    // setQuery(item.name); // <-- XÓA DÒNG NÀY
     onChange?.(item.name); // Thông báo cho component cha
     setOpen(false);         // Đóng dropdown
   };
@@ -57,7 +55,7 @@ export default function DestinationSelector({ value, onChange }) {
   return (
     <div className="relative flex flex-col" ref={ref}>
       <label className="text-sm font-semibold text-gray-600 mb-1">
-        Điểm đến
+        {t('search.destination')}
       </label>
 
       {/* Wrapper chứa icon và input */}
@@ -70,7 +68,7 @@ export default function DestinationSelector({ value, onChange }) {
         <Search size={18} className="text-gray-500 flex-shrink-0" />
         <input
           type="text"
-          placeholder="Nhập thành phố hoặc khách sạn"
+          placeholder={t('search.destination_placeholder')}
           className="w-full h-full outline-none border-none p-0 ml-2 text-sm text-gray-700"
           
           // ✅ 3. SỬ DỤNG 'value' TỪ PROP
@@ -102,7 +100,7 @@ export default function DestinationSelector({ value, onChange }) {
               ))
             ) : (
               <div className="px-4 py-2 text-sm text-gray-500">
-                Không tìm thấy kết quả.
+                {t('hotels.no_results')}
               </div>
             )}
           </div>

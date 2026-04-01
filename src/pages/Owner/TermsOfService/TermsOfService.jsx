@@ -26,8 +26,8 @@ const TermsOfService = () => {
                 <div className="text-center mb-10">
                     <Link to="/" className="inline-block mb-4">
                         <img
-                            src="/assets/logo/logo_travelmate_xoafont.png"
-                            alt="TravelMate"
+                            src="src/assets/logo/logo_tripify_xoafont.png"
+                            alt="Tripify"
                             className="h-12 object-contain"
                         />
                     </Link>
@@ -42,7 +42,7 @@ const TermsOfService = () => {
                         <div>
                             <h4 className="font-semibold text-blue-900">Thỏa thuận hợp tác</h4>
                             <p className="text-sm text-blue-800 mt-1">
-                                Bằng việc đăng ký trở thành Đối tác (Chủ sở hữu) trên TravelMate, bạn đồng ý tuân thủ các điều khoản và điều kiện dưới đây. Vui lòng đọc kỹ trước khi tiếp tục.
+                                Bằng việc đăng ký trở thành Đối tác (Chủ sở hữu) trên Tripify, bạn đồng ý tuân thủ các điều khoản và điều kiện dưới đây. Vui lòng đọc kỹ trước khi tiếp tục.
                             </p>
                         </div>
                     </div>
@@ -59,10 +59,10 @@ const TermsOfService = () => {
 
                     <Section title="2. Chính sách Đặt phòng & Thanh toán">
                         <p>
-                            TravelMate đóng vai trò là nền tảng trung gian kết nối. Khi có khách đặt phòng, hệ thống sẽ gửi thông báo đến bạn. Bạn có trách nhiệm cập nhật trạng thái phòng trống theo thời gian thực để tránh tình trạng "overbooking".
+                            Tripify đóng vai trò là nền tảng trung gian kết nối. Khi có khách đặt phòng, hệ thống sẽ gửi thông báo đến bạn. Bạn có trách nhiệm cập nhật trạng thái phòng trống theo thời gian thực để tránh tình trạng "overbooking".
                         </p>
                         <p>
-                            Doanh thu từ việc cho thuê phòng sẽ được TravelMate đối soát và thanh toán theo chu kỳ hàng tháng (hoặc theo thỏa thuận riêng), sau khi trừ đi phí hoa hồng dịch vụ.
+                            Doanh thu từ việc cho thuê phòng sẽ được Tripify đối soát và thanh toán theo chu kỳ hàng tháng (hoặc theo thỏa thuận riêng), sau khi trừ đi phí hoa hồng dịch vụ.
                         </p>
                     </Section>
 
@@ -71,13 +71,13 @@ const TermsOfService = () => {
                             Mọi hình ảnh tải lên hệ thống phải thuộc quyền sở hữu của bạn hoặc bạn có quyền sử dụng hợp pháp. Nghiêm cấm tải lên các nội dung đồi trụy, bạo lực, hoặc vi phạm thuần phong mỹ tục.
                         </p>
                         <p>
-                            TravelMate có quyền gỡ bỏ bất kỳ nội dung nào vi phạm tiêu chuẩn cộng đồng hoặc bị báo cáo bởi người dùng mà không cần báo trước.
+                            Tripify có quyền gỡ bỏ bất kỳ nội dung nào vi phạm tiêu chuẩn cộng đồng hoặc bị báo cáo bởi người dùng mà không cần báo trước.
                         </p>
                     </Section>
 
                     <div className="mt-12 pt-8 border-t border-gray-200 flex flex-col items-center">
                         <p className="text-gray-500 italic text-sm mb-6 text-center">
-                            Mọi thắc mắc vui lòng liên hệ bộ phận Hỗ trợ Đối tác: <strong>partners@travelmate.vn</strong>
+                            Mọi thắc mắc vui lòng liên hệ bộ phận Hỗ trợ Đối tác: <strong>partners@Tripify.vn</strong>
                         </p>
                         <Button onClick={() => window.close()}>
                             Đã hiểu & Đóng tab

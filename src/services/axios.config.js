@@ -1,11 +1,27 @@
 import axios from "axios";
 
-// Lấy URL từ biến môi trường hoặc fallback về localhost
-const API_URL =
-    import.meta.env.VITE_REACT_APP_API_URL || "http://localhost:8386/api/v1";
+// =========================================================================
+// 0. KHAI BÁO VÀ XUẤT CÁC BIẾN MÔI TRƯỜNG TẬP TRUNG
+// Lấy từ .env, nếu không có thì mặc định lấy IP VPS hiện tại
+// =========================================================================
 
+// URL gốc của Backend (dùng để lấy ảnh, file, websocket) - Không có /api/v1
+export const BASE_URL = import.meta.env.VITE_BASE_URL || "http://136.115.222.186:8386";
+
+// URL dành riêng cho việc gọi API (Có chứa /api/v1)
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://136.115.222.186:8386/api/v1";
+
+// URL chuyên dùng để nối chuỗi khi hiển thị ảnh ở các Component
+export const IMAGE_BASE_URL = `${BASE_URL}/images/`;
+
+
+
+// =========================================================================
+// KHỞI TẠO AXIOS INSTANCE
+// =========================================================================
 const api = axios.create({
-    baseURL: API_URL,
+    baseURL: API_BASE_URL,
+    withCredentials: true, // Thêm dòng này để gửi kèm Cookie/Session
     headers: {
         "Content-Type": "application/json",
     },
@@ -16,14 +32,16 @@ const api = axios.create({
 // =========================================================================
 api.interceptors.request.use(
     (config) => {
-        const token =
-            localStorage.getItem("accessToken") ||
-            localStorage.getItem("token");
+        // CHỈ thêm token từ localStorage NẾU chưa có Authorization header
+        if (!config.headers["Authorization"]) {
+            const token =
+                localStorage.getItem("accessToken") ||
+                localStorage.getItem("token");
 
-        if (token) {
-            config.headers["Authorization"] = `Bearer ${token}`;
+            if (token) {
+                config.headers["Authorization"] = `Bearer ${token}`;
+            }
         }
-
         return config;
     },
     (error) => Promise.reject(error)
@@ -60,14 +78,21 @@ api.interceptors.response.use(
                 return Promise.reject(error);
             }
 
-            // ✅ GUEST → KHÔNG redirect
-            if (!hasToken) {
+            // ✅ Nếu không có token (Guest) hoặc đang ở trang login thì không làm gì
+            if (!hasToken || window.location.pathname === "/login") {
                 return Promise.reject(error);
             }
 
             // 🔒 USER ĐÃ LOGIN → token hết hạn
-            localStorage.clear();
-            window.location.href = "/login";
+            // Thay vì clear hết localStorage và redirect cứng (gây loop khi reload),
+            // ta có thể phát event hoặc chỉ xóa các key liên quan đến auth
+            // Ở đây ta sẽ để AuthContext hoặc component tự xử lý sau khi bắt lỗi 401
+            console.warn("Unauthorized! Token might be expired.");
+            
+            // Tùy chọn: Có thể xóa token để tránh gửi tiếp các request lỗi
+            // localStorage.removeItem("accessToken");
+            // localStorage.removeItem("user");
+
             return Promise.reject(error);
         }
 

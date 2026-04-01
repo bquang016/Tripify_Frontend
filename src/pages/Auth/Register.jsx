@@ -18,9 +18,11 @@ import {
 } from "lucide-react";
 import LoginSlider from "@/components/auth/LoginSlider";
 import LegalModal from "@/components/auth/LegalModal";
+import OTPModal from "@/components/auth/OTPModal";
+import toast from "react-hot-toast";
+import { BASE_URL } from "../../services/axios.config";
 
 // URL Backend & Background
-const API_BASE_URL = "http://localhost:8386";
 const BG_URL =
     "https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=2074&auto=format&fit=crop";
 
@@ -30,7 +32,7 @@ const TERMS_CONTENT = (
         <p>
             <strong>1. Giới thiệu</strong>
             <br />
-            Chào mừng bạn đến với TravelMate. Bằng việc đăng ký tài khoản, bạn xác nhận
+            Chào mừng bạn đến với Tripify. Bằng việc đăng ký tài khoản, bạn xác nhận
             đã đọc, hiểu và đồng ý tuân thủ các Điều khoản dịch vụ này.
         </p>
         <p>
@@ -81,7 +83,7 @@ const RegistrationSuccessModal = ({ isOpen, email, countdown, onLoginNow }) => {
 
                     <p className="text-slate-600 text-sm mb-6 leading-relaxed">
                         Chúc mừng bạn đã tạo tài khoản thành công tại{" "}
-                        <strong>TravelMate</strong>.
+                        <strong>Tripify</strong>.
                         <br />
                         Vui lòng kiểm tra hộp thư đến của email:
                         <br />
@@ -139,8 +141,7 @@ const Register = () => {
     const [agreed, setAgreed] = useState(false);
     const [modalType, setModalType] = useState(null);
 
-    const [showSuccessModal, setShowSuccessModal] = useState(false);
-    const [countdown, setCountdown] = useState(5);
+    const [showOTPModal, setShowOTPModal] = useState(false);
 
     const [passwordCriteria, setPasswordCriteria] = useState({
         length: false,
@@ -159,39 +160,35 @@ const Register = () => {
     // để hiện inline message “mật khẩu yếu” sau khi user chạm vào field
     const [touched, setTouched] = useState({ password: false });
 
-    // --- COUNTDOWN ---
-    useEffect(() => {
-        let timer;
-        if (showSuccessModal && countdown > 0) {
-            timer = setTimeout(() => setCountdown((prev) => prev - 1), 1000);
-        } else if (showSuccessModal && countdown === 0) {
-            navigate("/login");
+    // --- OTP SUCCESS HANDLER ---
+    const handleOTPSuccess = async (otpCode) => {
+        setLoading(true);
+        try {
+            // Bước 3: Gọi verify-register để xác thực OTP và kích hoạt tài khoản
+            const res = await authService.verifyRegister(formData.email, otpCode);
+
+            if (res.success) {
+                toast.success("Đăng ký thành công! Đang chuyển hướng đến trang đăng nhập...");
+                
+                // Đóng modal ngay khi thành công
+                setShowOTPModal(false);
+
+                // Chuyển hướng về trang đăng nhập
+                setTimeout(() => {
+                    navigate("/login");
+                }, 2000);
+            }
+        } catch (err) {
+            console.error("Verification Error:", err);
+            const serverMsg = err.response?.data?.message || err.response?.data || "Mã OTP không chính xác hoặc đã hết hạn.";
+            setError(typeof serverMsg === 'string' ? serverMsg : "Lỗi xác thực dữ liệu.");
+            
+            // Ném lỗi để OTPModal biết và thực hiện reset + hiện toast 1 lần duy nhất
+            throw err;
+        } finally {
+            setLoading(false);
         }
-        return () => clearTimeout(timer);
-    }, [showSuccessModal, countdown, navigate]);
-
-    // --- PASSWORD STRENGTH ---
-    useEffect(() => {
-        const pwd = formData.password;
-        const criteria = {
-            length: pwd.length >= 6,
-            hasNumber: /\d/.test(pwd),
-            hasUpper: /[A-Z]/.test(pwd),
-            hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(pwd),
-        };
-
-        setPasswordCriteria(criteria);
-        setPasswordScore(Object.values(criteria).filter(Boolean).length);
-
-        if (pwd.length === 1 && scrollContainerRef.current) {
-            setTimeout(() => {
-                scrollContainerRef.current.scrollTo({
-                    top: scrollContainerRef.current.scrollHeight,
-                    behavior: "smooth",
-                });
-            }, 200);
-        }
-    }, [formData.password]);
+    };
 
     const getPasswordCriteria = (pwd = "") => ({
         length: pwd.length >= 6,
@@ -206,8 +203,44 @@ const Register = () => {
     };
 
     const handleSocialLogin = (provider) => {
-        window.location.href = `${API_BASE_URL}/oauth2/authorization/${provider}`;
+        window.location.href = `${BASE_URL}/oauth2/authorization/${provider}`;
     };
+
+    // --- PASSWORD STRENGTH EFFECT ---
+    useEffect(() => {
+        const pwd = formData.password;
+        const criteria = getPasswordCriteria(pwd);
+
+        setPasswordCriteria(criteria);
+        setPasswordScore(Object.values(criteria).filter(Boolean).length);
+
+        if (pwd.length === 1 && scrollContainerRef.current) {
+            setTimeout(() => {
+                scrollContainerRef.current.scrollTo({
+                    top: scrollContainerRef.current.scrollHeight,
+                    behavior: "smooth",
+                });
+            }, 200);
+        }
+    }, [formData.password]);
+
+    const getStrengthColor = () => {
+        if (passwordScore <= 1) return "bg-red-500";
+        if (passwordScore === 2) return "bg-yellow-500";
+        if (passwordScore === 3) return "bg-blue-500";
+        return "bg-green-500";
+    };
+
+    const getStrengthText = () => {
+        if (passwordScore === 0) return "";
+        if (passwordScore <= 1) return "Quá yếu";
+        if (passwordScore === 2) return "Trung bình";
+        if (passwordScore === 3) return "Tốt";
+        return "Tuyệt vời";
+    };
+
+    const isFormValid =
+        passwordScore >= 4 && formData.fullName && formData.email && agreed;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -229,7 +262,6 @@ const Register = () => {
             return;
         }
 
-        // ✅ Đồng bộ rule với backend (thường backend yêu cầu đủ 4 tiêu chí)
         const c = getPasswordCriteria(password);
         const strongEnough = c.length && c.hasNumber && c.hasUpper && c.hasSpecial;
 
@@ -241,84 +273,46 @@ const Register = () => {
             return;
         }
 
+        if (loading) return; // Chặn nhấn nhiều lần khi đang xử lý
+
+        // Hiển thị Modal ngay lập tức như yêu cầu của bạn
+        setShowOTPModal(true);
         setLoading(true);
+
         try {
-            const res = await authService.register(
-                fullName,
-                email,
-                password,
-                confirmPassword
-            );
+            // Bước 1: Gọi API Register để lưu tạm thông tin
+            // Backend ĐÃ tự động gửi mã OTP tại đây. KHÔNG GỌI thêm sendOtp ở đây.
+            authService.register(fullName, email, password, confirmPassword)
+                .then((response) => {
+                    console.log(">>> Register successful, OTP should be sent by BE:", response);
+                    toast.success("Mã xác thực đã được gửi đến email của bạn.");
+                    setError(""); 
+                })
+                .catch((err) => {
+                    console.error("Registration Step 1 Error:", err);
+                    setShowOTPModal(false); // Đóng modal nếu có lỗi xảy ra
 
-            if (res) {
-                setShowSuccessModal(true);
-                setCountdown(5);
-            }
+                    const statusCode = err.response?.status;
+                    const serverMsg = err.response?.data?.message || "Không thể thực hiện đăng ký. Vui lòng thử lại.";
+                    
+                    if (statusCode === 409) {
+                        setError("Email này đã được đăng ký. Vui lòng sử dụng email khác hoặc đăng nhập.");
+                        toast.error("Email đã tồn tại trên hệ thống!");
+                    } else {
+                        setError(serverMsg);
+                        toast.error(serverMsg);
+                    }
+                })
+                .finally(() => {
+                    setLoading(false);
+                });
+
         } catch (err) {
-            const status = err?.response?.status;
-            const data = err?.response?.data;
-
-            // lấy message tổng
-            const serverMsg =
-                data?.message || data?.error || data?.msg || data?.title || "";
-
-            // cố lấy lỗi chi tiết theo field (tuỳ backend)
-            const fieldErrors =
-                data?.errors ||
-                data?.data?.errors ||
-                data?.violations ||
-                data?.details ||
-                [];
-
-            const firstFieldMsg =
-                Array.isArray(fieldErrors) && fieldErrors.length
-                    ? fieldErrors[0]?.message || fieldErrors[0]?.msg || ""
-                    : "";
-
-            const msg = firstFieldMsg || serverMsg || "";
-            const s = String(msg).toLowerCase();
-
-            if (status === 400) {
-                // đừng show "Validation failed" trần trụi nữa
-                if (s.includes("password") || s.includes("mật khẩu")) {
-                    setError(
-                        firstFieldMsg ||
-                        "Mật khẩu không đạt yêu cầu. Vui lòng thêm chữ in hoa, số và ký tự đặc biệt."
-                    );
-                } else if (s.includes("email")) {
-                    setError(firstFieldMsg || "Email không hợp lệ. Vui lòng kiểm tra lại.");
-                } else if (s.includes("validation failed")) {
-                    setError("Thông tin đăng ký chưa hợp lệ. Vui lòng kiểm tra lại.");
-                } else {
-                    setError(msg || "Thông tin đăng ký chưa hợp lệ. Vui lòng kiểm tra lại.");
-                }
-            } else if (status === 409) {
-                setError("Email đã được đăng ký. Vui lòng dùng email khác.");
-            } else {
-                setError("Đăng ký thất bại. Vui lòng thử lại.");
-            }
-        } finally {
+            console.error("Register catch error:", err);
+            setShowOTPModal(false);
             setLoading(false);
         }
     };
-
-    const getStrengthColor = () => {
-        if (passwordScore <= 1) return "bg-red-500";
-        if (passwordScore === 2) return "bg-yellow-500";
-        if (passwordScore === 3) return "bg-blue-500";
-        return "bg-green-500";
-    };
-
-    const getStrengthText = () => {
-        if (passwordScore === 0) return "";
-        if (passwordScore <= 1) return "Quá yếu";
-        if (passwordScore === 2) return "Trung bình";
-        if (passwordScore === 3) return "Tốt";
-        return "Tuyệt vời";
-    };
-
-    const isFormValid =
-        passwordScore >= 2 && formData.fullName && formData.email && agreed;
 
     return (
         <div className="relative h-screen w-screen overflow-hidden flex items-center justify-center font-sans bg-slate-900">
@@ -674,12 +668,12 @@ const Register = () => {
                 </div>
             </div>
 
-            {/* ✅ SUCCESS MODAL */}
-            <RegistrationSuccessModal
-                isOpen={showSuccessModal}
+            {/* ✅ OTP MODAL */}
+            <OTPModal
+                isOpen={showOTPModal}
+                onClose={() => setShowOTPModal(false)}
                 email={formData.email}
-                countdown={countdown}
-                onLoginNow={() => navigate("/login")}
+                onSuccess={handleOTPSuccess}
             />
 
             {/* Other Modals */}

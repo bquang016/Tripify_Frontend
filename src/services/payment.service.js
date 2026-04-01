@@ -72,7 +72,19 @@ const paymentService = {
     }
   },
 
-  // 5. Xử lý hoàn tiền (Duyệt/Từ chối) (Cho trang RefundManagementPage)
+  // 5. Lấy danh sách yêu cầu hoàn tiền (MỚI)
+  getRefundRequests: async () => {
+    try {
+      const response = await api.get("/payments/refund-requests");
+      const result = response.data;
+      return Array.isArray(result) ? result : (result.data || []);
+    } catch (error) {
+      console.error("Lỗi lấy danh sách yêu cầu hoàn tiền:", error);
+      throw new Error(error.response?.data?.message || "Không thể tải danh sách hoàn tiền");
+    }
+  },
+
+  // 6. Xử lý hoàn tiền (Duyệt/Từ chối) (Cho trang RefundManagementPage)
   processRefundRequest: async (requestId, isApproved, note) => {
     try {
       const response = await api.put(`/payments/refund-process/${requestId}`, null, {
@@ -82,7 +94,38 @@ const paymentService = {
     } catch (error) {
       throw error.response?.data || error.message;
     }
-  }
+  },
+
+// Hàm cho Giai đoạn 1: Lấy Client Secret để lưu thẻ
+  createStripeSetupIntent: async () => {
+    // Sử dụng 'api' thay vì 'axiosClient'
+    return await api.post('/payments/stripe/setup-intent'); 
+  },
+  
+  // Hàm cho Giai đoạn 2: Lấy danh sách thẻ đã lưu
+  getSavedCards: async () => {
+    return await api.get('/payments/stripe/cards');
+  },
+  // Thêm hàm này vào dưới cùng của paymentService (bên dưới hàm getSavedCards)
+  chargeSavedCard: async (data) => {
+    // data bao gồm: bookingId, paymentMethodId, amount
+    return await api.post('/payments/stripe/charge', data);
+  },
+  deleteSavedCard: async (paymentMethodId) => {
+    return await api.delete(`/payments/stripe/cards/${paymentMethodId}`);
+  },
+  // 1. Cập nhật hàm submitPayment để gửi thêm amount
+  submitPayment: async (bookingId, note, method, amount) => {
+    return await api.post(`/payments/${bookingId}/pay`, null, {
+      params: { note, method, amount }
+    });
+  },
+
+  // 2. Thêm hàm hứng kết quả từ VNPay
+  verifyVNPayReturn: async (queryString) => {
+    // queryString có dạng: ?vnp_Amount=...&vnp_BankCode=...
+    return await api.get(`/payments/vnpay-return${queryString}`);
+  },
 };
 
 export default paymentService;

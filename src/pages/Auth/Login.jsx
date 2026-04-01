@@ -8,9 +8,12 @@ import {
 import Toast from "@/components/common/Notification/Toast";
 import ToastPortal from "@/components/common/Notification/ToastPortal";
 import LoginSlider from "@/components/auth/LoginSlider";
+import OTPModal from "@/components/auth/OTPModal";
+import toast from "react-hot-toast";
+import { extractErrorMessage } from "@/utils/errorHandler";
+import { BASE_URL } from "../../services/axios.config";
 
 // URL Backend (Cổng OAuth2)
-const API_BASE_URL = "http://localhost:8386";
 const BG_URL = "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop";
 
 const Login = () => {
@@ -22,7 +25,10 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
-    const [toast, setToast] = useState({ show: false, message: "", type: "info" });
+    
+    // 2FA state
+    const [show2faModal, setShow2faModal] = useState(false);
+    const [pendingEmail, setPendingEmail] = useState("");
 
     // ✅ STATE QUẢN LÝ MODAL (Giữ nguyên logic của bạn)
     const [errorModal, setErrorModal] = useState({
@@ -40,8 +46,28 @@ const Login = () => {
         if (error) setError("");
     };
 
+    const handle2faSuccess = async (otpCode) => {
+        setLoading(true);
+        try {
+            const res = await authService.verify2faLogin(pendingEmail, otpCode);
+            
+            if (res.success) {
+                if (updateUser) {
+                    await updateUser(res.data.user);
+                }
+                toast.success(res.message || "Đăng nhập thành công!");
+                setShow2faModal(false); // Đóng modal 2FA khi thành công
+                navigate(from, { replace: true });
+            }
+        } catch (err) {
+            throw err; // Ném lỗi để modal reset và hiện toast
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const handleSocialLogin = (provider) => {
-        window.location.href = `${API_BASE_URL}/oauth2/authorization/${provider}`;
+        window.location.href = `${BASE_URL}/oauth2/authorization/${provider}`;
     };
 
     // ✅ HÀM ĐÓNG MODAL
@@ -59,56 +85,70 @@ const Login = () => {
 
         setLoading(true);
         try {
-            const res = await authService.login(formData.email, formData.password);
+            const response = await authService.login(formData.email, formData.password);
+            
+            // Backend trả về message localized
+            const result = response.data || response;
 
-            if (res) {
+            // 1. Kiểm tra yêu cầu 2FA (Bắt đúng trường 2faRequired từ log thực tế)
+            const is2fa = result?.is2faRequired || result?.['2faRequired'];
+
+            if (result && is2fa === true) {
+                setPendingEmail(formData.email);
+                setShow2faModal(true);
+                toast.success(response.message || "Tài khoản đã bật bảo mật 2 lớp. Vui lòng nhập mã OTP!");
+                return;
+            }
+
+            // 2. Kiểm tra Token để cho phép đăng nhập
+            if (result && result.accessToken) {
                 if (updateUser) {
-                    await updateUser(res.user);
+                    await updateUser(result.user);
                 }
-                setToast({ show: true, message: "Đăng nhập thành công!", type: "success" });
+                toast.success(response.message || "Đăng nhập thành công!");
                 setTimeout(() => {
                     navigate(from, { replace: true });
                 }, 800);
+            } else {
+                // Nếu không có 2FA và cũng không có Token
+                setError(response.message || "Hệ thống không nhận diện được thông tin đăng nhập.");
             }
         } catch (err) {
             console.error("Login Error:", err);
 
+            const backendMessage = extractErrorMessage(err);
             let modalTitle = "Đăng nhập thất bại";
-            let modalMsg = "Có lỗi xảy ra, vui lòng thử lại.";
             let shouldShowModal = false;
 
             if (err.response) {
                 const status = err.response.status;
-                const data = err.response.data;
-
-                // Lấy message từ BE
-                const backendMessage = data.message || data.error || "";
                 const lowerMsg = backendMessage.toLowerCase();
 
                 // 🛑 TRƯỜNG HỢP 1: Tài khoản bị KHÓA (403 Forbidden + từ khóa lock/ban)
                 if (status === 403 && (lowerMsg.includes("khóa") || lowerMsg.includes("locked") || lowerMsg.includes("banned"))) {
                     modalTitle = "Tài khoản bị khóa";
-                    modalMsg = backendMessage || "Tài khoản của bạn đã bị khóa do vi phạm chính sách.";
                     shouldShowModal = true;
                 }
                 // ⚠️ TRƯỜNG HỢP 2: Tài khoản chưa kích hoạt / Xác thực email
                 else if (status === 403 || lowerMsg.includes("disabled") || lowerMsg.includes("chưa được xác thực")) {
                     modalTitle = "Tài khoản chưa kích hoạt";
-                    modalMsg = "Vui lòng kiểm tra email của bạn để xác thực tài khoản trước khi đăng nhập.";
                     shouldShowModal = true;
                 }
                 // ❌ TRƯỜNG HỢP 3: Sai thông tin (401 Unauthorized)
                 else if (status === 401 || lowerMsg.includes("bad credentials")) {
                     modalTitle = "Thông tin không chính xác";
-                    modalMsg = "Email hoặc mật khẩu bạn nhập không đúng. Vui lòng thử lại.";
                     shouldShowModal = true;
                 }
                 // Các lỗi khác thì hiện thông báo nhỏ (inline)
                 else {
-                    setError(backendMessage || "Lỗi hệ thống.");
+                    setError(backendMessage);
                 }
+            } else if (err.request) {
+                // Lỗi do không nhận được phản hồi từ server (Network Error)
+                setError("Không thể kết nối đến máy chủ. Vui lòng kiểm tra lại đường truyền.");
             } else {
-                setError("Không thể kết nối đến máy chủ.");
+                // Lỗi do logic code hoặc lỗi khác
+                setError("Đã xảy ra lỗi trong quá trình xử lý: " + err.message);
             }
 
             // ✅ Nếu rơi vào các trường hợp nghiêm trọng -> Hiện Modal của bạn
@@ -116,7 +156,7 @@ const Login = () => {
                 setErrorModal({
                     show: true,
                     title: modalTitle,
-                    message: modalMsg
+                    message: backendMessage
                 });
             }
 
@@ -334,6 +374,15 @@ const Login = () => {
                     </div>
                 </div>
             )}
+
+            {/* ✅ OTP MODAL CHO 2FA */}
+            <OTPModal
+                isOpen={show2faModal}
+                onClose={() => setShow2faModal(false)}
+                email={pendingEmail}
+                type="LOGIN_2FA"
+                onSuccess={handle2faSuccess}
+            />
 
             <style>{`
          @keyframes ken-burns-slow { 0% { transform: scale(1); } 100% { transform: scale(1.15); } }

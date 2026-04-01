@@ -1,35 +1,30 @@
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
-export default function ProtectedRoute({ roles, children }) {
-  const { currentUser } = useAuth();
+export default function ProtectedRoute({ roles, requiredRole, isSuperRequired, children }) {
+  const { currentUser, hasRole } = useAuth();
 
   if (!currentUser) return <Navigate to="/login" replace />;
 
-  // ✅ LOGIC MỚI: Kiểm tra an toàn
-  // 1. Lấy danh sách role từ 'roles' hoặc 'authorities'
-  // 2. Chuẩn hóa về dạng mảng string ["CUSTOMER", "ADMIN"]
-  const userRoles = getUserRoles(currentUser);
+  // 1. Kiểm tra quyền Super Admin nếu trang yêu cầu đặc quyền root
+  if (isSuperRequired && !currentUser.isSuper) {
+    return <Navigate to="/403" replace />;
+  }
 
-  // 3. Kiểm tra quyền
-  if (roles && !userRoles.some(r => roles.includes(r))) {
-    return <Navigate to="/" replace />;
+  // 2. Kiểm tra theo mảng Roles (Dùng cho các route cũ hoặc truyền nhiều role)
+  if (roles && Array.isArray(roles)) {
+    const hasAnyRole = roles.some(role => hasRole(role));
+    if (!hasAnyRole) {
+      console.warn(">>> [ProtectedRoute] User lacks required roles:", roles);
+      return <Navigate to="/403" replace />;
+    }
+  }
+
+  // 3. Kiểm tra theo Single Role (requiredRole) - Cách dùng phổ biến trong AdminRoutes
+  if (requiredRole && !hasRole(requiredRole)) {
+    console.warn(">>> [ProtectedRoute] User lacks required role:", requiredRole);
+    return <Navigate to="/403" replace />;
   }
 
   return children;
-}
-
-// Hàm helper để lấy role từ user object bất kể cấu trúc nào
-function getUserRoles(user) {
-  if (user?.roles && Array.isArray(user.roles)) {
-    // Trường hợp User Entity: [{roleName: "CUSTOMER"}] hoặc ["CUSTOMER"]
-    return user.roles.map(r => (typeof r === 'object' ? r.roleName : r));
-  }
-  
-  if (user?.authorities && Array.isArray(user.authorities)) {
-    // Trường hợp CustomUserDetails: [{authority: "ROLE_CUSTOMER"}]
-    return user.authorities.map(a => a.authority.replace("ROLE_", ""));
-  }
-
-  return [];
 }

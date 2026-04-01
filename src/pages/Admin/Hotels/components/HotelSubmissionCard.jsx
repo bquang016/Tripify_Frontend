@@ -1,63 +1,65 @@
 import React, { forwardRef } from "react";
 import { MapPin, User, Eye, Clock, CheckCircle, XCircle, Hotel, Home, Building, Calendar } from "lucide-react";
 import Button from "@/components/common/Button/Button";
-
-// URL Base cho ảnh (Cập nhật theo port backend của bạn)
-const API_IMAGE_BASE = "http://localhost:8386/uploads/";
-
-// 1. Helper: Cấu hình Badge trạng thái
-const getStatusConfig = (status) => {
-  switch (status) {
-    case "PENDING":
-      return {
-        label: "Đang chờ duyệt",
-        className: "bg-yellow-100 text-yellow-700 border-yellow-300 ring-2 ring-yellow-400/50 shadow-sm animate-pulse",
-        icon: <Clock size={14} className="animate-spin-slow" />
-      };
-    case "APPROVED":
-    case "APPROVE": 
-      return {
-        label: "Đã phê duyệt",
-        className: "bg-green-100 text-green-700 border-green-200",
-        icon: <CheckCircle size={14} />
-      };
-    case "REJECTED":
-      return {
-        label: "Đã từ chối",
-        className: "bg-red-100 text-red-700 border-red-200",
-        icon: <XCircle size={14} />
-      };
-    default:
-      return {
-        label: status || "Không xác định",
-        className: "bg-gray-100 text-gray-600 border-gray-200",
-        icon: null
-      };
-  }
-};
-
-// 2. Helper: Icon loại hình
-const getTypeIcon = (type) => {
-    switch (type) {
-        case "HOTEL": return <Hotel size={14} />;
-        case "VILLA": return <Home size={14} />;
-        case "HOMESTAY": return <Building size={14} />;
-        default: return <Hotel size={14} />;
-    }
-};
-
-// 3. Helper: Xử lý URL ảnh
-const getImageUrl = (path) => {
-    if (!path) return null;
-    return path.startsWith("http") ? path : `${API_IMAGE_BASE}${path}`;
-};
+import { useTranslation } from "react-i18next";
+import { IMAGE_BASE_URL } from "../../../../services/axios.config";
 
 // [QUAN TRỌNG] Sử dụng forwardRef để fix lỗi animation
 const HotelSubmissionCard = forwardRef(({ hotel, onViewDetails }, ref) => {
+  const { t, i18n } = useTranslation();
+  const isVi = i18n.language === 'vi';
+
   if (!hotel) return null;
+
+  // 1. Helper: Cấu hình Badge trạng thái
+  const getStatusConfig = (status) => {
+    switch (status) {
+      case "PENDING":
+        return {
+          label: t('hotels.pending'),
+          className: "bg-yellow-100 text-yellow-700 border-yellow-300 ring-2 ring-yellow-400/50 shadow-sm animate-pulse",
+          icon: <Clock size={14} className="animate-spin-slow" />
+        };
+      case "APPROVED":
+      case "APPROVE": 
+        return {
+          label: t('hotels.approved'),
+          className: "bg-green-100 text-green-700 border-green-200",
+          icon: <CheckCircle size={14} />
+        };
+      case "REJECTED":
+        return {
+          label: t('hotels.rejected'),
+          className: "bg-red-100 text-red-700 border-red-200",
+          icon: <XCircle size={14} />
+        };
+      default:
+        return {
+          label: status || (isVi ? "Không xác định" : "Unknown"),
+          className: "bg-gray-100 text-gray-600 border-gray-200",
+          icon: null
+        };
+    }
+  };
 
   const statusConfig = getStatusConfig(hotel.propertyStatus);
   
+  // 2. Helper: Icon loại hình
+  const getTypeIcon = (type) => {
+      switch (type) {
+          case "HOTEL": return <Hotel size={14} />;
+          case "VILLA": return <Home size={14} />;
+          case "HOMESTAY": return <Building size={14} />;
+          default: return <Hotel size={14} />;
+      }
+  };
+
+  // 3. Helper: Xử lý URL ảnh
+  const getImageUrl = (path) => {
+      if (!path) return null;
+      return path.startsWith("http") ? path : `${IMAGE_BASE_URL}${path}`;
+  };
+
   // Xử lý ảnh bìa
   const coverImage = getImageUrl(hotel.imageUrl) || "https://placehold.co/600x400?text=No+Image";
   
@@ -98,11 +100,11 @@ const HotelSubmissionCard = forwardRef(({ hotel, onViewDetails }, ref) => {
         {/* Tên & Địa chỉ */}
         <div>
           <h3 className="text-base font-bold text-gray-800 line-clamp-1 group-hover:text-[rgb(40,169,224)] transition-colors" title={hotel.hotelName}>
-            {hotel.hotelName || "Tên chưa cập nhật"}
+            {hotel.hotelName || (isVi ? "Tên chưa cập nhật" : "Name not updated")}
           </h3>
           <div className="flex items-start gap-1.5 text-gray-500 text-xs mt-1">
             <MapPin size={14} className="shrink-0 mt-0.5 text-red-400" />
-            <span className="line-clamp-2">{hotel.address || "Địa chỉ chưa cập nhật"}</span>
+            <span className="line-clamp-2">{hotel.address || (isVi ? "Địa chỉ chưa cập nhật" : "Address not updated")}</span>
           </div>
         </div>
 
@@ -127,9 +129,9 @@ const HotelSubmissionCard = forwardRef(({ hotel, onViewDetails }, ref) => {
                 
                 <div className="min-w-0">
                     <p className="text-xs font-semibold text-gray-700 truncate max-w-[100px]" title={hotel.ownerName}>
-                        {hotel.ownerName || "Không tên"}
+                        {hotel.ownerName || (isVi ? "Không tên" : "No name")}
                     </p>
-                    <p className="text-[10px] text-gray-400 font-medium">Chủ sở hữu</p> {/* Đã đổi tên */}
+                    <p className="text-[10px] text-gray-400 font-medium">{isVi ? "Chủ sở hữu" : "Owner"}</p>
                 </div>
              </div>
 
@@ -153,11 +155,11 @@ const HotelSubmissionCard = forwardRef(({ hotel, onViewDetails }, ref) => {
                 onViewDetails();
             }}
         >
-            <Eye size={14} className="mr-2"/> Xem chi tiết
+            <Eye size={14} className="mr-2"/> {isVi ? "Xem chi tiết" : "View details"}
         </Button>
       </div>
     </div>
   );
 });
 
-export default HotelSubmissionCard; 
+export default HotelSubmissionCard;

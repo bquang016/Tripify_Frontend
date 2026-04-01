@@ -29,11 +29,11 @@ const getOwnerActiveProperties = async () => {
 const searchProperties = async (params) => {
   try {
     // console.log("Params sent to API:", params); // Debug xem params có bị lồng không
-    
-    const response = await api.get(`/properties/search`, { 
+
+    const response = await api.get(`/properties/search`, {
       // Axios sẽ tự serialize object này thành query string
-      params: params, 
-      
+      params: params,
+
       // [QUAN TRỌNG] Nếu bạn đang dùng thư viện qs stringify, hãy bỏ đi hoặc cấu hình lại.
       // Mặc định axios xử lý params phẳng rất tốt.
     });
@@ -90,11 +90,11 @@ const uploadPropertyImages = async (propertyId, formData) => {
   try {
     // POST /api/v1/property-images/{propertyId}/upload
     const response = await api.post(
-        `/property-images/${propertyId}/upload`,
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        }
+      `/property-images/${propertyId}/upload`,
+      formData,
+      {
+        headers: { "Content-Type": "multipart/form-data" },
+      }
     );
     return response.data;
   } catch (error) {
@@ -120,7 +120,7 @@ const setCoverImage = async (propertyId, imageId) => {
   try {
     // PUT /api/v1/property-images/{propertyId}/{imageId}/cover
     const response = await api.put(
-        `/property-images/${propertyId}/${imageId}/cover`
+      `/property-images/${propertyId}/${imageId}/cover`
     );
     return response.data;
   } catch (error) {
@@ -216,14 +216,24 @@ const togglePropertyStatus = async (id) => {
 
 const getFeaturedProperties = async () => {
   try {
-    // Tận dụng API search, lấy 8 khách sạn có rating cao nhất
-    const response = await api.get("/properties/search", {
-      params: {
-        page: 0,
-        size: 8,
-        sort: "rating,desc" // Sắp xếp theo rating giảm dần
-      }
-    });
+    const response = await api.get("/properties/featured"); // Đảm bảo đúng endpoint backend của bạn
+    // Trả về trực tiếp mảng dữ liệu (tùy cấu trúc bọc ApiResponse của backend)
+    return response.data?.result || response.data?.data || response.data;
+  } catch (error) {
+    throw error.response?.data || error.message;
+  }
+};
+
+//Đăng ký thông tin cơ bản của property (step 2)
+const registerPropertyInfo = async (data) => {
+  // data: { propertyName, description, propertyType, starRating, ... }
+  const response = await api.post("/api/v1/properties/register-info", data);
+  return response.data;
+};
+
+const registerFullOnboarding = async (formData) => {
+  try {
+    const response = await api.post("/owner/onboarding/register-full", formData);
     return response.data;
   } catch (error) {
     throw error.response?.data || error.message;
@@ -250,7 +260,9 @@ const propertyService = {
   updatePropertyPolicies,
   checkNameAvailability,
   togglePropertyStatus,
-  getFeaturedProperties
+  getFeaturedProperties,
+  registerPropertyInfo,
+  registerFullOnboarding,
 };
 
 export default propertyService;

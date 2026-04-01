@@ -16,16 +16,35 @@ const adminService = {
     }
   },
 
-  reviewOwnerApplication: async (applicationId, reviewData) => {
+  /**
+   * Duyệt đơn đăng ký Owner
+   * Endpoint: POST /api/v1/admin/owner-applications/{id}/approve
+   */
+  approveOwnerApplication: async (applicationId) => {
     try {
-      const response = await api.post(
-        `/admin/owner-applications/${applicationId}/review`,
-        reviewData
-      );
+      const response = await api.post(`/admin/owner-applications/${applicationId}/approve`);
       return response.data;
     } catch (error) {
-      console.error("Error reviewing owner application:", error);
-      throw new Error(error.response?.data?.message || "Failed to review application");
+      console.error("Error approving application:", error);
+      // Ném ra error message chi tiết để hiển thị toast
+      throw new Error(error.response?.data?.message || "Lỗi khi duyệt đơn");
+    }
+  },
+
+  /**
+   * Từ chối đơn đăng ký Owner
+   * Endpoint: POST /api/v1/admin/owner-applications/{id}/reject
+   * Body: { reason: string }
+   */
+  rejectOwnerApplication: async (applicationId, reason) => {
+    try {
+      const response = await api.post(`/admin/owner-applications/${applicationId}/reject`, {
+        reason: reason
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Error rejecting application:", error);
+      throw new Error(error.response?.data?.message || "Lỗi khi từ chối đơn");
     }
   },
 
@@ -208,6 +227,17 @@ const adminService = {
       throw new Error(error.response?.data?.message || "Lỗi khi xóa người dùng");
     }
   },
+  getAllPayouts: async () => {
+    return await api.get('/admin/payouts');
+  },
+
+  calculatePayout: async (ownerId) => {
+    return await api.post(`/admin/payouts/calculate/${ownerId}`);
+  },
+
+  processPayout: async (payoutId) => {
+    return await api.post(`/admin/payouts/process/${payoutId}`);
+  }
 };
 
 export default adminService;
