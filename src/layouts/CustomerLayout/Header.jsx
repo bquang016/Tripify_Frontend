@@ -1,6 +1,6 @@
 // src/layouts/CustomerLayout/Header.jsx
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import logoTripify from "@/assets/logo/logo_Tripify_xoafont.png";
+import logoTripify from "@/assets/logo/logo_tripify_xoafont.png";
 
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { ChevronDown, HelpCircle, Phone, Menu } from "lucide-react";
