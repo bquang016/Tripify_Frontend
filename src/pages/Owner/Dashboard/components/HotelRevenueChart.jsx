@@ -6,6 +6,7 @@ import { useLanguage } from "@/context/LanguageContext";
 
 const HotelRevenueChart = ({ data }) => {
     const { t, i18n } = useTranslation();
+    
     const { currency } = useLanguage();
     const isVi = i18n.language === 'vi';
 
