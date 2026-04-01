@@ -2,9 +2,7 @@ import React, { forwardRef } from "react";
 import { MapPin, User, Eye, Clock, CheckCircle, XCircle, Hotel, Home, Building, Calendar } from "lucide-react";
 import Button from "@/components/common/Button/Button";
 import { useTranslation } from "react-i18next";
-
-// URL Base cho ảnh (Cập nhật theo port backend của bạn)
-const API_IMAGE_BASE = "http://localhost:8386/uploads/";
+import { IMAGE_BASE_URL } from "../../../../services/axios.config";
 
 // [QUAN TRỌNG] Sử dụng forwardRef để fix lỗi animation
 const HotelSubmissionCard = forwardRef(({ hotel, onViewDetails }, ref) => {
@@ -59,7 +57,7 @@ const HotelSubmissionCard = forwardRef(({ hotel, onViewDetails }, ref) => {
   // 3. Helper: Xử lý URL ảnh
   const getImageUrl = (path) => {
       if (!path) return null;
-      return path.startsWith("http") ? path : `${API_IMAGE_BASE}${path}`;
+      return path.startsWith("http") ? path : `${IMAGE_BASE_URL}${path}`;
   };
 
   // Xử lý ảnh bìa

@@ -20,9 +20,9 @@ import LoginSlider from "@/components/auth/LoginSlider";
 import LegalModal from "@/components/auth/LegalModal";
 import OTPModal from "@/components/auth/OTPModal";
 import toast from "react-hot-toast";
+import { BASE_URL } from "../../services/axios.config";
 
 // URL Backend & Background
-const API_BASE_URL = "http://localhost:8386";
 const BG_URL =
     "https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=2074&auto=format&fit=crop";
 
@@ -203,7 +203,7 @@ const Register = () => {
     };
 
     const handleSocialLogin = (provider) => {
-        window.location.href = `${API_BASE_URL}/oauth2/authorization/${provider}`;
+        window.location.href = `${BASE_URL}/oauth2/authorization/${provider}`;
     };
 
     // --- PASSWORD STRENGTH EFFECT ---

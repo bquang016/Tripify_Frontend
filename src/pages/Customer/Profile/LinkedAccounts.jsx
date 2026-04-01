@@ -11,6 +11,7 @@ import ConfirmModal from '@/components/common/Modal/ConfirmModal';
 import CreatePasswordModal from '@/components/common/Modal/CreatePasswordModal';
 import AccountReviewModal from '@/components/common/Modal/AccountReviewModal';
 import { useNavigate } from 'react-router-dom';
+import { BASE_URL } from '../../../services/axios.config';
 
 // ✅ 1. ĐỊNH NGHĨA COMPONENT GoogleIcon TẠI ĐÂY
 const GoogleIcon = ({ className }) => (
@@ -76,7 +77,7 @@ const LinkedAccounts = () => {
     }
 
     // 2. Chuyển hướng
-    window.location.href = `http://localhost:8386/oauth2/authorization/${provider}`;
+    window.location.href = `${BASE_URL}/oauth2/authorization/${provider}`;
   };
 
   const handleUnlinkExecution = async () => {

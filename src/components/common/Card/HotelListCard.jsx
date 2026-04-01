@@ -3,9 +3,7 @@ import { MapPin, Star, Wifi, Coffee, Car, Check, ArrowRight, Heart } from "lucid
 import { useNavigate } from "react-router-dom";
 import Button from "@/components/common/Button/Button";
 import { formatPrice } from "@/utils/priceUtils";
-
-// Cấu hình Base URL
-const BASE_URL = "http://localhost:8386"; 
+import { IMAGE_BASE_URL } from "../../../services/axios.config";
 
 const HotelListCard = ({ hotel }) => {
   const navigate = useNavigate();
@@ -14,7 +12,7 @@ const HotelListCard = ({ hotel }) => {
   const getImageUrl = (imagePath) => {
     if (!imagePath) return "https://via.placeholder.com/600x400?text=No+Image";
     if (imagePath.startsWith("http")) return imagePath;
-    return `${BASE_URL}/uploads/${imagePath}`;
+    return `${IMAGE_BASE_URL}${imagePath}`;
   };
   const mainImage = getImageUrl(hotel.coverImage);
 

@@ -2,19 +2,16 @@ import React, { useState, useEffect, useCallback, memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import promotionService from "@/services/promotion.service";
 import { ArrowRight, Gift, Clock, MapPin, Sparkles, ChevronRight, Star } from 'lucide-react';
+import { IMAGE_BASE_URL } from "../../../services/axios.config";
 
 // --- CONFIGURATION ---
 const AUTO_SWITCH_TIME = 6000;
-const BE_BASE_URL = "http://localhost:8386";
-const UPLOAD_DIR = "/uploads/";
 
 // Helper: Format tiền tệ đẹp
 const formatCurrency = (val, type) => {
     if (type === 'PERCENTAGE') return `-${val}%`;
     return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(val);
 };
-
-const R2_PUBLIC_URL = "https://pub-fed047aa2ebd4dcaad827464c190ea28.r2.dev";
 
 const getImageUrl = (path) => {
     if (!path) {
@@ -26,9 +23,7 @@ const getImageUrl = (path) => {
         return path;
     }
 
-    // Path tương đối -> ảnh nằm trên Cloudflare R2
-    const cleanPath = path.startsWith("/") ? path.slice(1) : path;
-    return `${R2_PUBLIC_URL}/${cleanPath}`;
+    return `${IMAGE_BASE_URL}${path}`;
 };
 
 

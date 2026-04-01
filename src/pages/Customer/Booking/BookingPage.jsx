@@ -16,14 +16,12 @@ import ContactInfoForm from './components/ContactInfoForm';
 import propertyService from "@/services/property.service";
 import bookingService from "@/services/booking.service";
 import { useAuth } from "@/context/AuthContext";
+import { IMAGE_BASE_URL } from "../../../services/axios.config";
 
-const BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8386/api/v1").replace("/api/v1", "");
 const getFullImageUrl = (path) => {
     if (!path) return "https://via.placeholder.com/150";
     if (path.startsWith("http")) return path;
-    let cleanPath = path.startsWith('/') ? path : `/${path}`;
-    if (!cleanPath.startsWith('/uploads')) cleanPath = `/uploads${cleanPath}`;
-    return `${BASE_URL}${cleanPath}`;
+    return `${IMAGE_BASE_URL}${path}`;
 };
 
 // Component con: Khối An Tâm Đặt Phòng

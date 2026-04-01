@@ -7,6 +7,7 @@ const COLORS = ['#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'
 const PropertyPerformanceReport = ({ data }) => {
     const [selectedType, setSelectedType] = useState("ALL");
     const [chartMode, setChartMode] = useState("REVENUE"); // REVENUE hoặc BOOKINGS
+    
 
     // Xử lý và format dữ liệu
     const formattedData = useMemo(() => {

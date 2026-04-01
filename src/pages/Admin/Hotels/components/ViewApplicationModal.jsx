@@ -8,13 +8,12 @@ import {
 } from "lucide-react";
 import Button from "@/components/common/Button/Button";
 import ImageViewerModal from "./ImageViewerModal";
-
-const API_BASE_URL = (import.meta.env.VITE_REACT_APP_API_URL || "http://localhost:8386/api/v1").replace("/api/v1", "");
+import { IMAGE_BASE_URL } from "../../../../services/axios.config";
 
 const getImgUrl = (url) => {
   if (!url) return "/assets/images/placeholder.png";
   if (url.startsWith("http")) return url;
-  return `${API_BASE_URL}${url}`;
+  return `${IMAGE_BASE_URL}${url}`;
 };
 
 const formatDateVN = (dateString) => {
