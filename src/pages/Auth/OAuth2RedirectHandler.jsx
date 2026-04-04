@@ -1,38 +1,36 @@
-// src/pages/Auth/OAuth2RedirectHandler.jsx
 import React, { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import LoadingOverlay from '../../components/common/Loading/LoadingOverlay';
+import { useSearchParams } from 'react-router-dom';
 
 const OAuth2RedirectHandler = () => {
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
-  const { loginWithOAuth2 } = useAuth();
 
   useEffect(() => {
     const token = searchParams.get('token');
-    const action = searchParams.get('action'); // Lấy tham số action
+    const action = searchParams.get('action');
+    const error = searchParams.get('error');
 
-    if (token) {
-      if (action === 'require_email') {
-        // 1. Lưu token tạm thời để gọi API update
-        localStorage.setItem('accessToken', token);
-        // 2. Chuyển sang trang nhập email bổ sung
-        navigate('/auth/complete-profile');
-      } else {
-        // Luồng đăng nhập bình thường
-        loginWithOAuth2(token)
-          .then((success) => {
-            if (success) navigate('/');
-            else navigate('/login');
-          });
-      }
-    } else {
-      navigate('/login');
+    const authData = { token, action, error };
+
+    // 1. Gửi qua postMessage (Nếu trình duyệt không chặn)
+    if (window.opener && !window.opener.closed) {
+      window.opener.postMessage(authData, window.location.origin);
+    } 
+    // 2. Fallback siêu cấp: Dùng LocalStorage để "đánh điện" cho cửa sổ mẹ
+    else {
+      localStorage.setItem('oauth2_data', JSON.stringify(authData));
+      // Xóa ngay lập tức để kích hoạt sự kiện 'storage' bên kia
+      setTimeout(() => localStorage.removeItem('oauth2_data'), 500); 
     }
-  }, [searchParams, navigate, loginWithOAuth2]);
 
-  return <LoadingOverlay isLoading={true} message="Đang xử lý..." />;
+    // Nhiệm vụ hoàn tất -> Rút lui!
+    window.close();
+  }, [searchParams]);
+
+  return (
+    <div className="flex h-screen w-screen items-center justify-center bg-slate-900">
+      <p className="text-white font-bold text-lg animate-pulse">Đang hoàn tất đăng nhập...</p>
+    </div>
+  );
 };
 
 export default OAuth2RedirectHandler;
