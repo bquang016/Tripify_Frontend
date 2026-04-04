@@ -9,7 +9,7 @@ import Toast from "@/components/common/Notification/Toast";
 import ToastPortal from "@/components/common/Notification/ToastPortal";
 import LoginSlider from "@/components/auth/LoginSlider";
 import OTPModal from "@/components/auth/OTPModal";
-import toast from "react-hot-toast";
+import hotToast from "react-hot-toast";
 import { extractErrorMessage } from "@/utils/errorHandler";
 import { API_BASE_URL } from "../../services/axios.config";
 
@@ -25,6 +25,7 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [toastState, setToastState] = useState({ show: false, message: "", type: "" });
     
     // 2FA state
     const [show2faModal, setShow2faModal] = useState(false);
@@ -420,7 +421,15 @@ const handleSocialLogin = (provider, isLinking = false) => {
 
             {/* ✅ THÔNG BÁO TOAST (Cho thành công) */}
             <ToastPortal>
-                {toast.show && <div className="fixed top-6 right-6 z-50 animate-slide-in-right"><Toast message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, show: false })} /></div>}
+                {toastState.show && (
+                    <div className="fixed top-6 right-6 z-50 animate-slide-in-right">
+                        <Toast 
+                    message={toastState.message} 
+                    type={toastState.type} 
+                    onClose={() => setToastState({ ...toastState, show: false })} 
+                        />
+                    </div>
+                    )}
             </ToastPortal>
 
             {/* ✅ MODAL LỖI (GIỮ NGUYÊN GIAO DIỆN CỦA BẠN) */}
@@ -441,6 +450,7 @@ const handleSocialLogin = (provider, isLinking = false) => {
                                 {errorModal.message}
                             </p>
                         </div>
+                        
 
                         {/* Footer Modal */}
                         <div className="p-4 bg-slate-50 flex justify-center">
