@@ -63,21 +63,85 @@ const LinkedAccounts = () => {
     setTimeout(() => setToast(prev => ({...prev, show: false})), 3000);
   };
 
+  // ✅ HÀM MỚI ĐÃ ĐƯỢC TÍCH HỢP POPUP
   const handleLink = (provider) => {
-    // 1. Lấy token hiện tại
-    const token = localStorage.getItem('accessToken');
+    // 1. Lấy token của User đang đăng nhập để gắn vào Cookie
+    const currentToken = localStorage.getItem('accessToken') || localStorage.getItem('token'); 
     
-    if (token) {
-        // ✅ CẬP NHẬT: Set Cookie với SameSite=Lax để đảm bảo nó được gửi khi redirect
-        document.cookie = `LINKING_TOKEN=${token}; path=/; max-age=300; SameSite=Lax`;
-        console.log("Cookie LINKING_TOKEN set:", document.cookie); // Debug log
-    } else {
-        console.error("No access token found to link account!");
+    if (!currentToken) {
+        showToast("Phiên đăng nhập không hợp lệ, vui lòng đăng nhập lại!", "error");
         return;
     }
+    
+    // Ghi Cookie để Backend nhận diện User nào đang muốn Link
+    document.cookie = `LINKING_TOKEN=${currentToken}; path=/; max-age=180; SameSite=Lax`; 
 
-    // 2. Chuyển hướng
-    window.location.href = `${BASE_URL}/oauth2/authorization/${provider}`;
+    // 2. Xử lý URL và Mở Popup
+    // Đảm bảo lấy API_BASE_URL và cắt phần "/api/v1" đi để ra đúng thư mục gốc chứa "/oauth2"
+    const backendRootUrl = BASE_URL.includes('/api/v1') ? BASE_URL.replace('/api/v1', '') : BASE_URL;
+    const backendUrl = `${backendRootUrl}/oauth2/authorization/${provider}`;
+
+    const width = 500; const height = 600;
+    const left = window.screen.width / 2 - width / 2;
+    const top = window.screen.height / 2 - height / 2;
+
+    window.open(backendUrl, "OAuth2Linking", `width=${width},height=${height},top=${top},left=${left}`);
+
+    // 3. Lắng nghe kết quả trả về từ Popup
+    const processAuthData = async (data) => {
+            const { token, error } = data || {};
+            
+            // ❌ TRƯỜNG HỢP THẤT BẠI (Ví dụ: Tài khoản FB đã liên kết với người khác)
+            if (error) {
+                // Giải mã URL nếu Backend gửi lỗi tiếng Việt đã mã hóa
+                const decodedError = decodeURIComponent(error); 
+                showToast(decodedError, "error"); // Hiện Toast đỏ báo lỗi
+                return;
+            }
+            
+            // ✅ TRƯỜNG HỢP THÀNH CÔNG
+            if (token) {
+                showToast(`Liên kết tài khoản ${provider} thành công!`, "success");
+                
+                // Load lại profile để cập nhật dấu tích xanh
+                try {
+                    const user = await authService.getProfile();
+                    updateUser(user);
+                } catch (err) {
+                    console.error("Không thể cập nhật giao diện:", err);
+                }
+            }
+        };
+
+    // Bắt sự kiện trực tiếp từ Popup (PostMessage)
+    const messageListener = (event) => {
+            if (event.origin !== window.location.origin) return;
+            
+            const data = event.data || {};
+            
+            // ✅ CHỈNH SỬA: Nếu có 'token' HOẶC có 'error' thì mới xử lý
+            // Nếu data trống rỗng (rác từ Vite/Extension) thì mới return
+            if (!data.token && !data.error) return; 
+
+            processAuthData(data);
+            window.removeEventListener("message", messageListener);
+        };
+
+        // Bắt sự kiện gián tiếp (LocalStorage Fallback)
+    const storageListener = (event) => {
+            if (event.key === 'oauth2_data' && event.newValue) {
+                const data = JSON.parse(event.newValue);
+                
+                // ✅ LỌC RÁC CHO STORAGE
+                if (!data.token && !data.error) return;
+
+                processAuthData(data);
+                window.removeEventListener("storage", storageListener);
+            }
+        };
+
+    window.addEventListener("message", messageListener, false);
+    window.addEventListener("storage", storageListener, false);
   };
 
   const handleUnlinkExecution = async () => {
