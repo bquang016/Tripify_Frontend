@@ -1,8 +1,7 @@
 import React from "react";
 import { Star, MapPin, ArrowRight, Heart, Wifi, Utensils, X } from "lucide-react";
 import { formatPrice } from "@/utils/priceUtils";
-
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8386/api/v1").replace("/api/v1", "");
+import { IMAGE_BASE_URL } from "../../../../services/axios.config";
 
 const MapHotelCard = ({ property, onClose, navigate }) => {
   
@@ -10,7 +9,7 @@ const MapHotelCard = ({ property, onClose, navigate }) => {
   if (property.coverImage) {
       imageUrl = property.coverImage.startsWith("http") 
         ? property.coverImage 
-        : `${API_BASE_URL}/images/${property.coverImage}`;
+        : `${IMAGE_BASE_URL}${property.coverImage}`;
   }
 
   const priceFormatted = formatPrice(property.minPrice, property.convertedMinPrice, property.currency);

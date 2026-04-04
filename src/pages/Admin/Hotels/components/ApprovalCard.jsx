@@ -2,13 +2,11 @@ import React, { forwardRef } from "react";
 import { User, Eye, Clock, CheckCircle, XCircle, Briefcase, Calendar, MapPin } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import Button from "@/components/common/Button/Button";
-
-// URL Base cho ảnh
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8386/api/v1").replace("/api/v1", "");
+import { IMAGE_BASE_URL } from "../../../../services/axios.config";
 
 const getImageUrl = (path) => {
     if (!path) return null;
-    return path.startsWith("http") ? path : `${API_BASE_URL}${path}`;
+    return path.startsWith("http") ? path : `${IMAGE_BASE_URL}${path}`;
 };
 
 const ApprovalCard = forwardRef(({ application, onViewDetails }, ref) => {

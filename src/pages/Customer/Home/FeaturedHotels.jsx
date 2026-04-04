@@ -12,9 +12,7 @@ import propertyService from "@/services/property.service";
 import placeholderImg from "@/assets/images/placeholder.png";
 import { formatPrice } from "@/utils/priceUtils";
 import { useLanguage } from "@/context/LanguageContext";
-
-// Cấu hình đường dẫn ảnh
-const BASE_IMAGE_URL = "http://localhost:8386/images/";
+import { IMAGE_BASE_URL } from "../../../services/axios.config";
 
 // ====================================================================
 // 1. SUB-COMPONENT: HEADER
@@ -142,14 +140,14 @@ const FeaturedHotels = () => {
         if (item.coverImage) {
             return item.coverImage.startsWith("http")
                 ? item.coverImage
-                : `${BASE_IMAGE_URL}${item.coverImage}`;
+                : `${IMAGE_BASE_URL}${item.coverImage}`;
         }
 
         if (item.images && item.images.length > 0) {
             const firstImg = item.images[0];
             return firstImg.startsWith("http")
                 ? firstImg
-                : `${BASE_IMAGE_URL}${firstImg}`;
+                : `${IMAGE_BASE_URL}${firstImg}`;
         }
 
         return placeholderImg;

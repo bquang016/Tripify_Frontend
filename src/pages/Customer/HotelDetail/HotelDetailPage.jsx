@@ -27,16 +27,14 @@ import propertyService from "@/services/property.service";
 import bookingService from "@/services/booking.service";
 import { getRatingsByProperty, pinRating } from "@/services/rating.service";
 import { formatPrice } from "@/utils/priceUtils";
+import { IMAGE_BASE_URL } from "../../../services/axios.config";
 
 // --- HELPERS ---
-const BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8386/api/v1").replace("/api/v1", "");
 
 const getFullImageUrl = (path) => {
     if (!path) return "https://via.placeholder.com/800x600?text=No+Image";
     if (path.startsWith("http")) return path;
-    let cleanPath = path.startsWith('/') ? path : `/${path}`;
-    if (!cleanPath.startsWith('/uploads')) cleanPath = `/uploads${cleanPath}`;
-    return `${BASE_URL}${cleanPath}`;
+    return `${IMAGE_BASE_URL}${path}`;
 };
 
 const getAmenityIcon = (amenityName) => {

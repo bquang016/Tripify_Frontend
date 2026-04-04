@@ -10,6 +10,7 @@ import Button from "@/components/common/Button/Button";
 import propertyService from "@/services/property.service";
 // Import component hiển thị chính sách
 import PropertyPoliciesView from "./PropertyPoliciesView";
+import { IMAGE_BASE_URL } from "../../../../services/axios.config";
 
 // --- HELPERS ---
 
@@ -104,9 +105,8 @@ export default function ViewHotelSubmissionModal({
   const typeInfo = getPropertyTypeLabel(submission.propertyType);
   
   // Xử lý ảnh
-  const API_IMAGE_BASE = "http://localhost:8386/images/"; 
   const ownerAvatarUrl = submission.ownerAvatar 
-    ? (submission.ownerAvatar.startsWith("http") ? submission.ownerAvatar : `${API_IMAGE_BASE}${submission.ownerAvatar}`)
+    ? (submission.ownerAvatar.startsWith("http") ? submission.ownerAvatar : `${IMAGE_BASE_URL}${submission.ownerAvatar}`)
     : null;
 
   let imageList = [];
@@ -116,7 +116,7 @@ export default function ViewHotelSubmissionModal({
   }
   
   const formattedImageUrls = [...new Set(imageList)].map(img => 
-      img.startsWith("http") ? img : `${API_IMAGE_BASE}${img}`
+      img.startsWith("http") ? img : `${IMAGE_BASE_URL}${img}`
   );
 
   const viewerImages = formattedImageUrls.map(url => ({

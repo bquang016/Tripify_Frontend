@@ -15,13 +15,13 @@ import {
 } from "lucide-react";
 import Button from "@/components/common/Button/Button";
 import RatingStars from "@/pages/Customer/MyBookings/components/RatingStars";
+import { IMAGE_BASE_URL } from "../../../services/axios.config";
 
 // --- HELPER XỬ LÝ ẢNH ---
-const API_BASE_URL = "http://localhost:8386";
 const getImageUrl = (path) => {
   if (!path) return "https://via.placeholder.com/150";
   if (path.startsWith("http")) return path;
-  return `${API_BASE_URL}/${path}`;
+  return `${IMAGE_BASE_URL}${path}`;
 };
 
 const ReviewBookingModal = ({ 

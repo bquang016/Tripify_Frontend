@@ -17,16 +17,14 @@ import {
     BedDouble, Users, DollarSign, Image as ImageIcon, Package, Trash2,
     Wine, Ban, Star, RefreshCw, Loader2, CheckCircle, AlertCircle
 } from "lucide-react";
+import { IMAGE_BASE_URL } from "../../../../services/axios.config";
 
 // --- CONFIG ---
-const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:8386/api/v1").replace("/api/v1", "");
 
 const getFullImageUrl = (url) => {
     if (!url) return "/assets/images/placeholder.png";
     if (url.startsWith("http")) return url;
-    let path = url.startsWith("/") ? url : `/${url}`;
-    if (!path.startsWith("/uploads")) path = `/uploads${path}`;
-    return `${API_BASE_URL}${path}`;
+    return `${IMAGE_BASE_URL}${url}`;
 };
 
 // --- HELPER FORMAT TIỀN ---
