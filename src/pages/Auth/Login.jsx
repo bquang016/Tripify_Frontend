@@ -9,9 +9,9 @@ import Toast from "@/components/common/Notification/Toast";
 import ToastPortal from "@/components/common/Notification/ToastPortal";
 import LoginSlider from "@/components/auth/LoginSlider";
 import OTPModal from "@/components/auth/OTPModal";
-import toast from "react-hot-toast";
+import hotToast from "react-hot-toast";
 import { extractErrorMessage } from "@/utils/errorHandler";
-import { BASE_URL } from "../../services/axios.config";
+import { API_BASE_URL } from "../../services/axios.config";
 
 // URL Backend (Cổng OAuth2)
 const BG_URL = "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=80&w=2070&auto=format&fit=crop";
@@ -19,12 +19,13 @@ const BG_URL = "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1?q=8
 const Login = () => {
     const navigate = useNavigate();
     const location = useLocation();
-    const { updateUser } = useAuth();
+    const { updateUser, loginWithOAuth2 } = useAuth();
 
     const [formData, setFormData] = useState({ email: "", password: "" });
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [toastState, setToastState] = useState({ show: false, message: "", type: "" });
     
     // 2FA state
     const [show2faModal, setShow2faModal] = useState(false);
@@ -66,8 +67,93 @@ const Login = () => {
         }
     };
 
-    const handleSocialLogin = (provider) => {
-        window.location.href = `${BASE_URL}/oauth2/authorization/${provider}`;
+    // ✅ HÀM MỚI: ĐĂNG NHẬP BẰNG POPUP
+const handleSocialLogin = (provider, isLinking = false) => {
+        // 1. CHỈ tạo Cookie khi người dùng đang ở trang Profile và chủ động muốn liên kết
+        if (isLinking) {
+            const currentToken = localStorage.getItem('accessToken'); 
+            if (currentToken) {
+                document.cookie = `LINKING_TOKEN=${currentToken}; path=/; max-age=180; SameSite=Lax`; 
+            }
+        } else {
+            // Dọn dẹp sạch sẽ Cookie nếu đang ở trang Đăng nhập bình thường
+            document.cookie = "LINKING_TOKEN=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+        }
+
+        // 2. XỬ LÝ URL BACKEND: Cắt bỏ '/api/v1' từ API_BASE_URL để lấy root domain
+        // Kết quả sẽ tự động là http://localhost:8386 hoặc https://api.tripify.click
+        const backendRootUrl = API_BASE_URL.replace('/api/v1', '');
+        const backendUrl = `${backendRootUrl}/oauth2/authorization/${provider}`;
+
+        const width = 500; const height = 600;
+        const left = window.screen.width / 2 - width / 2;
+        const top = window.screen.height / 2 - height / 2;
+
+        window.open(backendUrl, "OAuth2Login", `width=${width},height=${height},top=${top},left=${left}`);
+
+        // ✅ HÀM XỬ LÝ CHUNG (Trong Login.jsx)
+        const processAuthData = async (data) => {
+            const { token, action, error } = data || {};
+            
+            if (error) {
+                setError(error);
+                return;
+            }
+            
+            if (token) {
+                if (action === 'require_email') {
+                    localStorage.setItem('accessToken', token);
+                    localStorage.setItem('token', token); // Lưu cả 2 phòng hờ
+                    navigate('/auth/complete-profile');
+                } else {
+                    try {
+                        setLoading(true);
+
+                        // 🚀 CHÌA KHÓA LÀ ĐÂY: Lưu Token VÀO KHO trước khi gọi API
+                        localStorage.setItem('accessToken', token);
+                        localStorage.setItem('token', token);
+
+                        if (loginWithOAuth2) {
+                            const success = await loginWithOAuth2(token);
+                            if (success) {
+                                toast.success("Đăng nhập thành công!");
+                                setTimeout(() => navigate(from, { replace: true }), 800);
+                            } else {
+                                setError("Tài khoản chưa được phân quyền.");
+                            }
+                        }
+                    } catch (err) {
+                        console.error("==== LỖI OAUTH2 CHI TIẾT ====", err);
+                        if (err.response) {
+                            setError(`Lỗi từ Server: ${err.response.status} - ${err.response.data?.message || 'Token bị từ chối'}`);
+                        } else {
+                            setError("Không thể kết nối đến máy chủ: " + err.message);
+                        }
+                    } finally {
+                        setLoading(false);
+                    }
+                }
+            }
+        };
+
+        // Lắng nghe tín hiệu trực tiếp (postMessage)
+        const messageListener = (event) => {
+            // Kiểm tra bảo mật cơ bản
+            if (event.origin !== window.location.origin) return;
+            processAuthData(event.data);
+            window.removeEventListener("message", messageListener);
+        };
+
+        // Lắng nghe tín hiệu dự phòng (LocalStorage)
+        const storageListener = (event) => {
+            if (event.key === 'oauth2_data' && event.newValue) {
+                processAuthData(JSON.parse(event.newValue));
+                window.removeEventListener("storage", storageListener);
+            }
+        };
+
+        window.addEventListener("message", messageListener, false);
+        window.addEventListener("storage", storageListener, false);
     };
 
     // ✅ HÀM ĐÓNG MODAL
@@ -335,7 +421,15 @@ const Login = () => {
 
             {/* ✅ THÔNG BÁO TOAST (Cho thành công) */}
             <ToastPortal>
-                {toast.show && <div className="fixed top-6 right-6 z-50 animate-slide-in-right"><Toast message={toast.message} type={toast.type} onClose={() => setToast({ ...toast, show: false })} /></div>}
+                {toastState.show && (
+                    <div className="fixed top-6 right-6 z-50 animate-slide-in-right">
+                        <Toast 
+                    message={toastState.message} 
+                    type={toastState.type} 
+                    onClose={() => setToastState({ ...toastState, show: false })} 
+                        />
+                    </div>
+                    )}
             </ToastPortal>
 
             {/* ✅ MODAL LỖI (GIỮ NGUYÊN GIAO DIỆN CỦA BẠN) */}
@@ -356,6 +450,7 @@ const Login = () => {
                                 {errorModal.message}
                             </p>
                         </div>
+                        
 
                         {/* Footer Modal */}
                         <div className="p-4 bg-slate-50 flex justify-center">
