@@ -9,7 +9,7 @@ import Toast from "@/components/common/Notification/Toast";
 import ToastPortal from "@/components/common/Notification/ToastPortal";
 import LoginSlider from "@/components/auth/LoginSlider";
 import OTPModal from "@/components/auth/OTPModal";
-import hotToast from "react-hot-toast";
+import toast from "react-hot-toast";
 import { extractErrorMessage } from "@/utils/errorHandler";
 import { API_BASE_URL } from "../../services/axios.config";
 
