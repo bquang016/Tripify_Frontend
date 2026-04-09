@@ -94,6 +94,8 @@
     }
   },
   "hotels": {
+    "filters": "Bộ lọc tìm kiếm",
+    "star_rating": "Hạng sao",
     "submissions_title": "Duyệt chỗ nghỉ",
     "list_title": "Danh sách chỗ nghỉ",
     "approve": "Duyệt",

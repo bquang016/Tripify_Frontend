@@ -3,7 +3,6 @@ import Card from "@/components/common/Card/Card";
 import Button from "@/components/common/Button/Button";
 import { Search, RotateCcw, MapPin, Star } from "lucide-react";
 import MapEntryPoint from "@/pages/Customer/Explore/components/MapEntryPoint";
-import { useTranslation } from "react-i18next";
 
 // Import các components con
 import FilterSection from "./components/Filter/FilterSection";
@@ -11,8 +10,6 @@ import CheckboxOption from "./components/Filter/CheckboxOption";
 import PriceRangeFilter from "./components/Filter/PriceRangeFilter";
 
 export default function FilterSidebar({ onFilterChange }) {
-    const { t, i18n } = useTranslation();
-    
     // --- STATE ---
     const [selectedCities, setSelectedCities] = useState([]);
     const [selectedRatings, setSelectedRatings] = useState([]);
@@ -73,7 +70,7 @@ export default function FilterSidebar({ onFilterChange }) {
                         <div className="bg-blue-50 p-1.5 rounded-lg text-[rgb(40,169,224)]">
                             <Search size={16} />
                         </div>
-                        <h2 className="text-base font-bold text-gray-900">{t('hotels.filters')}</h2>
+                        <h2 className="text-base font-bold text-gray-900">Bộ lọc</h2>
                     </div>
                     <Button
                         variant="ghost"
@@ -82,7 +79,7 @@ export default function FilterSidebar({ onFilterChange }) {
                         className="text-xs font-medium text-gray-500 hover:text-red-500 hover:bg-red-50 px-2 transition-colors"
                         leftIcon={<RotateCcw size={14} />}
                     >
-                        {i18n.language === 'vi' ? 'Đặt lại' : 'Reset'}
+                        Đặt lại
                     </Button>
                 </div>
 
@@ -95,7 +92,7 @@ export default function FilterSidebar({ onFilterChange }) {
                     />
 
                     {/* MODULE 2: ĐỊA ĐIỂM */}
-                    <FilterSection title={t('search.popular_destinations')} icon={MapPin}>
+                    <FilterSection title="Điểm đến phổ biến" icon={MapPin}>
                         {CITIES.map(city => (
                             <CheckboxOption 
                                 key={city} 
@@ -106,8 +103,9 @@ export default function FilterSidebar({ onFilterChange }) {
                         ))}
                     </FilterSection>
 
+
                     {/* MODULE 3: HẠNG SAO */}
-                    <FilterSection title={t('hotels.star_rating')} icon={Star}>
+                    <FilterSection title="Hạng sao" icon={Star}>
                         {[5, 4, 3, 2, 1].map(star => (
                             <CheckboxOption 
                                 key={star} 

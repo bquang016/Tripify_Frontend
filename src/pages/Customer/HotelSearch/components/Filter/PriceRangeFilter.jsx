@@ -6,13 +6,12 @@ import { DollarSign } from "lucide-react";
 const PriceRangeFilter = ({ onChange, initialMin = 0, initialMax = 10000000 }) => {
     const [range, setRange] = useState({ min: initialMin, max: initialMax });
 
-    // Debounce: Chỉ gọi onChange lên cha khi người dùng dừng thao tác 600ms
     useEffect(() => {
         const timer = setTimeout(() => {
             onChange({ minPrice: range.min, maxPrice: range.max });
         }, 600);
         return () => clearTimeout(timer);
-    }, [range]); // Bỏ dependency onChange để tránh loop nếu cha ko dùng useCallback
+    }, [range]);
 
     const handleQuickPrice = (min, max) => {
         setRange({ min, max });
@@ -20,17 +19,18 @@ const PriceRangeFilter = ({ onChange, initialMin = 0, initialMax = 10000000 }) =
 
     return (
         <FilterSection title="Khoảng giá (1 đêm)" icon={DollarSign}>
-            <div className="mb-2">
+            <div className="mb-2 px-1">
                 <DualRangeSlider 
                     min={0} 
                     max={10000000} 
                     step={100000}
-                    value={range} // Truyền value xuống để slider cập nhật khi bấm nút nhanh
+                    value={range} 
                     onChange={(newRange) => setRange(newRange)} 
                 />
             </div>
 
-            <div className="flex flex-wrap gap-2 mt-4">
+            {/* Đã làm đẹp lại các nút bấm quick price */}
+            <div className="flex flex-wrap gap-2 mt-5">
                 {[
                     { l: '< 1tr', min: 0, max: 1000000 },
                     { l: '1-3tr', min: 1000000, max: 3000000 },
@@ -39,7 +39,7 @@ const PriceRangeFilter = ({ onChange, initialMin = 0, initialMax = 10000000 }) =
                     <button
                         key={idx}
                         onClick={() => handleQuickPrice(item.min, item.max)}
-                        className="text-xs px-2 py-1 bg-gray-50 border border-gray-200 rounded hover:border-[rgb(40,169,224)] hover:text-[rgb(40,169,224)] transition-all"
+                        className="flex-1 text-center text-[13px] font-medium px-2 py-1.5 bg-white border border-gray-200 rounded-full hover:border-[rgb(40,169,224)] hover:text-[rgb(40,169,224)] hover:bg-blue-50/50 transition-all active:scale-95"
                     >
                         {item.l}
                     </button>

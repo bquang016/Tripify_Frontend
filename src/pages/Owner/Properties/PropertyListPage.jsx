@@ -8,11 +8,8 @@ import ViewPropertyModal from "./components/ViewPropertyModal";
 import EditPropertyModal from "./components/EditPropertyModal";
 import DeactivateConfirmModal from "./components/DeactivateConfirmModal"; 
 import Toast from "@/components/common/Notification/Toast"; 
-import { useTranslation } from "react-i18next";
 
 const PropertyListPage = () => {
-  const { t, i18n } = useTranslation();
-  const isVi = i18n.language === 'vi';
   const navigate = useNavigate();
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +37,7 @@ const PropertyListPage = () => {
       const res = await propertyService.getOwnerProperties();
       setProperties(res.data || []); 
     } catch (error) {
-      showToast(t('owner.fetch_properties_failed'), "error");
+      showToast("Tải danh sách chỗ nghỉ thất bại", "error");
     } finally {
       setLoading(false);
     }
@@ -66,12 +63,12 @@ const PropertyListPage = () => {
         const isTurningOff = property.active; 
         showToast(
             isTurningOff 
-                ? t('owner.deactivate_success', { name: property.propertyName })
-                : t('owner.activate_success', { name: property.propertyName }), 
+                ? `Đã tạm ngưng hoạt động: ${property.propertyName}`
+                : `Đã kích hoạt: ${property.propertyName}`, 
             "success"
         );
     } catch (error) {
-        showToast(isVi ? "Không thể cập nhật trạng thái. Vui lòng thử lại!" : "Update failed. Please try again.", "error");
+        showToast("Không thể cập nhật trạng thái. Vui lòng thử lại!", "error");
     }
   };
 
@@ -121,7 +118,7 @@ const PropertyListPage = () => {
   const handleEditSuccess = () => {
       setIsEditModalOpen(false);
       fetchProperties(); 
-      showToast(t('owner.update_success'), "success");
+      showToast("Cập nhật thành công!", "success");
   };
 
   const stats = {
@@ -135,11 +132,11 @@ const PropertyListPage = () => {
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">{t('owner.my_properties')}</h1>
-          <p className="text-gray-500 mt-1">{t('owner.manage_track_status')}</p>
+          <h1 className="text-2xl font-bold text-gray-900">Chỗ nghỉ của tôi</h1>
+          <p className="text-gray-500 mt-1">Quản lý và theo dõi trạng thái các chỗ nghỉ</p>
         </div>
         <Button onClick={() => navigate("/owner/properties/new")} leftIcon={<Plus size={20} />}>
-          {t('owner.add_property')}
+          Thêm chỗ nghỉ
         </Button>
       </div>
 
@@ -149,7 +146,7 @@ const PropertyListPage = () => {
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                 <input 
                     type="text"
-                    placeholder={t('owner.search_properties_placeholder')}
+                    placeholder="Tìm kiếm theo tên, thành phố..."
                     className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-blue-100 focus:border-blue-500 outline-none transition-all text-sm"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -157,23 +154,23 @@ const PropertyListPage = () => {
              </div>
              <div className="flex p-1 bg-gray-100 rounded-xl overflow-hidden w-full lg:w-auto">
                 {[
-                    { id: "ALL", label: t('owner.all') },
-                    { id: "ACTIVE", label: t('owner.active') },
-                    { id: "PENDING", label: t('owner.pending') }
+                    { id: "ALL", label: "Tất cả" },
+                    { id: "ACTIVE", label: "Đang hoạt động" },
+                    { id: "PENDING", label: "Chờ duyệt" }
                 ].map(tab => (
                     <button key={tab.id} onClick={() => setFilterStatus(tab.id)} className={`px-4 py-2 text-sm font-medium rounded-lg transition-all flex-1 lg:flex-none ${filterStatus === tab.id ? "bg-white text-blue-600 shadow-sm" : "text-gray-500 hover:bg-gray-200/50"}`}>{tab.label}</button>
                 ))}
              </div>
              <div className="hidden xl:flex gap-4 text-sm text-gray-500">
-                 <span>{t('owner.total')}: <b>{stats.total}</b></span>
+                 <span>Tổng số: <b>{stats.total}</b></span>
                  <span className="text-gray-300">|</span>
-                 <span className="text-green-600">{t('owner.active')}: <b>{stats.active}</b></span>
+                 <span className="text-green-600">Hoạt động: <b>{stats.active}</b></span>
              </div>
          </div>
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center h-64"><Loader2 className="animate-spin text-blue-600 mb-4" size={40} /><p className="text-gray-500 font-medium">{t('common.loading')}</p></div>
+        <div className="flex flex-col items-center justify-center h-64"><Loader2 className="animate-spin text-blue-600 mb-4" size={40} /><p className="text-gray-500 font-medium">Đang tải dữ liệu...</p></div>
       ) : filteredProperties.length > 0 ? (
         <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -183,7 +180,7 @@ const PropertyListPage = () => {
             </div>
             {totalPages > 1 && (
                 <div className="mt-8 pt-6 border-t border-gray-200 bg-white rounded-xl p-4 shadow-sm border flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <span className="text-sm text-gray-500">{isVi ? "Hiển thị" : "Showing"} <span className="font-semibold text-gray-700">{paginatedProperties.length}</span> / <span className="font-semibold text-gray-700">{filteredProperties.length}</span> {isVi ? "kết quả" : "results"}</span>
+                    <span className="text-sm text-gray-500">Hiển thị <span className="font-semibold text-gray-700">{paginatedProperties.length}</span> / <span className="font-semibold text-gray-700">{filteredProperties.length}</span> kết quả</span>
                     <div className="flex items-center gap-2">
                         <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="p-2 rounded-lg border bg-white disabled:opacity-50"><ChevronLeft size={18} /></button>
                         <div className="flex gap-1">{getPaginationGroup().map((item, index) => (<button key={index} onClick={() => typeof item === 'number' && handlePageChange(item)} className={`w-8 h-8 rounded-lg text-sm ${item === currentPage ? "bg-blue-500 text-white" : "bg-white border text-gray-600"}`}>{item}</button>))}</div>
@@ -195,8 +192,8 @@ const PropertyListPage = () => {
       ) : (
         <div className="flex flex-col items-center justify-center h-96 bg-white rounded-3xl border border-dashed border-gray-200 shadow-sm">
             <Building2 size={64} className="text-blue-400 mb-6" />
-            <h3 className="text-xl font-bold text-gray-900 mb-2">{searchTerm ? t('owner.no_results_found') : t('owner.no_properties_yet')}</h3>
-            {!searchTerm && <Button onClick={() => navigate("/owner/properties/new")}>{t('owner.register_now')}</Button>}
+            <h3 className="text-xl font-bold text-gray-900 mb-2">{searchTerm ? "Không tìm thấy kết quả" : "Bạn chưa có chỗ nghỉ nào"}</h3>
+            {!searchTerm && <Button onClick={() => navigate("/owner/properties/new")}>Đăng ký ngay</Button>}
         </div>
       )}
 

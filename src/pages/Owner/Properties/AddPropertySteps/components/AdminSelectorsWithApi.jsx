@@ -3,13 +3,28 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import CustomSelect from "@/components/common/Select/CustomSelect";
 
-const VN_API_BASE = "https://provinces.open-api.vn/api/";
+const VN_API_BASE = "https://provinces.open-api.vn/api/v1/";
 const getMapboxAccessToken = () => import.meta.env.VITE_MAPBOX_TOKEN;
 
-// Hàm chuẩn hóa tên
-const normalizeName = (str) => {
-  if (!str) return "";
-  return str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/(tỉnh|thành phố|quận|huyện|thị xã|phường|xã|thị trấn)/g, "").replace(/[^a-z0-9]/g, "").trim();
+const superNormalize = (str) => {
+    if (!str) return "";
+    let s = String(str).toLowerCase();
+    s = s.replace(/đ/g, "d"); 
+    s = s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    s = s.replace(/^(thanh pho|tinh|quan|huyen|phuong|xa|thi xa|thi tran|tp\.?|tt\.?)\s+/, "");
+    s = s.replace(/^(city|district|ward)\s+/, "");
+    s = s.replace(/\s+(city|district|ward)$/, "");
+    return s.replace(/[^a-z0-9]/g, ""); 
+};
+
+const isMatch = (apiStr, mapStr) => {
+    const api = superNormalize(apiStr);
+    const map = superNormalize(mapStr);
+    if (!api || !map) return false;
+    if (api === map) return true;
+    if (map.length >= 5 && api.includes(map)) return true;
+    if (api.length >= 5 && map.includes(api)) return true;
+    return false;
 };
 
 export default function AdminSelectorsWithApi({ watch, setValue, errors, mapRef, markerRef, mapboxData }) {
@@ -22,104 +37,117 @@ export default function AdminSelectorsWithApi({ watch, setValue, errors, mapRef,
   const districtCode = watch("districtCode");
   const wardName = watch("ward");
 
-  // Debug: Báo khi component được mount
-  useEffect(() => { console.log("Component AdminSelectorsWithApi đã Mount"); }, []);
-
-  // 1. Load Tỉnh
   useEffect(() => {
-    console.log("🚀 Bắt đầu tải danh sách Tỉnh...");
     axios.get(`${VN_API_BASE}p/`)
-      .then(res => {
-        console.log(`✅ Đã tải ${res.data.length} tỉnh/thành.`);
-        setProvinces(res.data.map(p => ({ value: p.code, label: p.name })));
-      })
-      .catch(err => console.error("🔥 Lỗi tải tỉnh:", err));
+      .then(res => setProvinces(res.data.map(p => ({ value: String(p.code), label: p.name }))))
+      .catch(err => console.error(err));
   }, []);
 
-  // 2. LOGIC ĐỒNG BỘ TỪ MAPBOX
   useEffect(() => {
-    // Log kiểm tra đầu vào
-    if (!mapboxData) return; 
-    console.log("📩 AdminSelectors nhận được MapboxData:", mapboxData);
-
-    if (provinces.length === 0) {
-        console.warn("⏳ Chờ danh sách Tỉnh tải xong...");
-        return;
-    }
-
-    const { province: mProvince, district: mDistrict, ward: mWard } = mapboxData;
+    if (!mapboxData || provinces.length === 0) return;
+    const { province: mProvince, district: mDistrict, ward: mWard, fullAddress } = mapboxData;
     
-    if (!mProvince) {
-        console.warn("⚠️ Mapbox không trả về tên Tỉnh (Region). Dữ liệu nhận được:", mapboxData);
-        return;
-    }
+    if (!mProvince) return;
 
     const syncLogic = async () => {
-      console.log("🔄 Bắt đầu đồng bộ vị trí...");
       setIsSyncing(true);
+      
       try {
-        // Match Tỉnh
-        const normProvince = normalizeName(mProvince);
-        const foundProvince = provinces.find(p => normalizeName(p.label).includes(normProvince) || normProvince.includes(normalizeName(p.label)));
-        
+        // 1. TÌM TỈNH
+        const foundProvince = provinces.find(p => isMatch(p.label, mProvince));
         if (!foundProvince) {
-             console.error(`❌ Không tìm thấy tỉnh nào khớp với "${mProvince}" (Norm: ${normProvince})`);
+             console.log(`❌ Lỗi: Không khớp Tỉnh "${mProvince}"`);
              setIsSyncing(false);
              return;
         }
-        console.log("📍 Đã chọn Tỉnh:", foundProvince.label);
+
         setValue("provinceCode", foundProvince.value);
         setValue("province", foundProvince.label, { shouldValidate: true });
 
-        // Load Huyện
-        console.log(`⬇️ Đang tải huyện cho tỉnh ${foundProvince.label} (Code: ${foundProvince.value})...`);
-        const resD = await axios.get(`${VN_API_BASE}p/${foundProvince.value}?depth=2`);
-        const dOptions = resD.data.districts.map(d => ({ value: d.code, label: d.name }));
-        setDistricts(dOptions);
+        // 2. TẢI TẤT CẢ QUẬN & PHƯỜNG
+        const pRes = await axios.get(`${VN_API_BASE}p/${foundProvince.value}?depth=3`);
+        const districtsList = pRes.data.districts || [];
+        setDistricts(districtsList.map(d => ({ value: String(d.code), label: d.name })));
 
-        // Match Huyện
-        if (mDistrict) {
-            const normDistrict = normalizeName(mDistrict);
-            const foundDistrict = dOptions.find(d => normalizeName(d.label).includes(normDistrict) || normDistrict.includes(normalizeName(d.label)));
-            
-            if (foundDistrict) {
-                console.log("📍 Đã chọn Huyện:", foundDistrict.label);
-                setValue("districtCode", foundDistrict.value);
-                setValue("city", foundDistrict.label, { shouldValidate: true });
+        let allWards = [];
+        districtsList.forEach(d => {
+            if (d.wards) {
+                d.wards.forEach(w => allWards.push({ ...w, parent_district: d }));
+            }
+        });
 
-                // Load Xã
-                console.log(`⬇️ Đang tải xã cho huyện ${foundDistrict.label}...`);
-                const resW = await axios.get(`${VN_API_BASE}d/${foundDistrict.value}?depth=2`);
-                const wOptions = resW.data.wards.map(w => ({ value: w.name, label: w.name }));
-                setWards(wOptions);
+        let districtMatch = null;
+        let wardMatch = null;
 
-                // Match Xã
-                if (mWard) {
-                    const normWard = normalizeName(mWard);
-                    const foundWard = wOptions.find(w => normalizeName(w.label).includes(normWard) || normWard.includes(normalizeName(w.label)));
-                    if (foundWard) {
-                        console.log("📍 Đã chọn Xã:", foundWard.label);
-                        setValue("ward", foundWard.label, { shouldValidate: true });
-                    } else {
-                        console.warn(`⚠️ Không khớp xã "${mWard}", điền tạm.`);
-                        setValue("ward", mWard, { shouldValidate: true });
-                    }
-                }
-            } else {
-                console.warn(`❌ Không tìm thấy huyện nào khớp với "${mDistrict}"`);
+        // 3. LỌC MAPBOX WARD (Bỏ qua nếu nó trả về mã bưu điện bằng số như '12100')
+        if (mWard && isNaN(Number(mWard))) {
+            const potentialWards = allWards.filter(w => isMatch(w.name, mWard));
+            if (potentialWards.length > 0) {
+                if (mDistrict) wardMatch = potentialWards.find(w => isMatch(w.parent_district.name, mDistrict));
+                if (!wardMatch) wardMatch = potentialWards[0];
             }
         }
+
+        // 4. THUẬT TOÁN "DÒ CHÉO CẤP BẬC" CỨU CÁNH MAPBOX LỆCH (Giải quyết lỗi Kien Hung)
+        if (!wardMatch && mDistrict) {
+            // Bước 4.1: Thử tìm xem nó có đúng là Quận/Huyện không?
+            districtMatch = districtsList.find(d => isMatch(d.name, mDistrict));
+
+            // Bước 4.2: Nếu không phải Quận, có thể Mapbox đã ném tên Phường vào biến mDistrict!
+            if (!districtMatch) {
+                console.log(`⚠️ Mapbox nhầm cấp bậc: Đang quét thử '${mDistrict}' trong danh sách Phường/Xã...`);
+                const shiftedWards = allWards.filter(w => isMatch(w.name, mDistrict));
+                
+                if (shiftedWards.length > 0) {
+                    wardMatch = shiftedWards[0];
+                    districtMatch = wardMatch.parent_district;
+                    console.log(`✅ CỨU CÁNH THÀNH CÔNG: '${mDistrict}' thực ra là Phường thuộc '${districtMatch.name}'`);
+                }
+            }
+        }
+        
+        // 5. Fallback chuỗi FullAddress cuối cùng (nếu có)
+        if (!wardMatch && !districtMatch && fullAddress) {
+            const normFullAddr = superNormalize(fullAddress);
+            const sortedWards = [...allWards].sort((a, b) => b.name.length - a.name.length);
+            wardMatch = sortedWards.find(w => superNormalize(w.name).length > 3 && normFullAddr.includes(superNormalize(w.name)));
+            
+            if (wardMatch) {
+                districtMatch = wardMatch.parent_district;
+            } else {
+                const sortedDistricts = [...districtsList].sort((a, b) => b.name.length - a.name.length);
+                districtMatch = sortedDistricts.find(d => superNormalize(d.name).length > 3 && normFullAddr.includes(superNormalize(d.name)));
+            }
+        }
+
+        // 6. GHI DỮ LIỆU LÊN GIAO DIỆN FORM
+        if (districtMatch) {
+            setValue("districtCode", String(districtMatch.code));
+            setValue("city", districtMatch.name, { shouldValidate: true });
+            setWards((districtMatch.wards || []).map(w => ({ value: w.name, label: w.name })));
+
+            if (wardMatch) {
+                setValue("ward", wardMatch.name, { shouldValidate: true });
+            } else {
+                setValue("ward", ""); // Để user tự chọn nếu bó tay
+            }
+        } else {
+            setValue("districtCode", "");
+            setValue("city", "");
+            setWards([]);
+        }
+
       } catch (err) { 
-        console.error("🔥 Lỗi trong quá trình đồng bộ:", err); 
+        console.error("🔥 Lỗi đồng bộ:", err); 
       } finally { 
-        setIsSyncing(false); 
-        console.log("🏁 Kết thúc đồng bộ.");
+        setTimeout(() => setIsSyncing(false), 500); 
       }
     };
+
     syncLogic();
   }, [mapboxData, provinces, setValue]);
 
-  // Manual Handlers (Giữ nguyên logic cũ)
+  // --- MANUAL HANDLERS ---
   const geocodeManual = async (addr) => {
       if(isSyncing || !addr) return;
       try {
@@ -136,19 +164,19 @@ export default function AdminSelectorsWithApi({ watch, setValue, errors, mapRef,
   
   const handleProvinceChange = async (code) => {
       if(isSyncing) return;
-      const p = provinces.find(i=>i.value===code);
+      const p = provinces.find(i=>i.value === code);
       setValue("provinceCode", code); setValue("province", p?.label, {shouldValidate:true});
       setValue("districtCode", ""); setValue("city", ""); setValue("ward", ""); setWards([]);
       try {
          const res = await axios.get(`${VN_API_BASE}p/${code}?depth=2`);
-         setDistricts(res.data.districts.map(d=>({value:d.code, label:d.name})));
+         setDistricts(res.data.districts.map(d=>({value: String(d.code), label:d.name})));
       } catch(e){}
       if(p) geocodeManual(`${p.label}, Việt Nam`);
   };
 
   const handleDistrictChange = async (code) => {
       if(isSyncing) return;
-      const d = districts.find(i=>i.value===code);
+      const d = districts.find(i=>i.value === code);
       setValue("districtCode", code); setValue("city", d?.label, {shouldValidate:true}); setValue("ward", "");
       try {
          const res = await axios.get(`${VN_API_BASE}d/${code}?depth=2`);
