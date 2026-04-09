@@ -50,16 +50,16 @@ const Footer = () => {
           </div>
 
           <div className="bg-white/10 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
-             <h4 className="font-bold text-lg mb-2">Newsletter</h4>
-             <p className="text-sm text-blue-100 mb-4">Subscribe for exclusive offers up to 50% off.</p>
+             <h4 className="font-bold text-lg mb-2">Đăng ký nhận tin</h4>
+             <p className="text-sm text-blue-100 mb-4">Đăng ký để nhận các ưu đãi độc quyền giảm giá lên đến 50%.</p>
              <div className="flex gap-2">
                 <input 
                   type="email" 
-                  placeholder="Enter your email..." 
+                  placeholder="Nhập email của bạn..." 
                   className="w-full bg-white/20 border border-white/30 rounded-lg px-4 py-2 text-sm text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-[rgb(40,169,224)] transition-all"
                 />
                 <button className="bg-[rgb(40,169,224)] hover:bg-[#1b98d6] text-white px-4 py-2 rounded-lg font-medium transition-all hover:shadow-lg flex items-center gap-2">
-                   <Send size={16} /> <span className="hidden sm:inline">Subscribe</span>
+                   <Send size={16} /> <span className="hidden sm:inline">Gửi</span>
                 </button>
              </div>
           </div>
@@ -74,7 +74,7 @@ const Footer = () => {
             <ul className="space-y-4 text-sm text-white">
               <li className="flex items-start gap-3">
                 <MapPin size={18} className="mt-0.5 text-[rgb(40,169,224)] shrink-0" />
-                <span>Bitexco Building, District 1, Ho Chi Minh City, Vietnam</span>
+                <span>Tòa nhà Bitexco, Quận 1, TP. Hồ Chí Minh, Việt Nam</span>
               </li>
               <li className="flex items-center gap-3">
                 <Phone size={18} className="text-[rgb(40,169,224)] shrink-0" />
@@ -127,7 +127,7 @@ const Footer = () => {
 
           {/* Cột 4: Mạng xã hội & Chứng nhận */}
           <div>
-            <h4 className="font-bold text-lg mb-5 border-l-4 border-[rgb(40,169,224)] pl-3">Social</h4>
+            <h4 className="font-bold text-lg mb-5 border-l-4 border-[rgb(40,169,224)] pl-3">Mạng xã hội</h4>
             <div className="flex gap-3 mb-6">
               {socialLinks.map((item, idx) => (
                 <a 

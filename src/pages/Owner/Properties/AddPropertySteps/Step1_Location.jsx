@@ -19,9 +19,21 @@ const Step1_Location = ({ register, setValue, watch, errors }) => {
   const latWatch = watch("latitude");
   const lngWatch = watch("longitude");
   
-  register("provinceCode"); 
-  register("districtCode"); 
-  register("ward"); 
+  // 🔥 COPY LOGIC: Đưa register vào useEffect và thiết lập giá trị mặc định để tránh lỗi validation
+  useEffect(() => {
+    register("latitude");
+    register("longitude");
+    register("country");
+    register("provinceCode"); 
+    register("districtCode"); 
+    register("ward"); 
+    
+    // Nếu chưa có tọa độ ban đầu, set mặc định (Hà Nội)
+    if (!watch("latitude")) {
+        setValue("latitude", 21.028511);
+        setValue("longitude", 105.804817);
+    }
+  }, [register, setValue, watch]);
 
   const [viewState, setViewState] = useState(() => ({
     lng: lngWatch ? Number(lngWatch) : 105.804817,
@@ -43,43 +55,25 @@ const Step1_Location = ({ register, setValue, watch, errors }) => {
   const mapRef = useRef(null);
   const markerRef = useRef(null);
 
+  // 🔥 COPY LOGIC: Sử dụng context từ Mapbox để bóc tách địa chỉ chuẩn xác hơn, tránh lỗi cắt chuỗi
   const extractLocationFromMapbox = (place) => {
     const context = place.context || [];
     const fullContext = [...context, { id: place.id, text: place.text }];
     const findByType = (type) => fullContext.find(c => c.id && c.id.startsWith(type))?.text;
 
     let country = findByType("country") || "Việt Nam";
-    let province = findByType("region");
-    let district = findByType("district");
-    let ward = findByType("neighborhood") || findByType("locality");
+    let province = findByType("region") || findByType("place");
+    let district = findByType("district") || findByType("locality");
+    let ward = findByType("neighborhood") || findByType("postcode");
 
-    if (!province) {
-         const placeText = findByType("place");
+    if (!province && place.place_name) {
+         const parts = place.place_name.split(",").map(p => p.trim());
          const specialCities = ["Hà Nội", "Hồ Chí Minh", "Đà Nẵng", "Hải Phòng", "Cần Thơ"];
-         if (placeText && specialCities.some(city => placeText.includes(city))) province = placeText;
+         const foundCity = parts.find(p => specialCities.some(city => p.includes(city)));
+         if (foundCity) province = foundCity;
     }
 
-    if (place.place_name && province) {
-        const parts = place.place_name.split(",").map(p => p.trim());
-        const provinceIndex = parts.findIndex(p => p === province);
-        if (provinceIndex > 0) {
-            let potentialDistrict = parts[provinceIndex - 1];
-            if (!isNaN(potentialDistrict)) { if (provinceIndex > 1) potentialDistrict = parts[provinceIndex - 2]; }
-            if ((!district || district === province) && potentialDistrict) district = potentialDistrict;
-            if (provinceIndex > 1) {
-                 let potentialWardIndex = provinceIndex - 1;
-                 if (!isNaN(parts[potentialWardIndex])) potentialWardIndex--; 
-                 potentialWardIndex--; 
-                 if (potentialWardIndex >= 0) {
-                     const potentialWard = parts[potentialWardIndex];
-                     if (!ward && potentialWard && potentialWard !== district) ward = potentialWard;
-                 }
-            }
-        }
-    }
-    if (district === province) district = undefined;
-    if (ward === district) ward = undefined;
-    return { country, province, district, ward };
+    return { country, province, district, ward, fullAddress: place.place_name };
   };
 
   const reverseGeocode = async (lng, lat) => {
@@ -90,12 +84,16 @@ const Step1_Location = ({ register, setValue, watch, errors }) => {
       const res = await fetch(url);
       const data = await res.json();
       if (!data.features || data.features.length === 0) return;
+      
       const place = data.features[0];
       const { country, province, district, ward } = extractLocationFromMapbox(place);
+      
+      // 🔥 COPY LOGIC: Thêm { shouldValidate: true } để form nhận diện sự thay đổi
       setValue("address", place.place_name, { shouldValidate: true });
       setValue("country", country, { shouldValidate: true });
+      
       setMapboxData({ province, district, ward, timestamp: Date.now() });
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error("❌ [GEOCODE ERROR]:", err); }
   };
 
   useEffect(() => {
@@ -113,17 +111,21 @@ const Step1_Location = ({ register, setValue, watch, errors }) => {
     markerRef.current = new mapboxgl.Marker({ draggable: true, color: PRIMARY_COLOR, scale: 1.2 })
       .setLngLat([viewState.lng, viewState.lat])
       .addTo(mapRef.current);
+      
     markerRef.current.on("dragend", async () => {
       const { lng, lat } = markerRef.current.getLngLat();
       setMarkerPosition({ lng, lat });
-      setValue("latitude", lat); setValue("longitude", lng);
+      setValue("latitude", lat, { shouldValidate: true }); 
+      setValue("longitude", lng, { shouldValidate: true });
       await reverseGeocode(lng, lat);
     });
+
     mapRef.current.on("click", async (e) => {
       const { lng, lat } = e.lngLat;
       markerRef.current?.setLngLat([lng, lat]);
       setMarkerPosition({ lng, lat });
-      setValue("latitude", lat); setValue("longitude", lng);
+      setValue("latitude", lat, { shouldValidate: true }); 
+      setValue("longitude", lng, { shouldValidate: true });
       await reverseGeocode(lng, lat);
     });
   }, []);
@@ -132,9 +134,14 @@ const Step1_Location = ({ register, setValue, watch, errors }) => {
     if (markerRef.current && latWatch && lngWatch) {
         const lat = Number(latWatch); const lng = Number(lngWatch);
         if(!isNaN(lat) && !isNaN(lng)) {
-            markerRef.current.setLngLat([lng, lat]);
-            setMarkerPosition({ lng, lat });
-            mapRef.current?.flyTo({ center: [lng, lat], zoom: 15 });
+            // 🔥 COPY LOGIC: Kiểm tra isDifferent để tránh map tự động flyTo liên tục khi đang kéo thả
+            const currentLngLat = markerRef.current.getLngLat();
+            const isDifferent = Math.abs(currentLngLat.lat - lat) > 0.0001 || Math.abs(currentLngLat.lng - lng) > 0.0001;
+            if (isDifferent) {
+               markerRef.current.setLngLat([lng, lat]);
+               setMarkerPosition({ lng, lat });
+               mapRef.current?.flyTo({ center: [lng, lat], zoom: 15 });
+            }
         }
     }
   }, [latWatch, lngWatch]);
@@ -146,7 +153,8 @@ const Step1_Location = ({ register, setValue, watch, errors }) => {
         markerRef.current?.setLngLat([longitude, latitude]);
         mapRef.current?.flyTo({ center: [longitude, latitude], zoom: 15 });
         setMarkerPosition({ lng: longitude, lat: latitude });
-        setValue("latitude", latitude); setValue("longitude", longitude);
+        setValue("latitude", latitude, { shouldValidate: true }); 
+        setValue("longitude", longitude, { shouldValidate: true });
         await reverseGeocode(longitude, latitude);
     }, () => alert(isVi ? "Không thể lấy vị trí." : "Unable to get location."));
   };
@@ -168,12 +176,15 @@ const Step1_Location = ({ register, setValue, watch, errors }) => {
     markerRef.current?.setLngLat([lng, lat]);
     mapRef.current?.flyTo({ center: [lng, lat], zoom: 15 });
     setMarkerPosition({ lng, lat });
-    setValue("latitude", lat); setValue("longitude", lng);
+    setValue("latitude", lat, { shouldValidate: true }); 
+    setValue("longitude", lng, { shouldValidate: true });
+    
     const { country, province, district, ward } = extractLocationFromMapbox(place);
-    setValue("address", place.place_name);
-    setValue("country", country);
+    setValue("address", place.place_name, { shouldValidate: true });
+    setValue("country", country, { shouldValidate: true });
     setSearchQuery(place.place_name);
     setSuggestions([]);
+    
     setMapboxData({ province, district, ward, timestamp: Date.now() });
   };
 
@@ -191,10 +202,12 @@ const Step1_Location = ({ register, setValue, watch, errors }) => {
         <div className="lg:col-span-5 space-y-6 order-2 lg:order-1">
             <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-lg shadow-gray-50 space-y-6">
                 <div className="flex items-center gap-2 pb-4 border-b border-gray-100"><Navigation size={20} className="text-[rgb(40,169,224)]" /><h4 className="text-base font-bold text-gray-800">{isVi ? "Khu vực hành chính" : "Administrative Area"}</h4></div>
+                {/* GIỮ NGUYÊN PROPS Ở COMPONENT NÀY NHƯ BẢN GỐC CỦA BẠN */}
                 <AdminSelectorsWithApi watch={watch} setValue={setValue} errors={errors} mapRef={mapRef} markerRef={markerRef} mapboxData={mapboxData} />
             </div>
             <div className="bg-white p-6 rounded-3xl border border-gray-200 shadow-lg shadow-gray-50 space-y-6">
                 <div className="flex items-center gap-2 pb-4 border-b border-gray-100"><MapPin size={20} className="text-[rgb(40,169,224)]" /><h4 className="text-base font-bold text-gray-800">{t('add_property_flow.address_label')}</h4></div>
+                {/* GIỮ NGUYÊN FORM ĐĂNG KÝ ADDRESS */}
                 <TextField label={isVi ? "Số nhà, tên đường" : "Street number, street name"} placeholder={isVi ? "VD: Số 123 Đường Nguyễn Huệ..." : "e.g. 123 Nguyen Hue St..."} {...register("address")} error={errors.address?.message} icon={<MapPin size={18} />} />
             </div>
         </div>

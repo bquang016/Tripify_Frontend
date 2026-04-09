@@ -26,6 +26,7 @@ const AdminHeader = () => {
           <div className="h-6 w-[1px] bg-gray-200 mx-1"></div>
 
           <Link 
+          
             to="/" 
             className="flex items-center gap-2 px-4 py-2 text-sm font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-blue-600 hover:border-blue-200 rounded-full transition-all shadow-sm"
             title={isVi ? "Quay về trang chủ Website" : "Back to Home"}
