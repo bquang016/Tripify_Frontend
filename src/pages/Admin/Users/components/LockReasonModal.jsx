@@ -3,17 +3,14 @@ import Modal from "@/components/common/Modal/Modal";
 import Button from "@/components/common/Button/Button";
 import TextArea from "@/components/common/Input/TextArea";
 import { ShieldAlert } from "lucide-react";
-import { useTranslation } from "react-i18next";
 
 const LockReasonModal = ({ open, onClose, onConfirm, userName, isLoading }) => {
-    const { t, i18n } = useTranslation();
-    const isVi = i18n.language === 'vi';
     const [reason, setReason] = useState("");
     const [error, setError] = useState("");
 
     const handleConfirm = () => {
         if (!reason.trim()) {
-            setError(isVi ? "Vui lòng nhập lý do khóa tài khoản" : "Please enter a reason for locking");
+            setError("Vui lòng nhập lý do khóa tài khoản");
             return;
         }
         onConfirm(reason);
@@ -23,29 +20,29 @@ const LockReasonModal = ({ open, onClose, onConfirm, userName, isLoading }) => {
         <Modal
             open={open}
             onClose={onClose}
-            title={t('admin.users.lock_account')}
+            title="Khóa tài khoản"
             maxWidth="max-w-md"
         >
             <div className="space-y-5">
                 <div className="bg-red-50 border border-red-100 p-4 rounded-xl flex gap-3 text-red-800">
                     <ShieldAlert className="shrink-0" size={24} />
                     <p className="text-sm leading-relaxed">
-                        {isVi ? `Bạn đang thực hiện khóa tài khoản ${userName}.` : `You are locking account ${userName}.`}
+                        Bạn đang thực hiện khóa tài khoản {userName}.
                         <br/>
-                        {isVi ? "Hành động này sẽ ngăn người dùng đăng nhập vào hệ thống." : "This action will prevent the user from logging into the system."}
+                        Hành động này sẽ ngăn người dùng đăng nhập vào hệ thống.
                     </p>
                 </div>
 
                 <div>
                     <TextArea
-                        label={t('admin.users.lock_reason_label')}
+                        label="Lý do khóa"
                         required
                         value={reason}
                         onChange={(e) => {
                             setReason(e.target.value);
                             if (error) setError("");
                         }}
-                        placeholder={t('admin.users.lock_reason_placeholder')}
+                        placeholder="Nhập lý do khóa tài khoản..."
                         error={error}
                         rows={4}
                     />
@@ -57,14 +54,14 @@ const LockReasonModal = ({ open, onClose, onConfirm, userName, isLoading }) => {
                         onClick={onClose}
                         disabled={isLoading}
                     >
-                        {t('common.cancel')}
+                        Hủy
                     </Button>
                     <Button
                         variant="danger"
                         onClick={handleConfirm}
                         isLoading={isLoading}
                     >
-                        {t('admin.users.confirm_lock')}
+                        Xác nhận khóa
                     </Button>
                 </div>
             </div>
