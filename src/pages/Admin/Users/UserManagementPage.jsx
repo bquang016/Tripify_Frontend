@@ -9,10 +9,8 @@ import UserStats from "./components/UserStats";
 import UserFilterBar from "./components/UserFilterBar";
 import UserTable from "./components/UserTable";
 import adminService from "@/services/admin.service";
-import { useTranslation } from "react-i18next";
 
 export default function UserManagementPage() {
-    const { t, i18n } = useTranslation();
     const toastRef = useRef();
 
     const [users, setUsers] = useState([]);
@@ -34,7 +32,7 @@ export default function UserManagementPage() {
     const [lockReason, setLockReason] = useState("");
 
     const [confirmModal, setConfirmModal] = useState({
-        open: false, title: "", message: "", type: "info", confirmText: t('common.confirm'), onConfirm: null,
+        open: false, title: "", message: "", type: "info", confirmText: "Xác nhận", onConfirm: null,
     });
 
     const addToast = (message, mode = "info") => {
@@ -74,11 +72,11 @@ export default function UserManagementPage() {
             }
         } catch (error) {
             console.error("Failed:", error);
-            addToast(i18n.language === 'vi' ? "Không thể tải danh sách người dùng" : "Failed to load user list", "error");
+            addToast("Không thể tải danh sách người dùng", "error");
         } finally {
             setIsLoading(false);
         }
-    }, [currentPage, pageSize, debouncedSearchTerm, roleFilter, rankFilter, i18n.language]);
+    }, [currentPage, pageSize, debouncedSearchTerm, roleFilter, rankFilter]);
 
     useEffect(() => {
         fetchUsers();
@@ -99,10 +97,10 @@ export default function UserManagementPage() {
         } else {
             setConfirmModal({
                 open: true,
-                title: t('admin.users.unlock_account'),
-                message: t('admin.users.unlock_message', { name: user?.fullName }),
+                title: "Mở khóa tài khoản",
+                message: `Bạn có chắc chắn muốn mở khóa tài khoản của ${user?.fullName} không?`,
                 type: "success",
-                confirmText: i18n.language === 'vi' ? 'Mở khóa' : 'Unlock',
+                confirmText: 'Mở khóa',
                 onConfirm: () => executeStatusChange(userId, "ACTIVE", "")
             });
         }
@@ -110,7 +108,7 @@ export default function UserManagementPage() {
 
     const handleConfirmLock = () => {
         if (!lockReason.trim()) {
-            addToast(i18n.language === 'vi' ? "Vui lòng nhập lý do khóa tài khoản" : "Please enter a reason for locking", "warning");
+            addToast("Vui lòng nhập lý do khóa tài khoản", "warning");
             return;
         }
         if (selectedUserForLock) {
@@ -122,13 +120,13 @@ export default function UserManagementPage() {
         setIsLoading(true);
         try {
             await adminService.updateUserStatus(userId, newStatus, reason);
-            const successMsg = newStatus === "BANNED" ? t('admin.users.lock_success') : t('admin.users.unlock_success');
+            const successMsg = newStatus === "BANNED" ? "Đã khóa tài khoản thành công" : "Đã mở khóa tài khoản thành công";
             addToast(successMsg, "success");
             setIsLockModalOpen(false);
             setConfirmModal(prev => ({ ...prev, open: false }));
             fetchUsers();
         } catch (error) {
-            const errorMessage = error.response?.data?.message || (i18n.language === 'vi' ? "Lỗi cập nhật trạng thái" : "Status update error");
+            const errorMessage = error.response?.data?.message || "Lỗi cập nhật trạng thái";
             addToast(errorMessage, "error");
             setIsLoading(false);
             if(newStatus !== "BANNED") {
@@ -145,23 +143,23 @@ export default function UserManagementPage() {
             <Modal
                 open={isLockModalOpen}
                 onClose={() => !isLoading && setIsLockModalOpen(false)}
-                title={t('admin.users.lock_account')}
+                title="Khóa tài khoản"
             >
                 <div className="p-1 space-y-4">
                     <p className="text-gray-600 text-sm">
-                        {i18n.language === 'vi' ? `Bạn đang khóa tài khoản ${selectedUserForLock?.fullName}.` : `You are locking account ${selectedUserForLock?.fullName}.`}
+                        Bạn đang khóa tài khoản {selectedUserForLock?.fullName}.
                         <br/>
-                        {i18n.language === 'vi' ? 'Vui lòng nhập lý do để thông báo cho người dùng.' : 'Please enter a reason to notify the user.'}
+                        Vui lòng nhập lý do để thông báo cho người dùng.
                     </p>
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
-                            {t('admin.users.lock_reason_label')} <span className="text-red-500">*</span>
+                            Lý do khóa <span className="text-red-500">*</span>
                         </label>
                         <textarea
                             value={lockReason}
                             onChange={(e) => setLockReason(e.target.value)}
-                            placeholder={t('admin.users.lock_reason_placeholder')}
+                            placeholder="Nhập lý do khóa tài khoản..."
                             disabled={isLoading}
                             className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all text-sm min-h-[100px] disabled:bg-gray-100 disabled:text-gray-500"
                         />
@@ -169,10 +167,10 @@ export default function UserManagementPage() {
 
                     <div className="flex justify-end gap-3 pt-2">
                         <Button variant="text" onClick={() => setIsLockModalOpen(false)} disabled={isLoading}>
-                            {t('common.cancel')}
+                            Hủy
                         </Button>
                         <Button variant="danger" onClick={handleConfirmLock} disabled={isLoading}>
-                            {t('admin.users.confirm_lock')}
+                            Xác nhận khóa
                         </Button>
                     </div>
                 </div>
@@ -189,7 +187,7 @@ export default function UserManagementPage() {
             />
 
             <div className="flex flex-col gap-1">
-                <h1 className="text-2xl font-bold text-gray-800">{t('admin.users.title')}</h1>
+                <h1 className="text-2xl font-bold text-gray-800">Quản lý người dùng</h1>
             </div>
 
             <UserStats stats={stats} />
